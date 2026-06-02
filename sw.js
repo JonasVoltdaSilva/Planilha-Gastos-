@@ -1,4 +1,4 @@
-const CACHE = 'cofrinho-v5';
+const CACHE = 'cofrinho-v6';
 const LOCAL = [
   './',
   './index.html',
@@ -13,41 +13,34 @@ const LOCAL = [
   './app.jsx',
 ];
 
+// Instala e pré-carrega o cache para uso offline
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(LOCAL)).then(() => self.skipWaiting())
   );
 });
 
+// Ativa imediatamente, limpa caches antigos e recarrega todas as abas abertas
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then(clients => clients.forEach(client => client.navigate(client.url)))
   );
 });
 
+// Network-first: busca da rede (sempre atualizado), cai no cache só se offline
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  const url = new URL(e.request.url);
-
-  // CDN externo: network-first (usa cache se offline)
-  if (url.origin !== self.location.origin) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-
-  // Arquivos locais: cache-first
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
+    fetch(e.request)
+      .then(res => {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return res;
-      });
-    })
+      })
+      .catch(() => caches.match(e.request))
   );
 });
