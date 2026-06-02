@@ -74,5 +74,14 @@ mk("receipt", <>
 mk("download", <><path d="M12 3v12M7 11l5 5 5-5" /><path d="M5 21h14" /></>);
 mk("filter", <><path d="M3 5h18l-7 8v6l-4-2v-4Z" /></>);
 mk("target", <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /></>);
+mk("home", <>
+  <path d="M3 12L12 4l9 8" />
+  <path d="M5 10v10h5v-5h4v5h5V10" />
+</>);
+mk("upload", <>
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+  <path d="M17 8l-5-5-5 5" />
+  <path d="M12 3v12" />
+</>);
 
 window.Ic = Ic;

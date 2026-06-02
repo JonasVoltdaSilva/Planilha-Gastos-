@@ -4,22 +4,22 @@
    ============================================================ */
 
 :root {
-  --ink-900: #0b1220;
-  --ink-800: #0f172a;
-  --moss-900: #0e2a1e;
-  --moss-800: #1b4332;
+  --ink-900: #050b14;
+  --ink-800: #08111e;
+  --moss-900: #071410;
+  --moss-800: #0f2a1e;
 
   --accent-blue: oklch(0.72 0.12 235);
   --accent-mint: oklch(0.78 0.12 165);
   --accent-blue-soft: oklch(0.72 0.12 235 / 0.16);
   --accent-mint-soft: oklch(0.78 0.12 165 / 0.16);
 
-  --glass-bg: rgba(255, 255, 255, 0.055);
-  --glass-bg-strong: rgba(255, 255, 255, 0.085);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-border-strong: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55);
-  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --glass-bg: rgba(255, 255, 255, 0.026);
+  --glass-bg-strong: rgba(255, 255, 255, 0.048);
+  --glass-border: rgba(255, 255, 255, 0.075);
+  --glass-border-strong: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.75);
+  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 
   --text-hi: rgba(255, 255, 255, 0.96);
   --text-mid: rgba(255, 255, 255, 0.66);
@@ -67,11 +67,11 @@ body {
 /* ---- Backdrop ---- */
 .backdrop {
   position: fixed; inset: 0; z-index: 0;
-  background: linear-gradient(135deg, #0a111f 0%, #0f172a 40%, #112d20 78%, #0e2a1e 100%);
+  background: linear-gradient(135deg, #030710 0%, #05101a 40%, #060e0b 78%, #040c08 100%);
 }
 .blob {
   position: fixed; border-radius: 50%; filter: blur(90px);
-  opacity: 0.45; z-index: 0; pointer-events: none;
+  opacity: 0.2; z-index: 0; pointer-events: none;
   animation: float 22s ease-in-out infinite;
 }
 .blob.b1 { width: 560px; height: 560px; top: -180px; left: -120px;
@@ -344,7 +344,7 @@ tbody tr:hover .row-actions { opacity: 1; }
 .modal {
   width: 100%; max-width: 460px;
   border-radius: var(--radius-xl); padding: 28px;
-  background: rgba(20, 30, 44, 0.88);
+  background: rgba(5, 9, 18, 0.96);
   animation: pop 0.26s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 @keyframes fade { from { opacity: 0; } }
@@ -511,6 +511,70 @@ tbody tr:hover .row-actions { opacity: 1; }
 .color-dot:hover { transform: scale(1.2); }
 .color-dot.on { border-color: #fff; transform: scale(1.15); }
 
+/* ---- Home view ---- */
+.home-hero {
+  border-radius: var(--radius-xl);
+  padding: 28px 30px;
+  margin-bottom: 20px;
+}
+.home-hero-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+}
+.home-greeting { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.2; }
+.home-greeting strong { color: var(--accent-mint); }
+.home-date { font-size: 13px; color: var(--text-lo); margin-top: 5px; font-weight: 500; }
+.home-stats-row {
+  display: flex; gap: 0; flex-wrap: wrap;
+  border-radius: var(--radius-md); overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.018);
+}
+.home-stat-block {
+  flex: 1; min-width: 110px;
+  padding: 18px 20px;
+  border-right: 1px solid var(--glass-border);
+}
+.home-stat-block:last-child { border-right: none; }
+.home-stat-label {
+  font-size: 11px; color: var(--text-lo);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+}
+.home-stat-value {
+  font-family: var(--font-display); font-size: 24px; font-weight: 700;
+  letter-spacing: -0.02em; line-height: 1;
+}
+.home-stat-meta { font-size: 11.5px; color: var(--text-lo); margin-top: 5px; }
+
+/* ---- PDF upload area ---- */
+.pdf-upload-area {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; min-height: 140px;
+  border: 2px dashed var(--glass-border-strong);
+  border-radius: var(--radius-md); cursor: pointer;
+  text-align: center; transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 4px; background: rgba(255,255,255,0.016);
+}
+.pdf-upload-area:hover { border-color: var(--accent-mint); background: var(--accent-mint-soft); }
+.pdf-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--glass-border-strong);
+  border-top-color: var(--accent-mint);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.import-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.import-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  font-size: 13.5px; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  color: var(--text-mid); transition: all 0.16s;
+}
+.import-tab:hover { background: rgba(255,255,255,0.07); color: var(--text-hi); }
+.import-tab.on { background: var(--accent-mint-soft); border-color: oklch(0.78 0.12 165 / 0.35); color: var(--accent-mint); }
+
 /* ============================================================
    TABLET  ≤ 920px
    ============================================================ */
@@ -572,7 +636,7 @@ tbody tr:hover .row-actions { opacity: 1; }
     display: flex;
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
     padding: 0 0 env(safe-area-inset-bottom, 0px);
-    background: rgba(12, 20, 32, 0.92);
+    background: rgba(3, 6, 12, 0.97);
     backdrop-filter: blur(22px) saturate(140%);
     -webkit-backdrop-filter: blur(22px) saturate(140%);
     border-top: 1px solid var(--glass-border);
@@ -681,4 +745,10 @@ tbody tr:hover .row-actions { opacity: 1; }
   .btn { font-size: 13px; padding: 12px 14px; }
 
   .toast { font-size: 13px; padding: 12px 18px; max-width: calc(100vw - 32px); }
+
+  .home-hero { padding: 18px 16px; }
+  .home-greeting { font-size: 20px; }
+  .home-stat-block { padding: 14px 14px; min-width: 90px; }
+  .home-stat-value { font-size: 18px; }
+  .home-stat-label { font-size: 10px; }
 }
