@@ -5,24 +5,59 @@ const { useState, useMemo, useEffect } = React;
 
 const NAV = [
   { id: "dashboard", nome: "Dashboard", icon: Ic.dashboard },
-  { id: "gastos", nome: "Gastos", icon: Ic.wallet },
-  { id: "relatorios", nome: "Relatórios", icon: Ic.chart },
-  { id: "config", nome: "Configurações", icon: Ic.settings },
+  { id: "gastos",    nome: "Gastos",    icon: Ic.wallet },
+  { id: "relatorios",nome: "Relatórios",icon: Ic.chart },
+  { id: "config",    nome: "Config.",   icon: Ic.settings },
 ];
 
 const PAGE_META = {
-  dashboard: { t: "Dashboard", s: "Visão geral das suas finanças pessoais" },
-  gastos: { t: "Gastos", s: "Sua planilha completa de lançamentos" },
-  relatorios: { t: "Relatórios", s: "Análise da distribuição dos seus gastos" },
-  config: { t: "Configurações", s: "Personalize sua experiência" },
+  dashboard:  { t: "Dashboard",    s: "Visão geral das suas finanças pessoais" },
+  gastos:     { t: "Gastos",       s: "Sua planilha completa de lançamentos" },
+  relatorios: { t: "Relatórios",   s: "Análise da distribuição dos seus gastos" },
+  config:     { t: "Configurações",s: "Personalize sua experiência" },
 };
 
-const LS_KEY = "planilha_gastos_v1";
-const LS_SET = "planilha_gastos_settings_v1";
+const LS_KEY  = "planilha_gastos_v1";
+const LS_SET  = "planilha_gastos_settings_v1";
+const LS_CATS = "planilha_gastos_cats_v1";
 
 function App() {
   const [page, setPage] = useState("dashboard");
-  const [menuOpen, setMenuOpen] = useState(false);
+
+  // ---------- Categorias personalizadas ----------
+  const [customCats, setCustomCats] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS_CATS);
+      if (s) {
+        const cats = JSON.parse(s);
+        // Adiciona ao global imediatamente, antes do primeiro render
+        cats.forEach(c => { if (!CAT_MAP[c.id]) { CATEGORIES.push(c); CAT_MAP[c.id] = c; } });
+        return cats;
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  const allCats = useMemo(() => [...CATEGORIES], [customCats]);
+
+  const addCustomCat = (cat) => {
+    if (CAT_MAP[cat.id]) return;
+    CATEGORIES.push(cat);
+    CAT_MAP[cat.id] = cat;
+    const updated = [...customCats, cat];
+    setCustomCats(updated);
+    try { localStorage.setItem(LS_CATS, JSON.stringify(updated)); } catch (e) {}
+  };
+
+  const deleteCustomCat = (id) => {
+    const idx = CATEGORIES.findIndex(c => c.id === id);
+    if (idx >= 0) { CATEGORIES.splice(idx, 1); delete CAT_MAP[id]; }
+    const updated = customCats.filter(c => c.id !== id);
+    setCustomCats(updated);
+    try { localStorage.setItem(LS_CATS, JSON.stringify(updated)); } catch (e) {}
+  };
+
+  // ---------- Gastos ----------
   const [expenses, setExpenses] = useState(() => {
     try {
       const s = localStorage.getItem(LS_KEY);
@@ -30,27 +65,31 @@ function App() {
     } catch (e) {}
     return seedData();
   });
+
+  // ---------- Configurações ----------
   const [settings, setSettings] = useState(() => {
     try {
       const s = localStorage.getItem(LS_SET);
-      if (s) return JSON.parse(s);
+      if (s) {
+        const parsed = JSON.parse(s);
+        return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, ...parsed };
+      }
     } catch (e) {}
-    return { autoCat: true, glow: true, animations: true, confirmDelete: false };
+    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000 };
   });
 
-  const [modal, setModal] = useState(null); // null | {} | expense
+  const [modal, setModal] = useState(null);
   const [toast, setToast] = useState("");
   const [quick, setQuick] = useState("");
 
   // filtros
   const [period, setPeriod] = useState("30");
-  const [cat, setCat] = useState("all");
+  const [cat, setCat]       = useState("all");
   const [search, setSearch] = useState("");
 
-  useEffect(() => { try { localStorage.setItem(LS_KEY, JSON.stringify(expenses)); } catch (e) {} }, [expenses]);
-  useEffect(() => { try { localStorage.setItem(LS_SET, JSON.stringify(settings)); } catch (e) {} }, [settings]);
+  useEffect(() => { try { localStorage.setItem(LS_KEY,  JSON.stringify(expenses)); } catch (e) {} }, [expenses]);
+  useEffect(() => { try { localStorage.setItem(LS_SET,  JSON.stringify(settings)); } catch (e) {} }, [settings]);
 
-  // toggle animações de fundo
   useEffect(() => {
     document.body.classList.toggle("no-anim", !settings.animations);
     document.body.classList.toggle("no-glow", !settings.glow);
@@ -58,7 +97,7 @@ function App() {
 
   const showToast = (m) => { setToast(m); setTimeout(() => setToast(""), 2400); };
 
-  // ---- filtragem ----
+  // ---------- Filtragem ----------
   const filtered = useMemo(() => {
     let arr = [...expenses];
     if (period !== "all") {
@@ -78,13 +117,13 @@ function App() {
   const byCat = useMemo(() => {
     const map = {};
     filtered.forEach(e => { map[e.categoria] = (map[e.categoria] || 0) + e.valor; });
-    return CATEGORIES
+    return allCats
       .map(c => ({ id: c.id, nome: c.nome, hex: c.hex, valor: map[c.id] || 0 }))
       .filter(c => c.valor > 0)
       .sort((a, b) => b.valor - a.valor);
-  }, [filtered]);
+  }, [filtered, allCats]);
 
-  // ---- ações ----
+  // ---------- Ações ----------
   const saveExpense = (exp) => {
     setExpenses(prev => {
       const exists = prev.some(e => e.id === exp.id);
@@ -100,6 +139,13 @@ function App() {
     showToast("Gasto excluído");
   };
 
+  const importExpenses = (list) => {
+    if (!list.length) return;
+    setExpenses(prev => [...list, ...prev]);
+    showToast(`${list.length} gasto${list.length > 1 ? "s" : ""} importado${list.length > 1 ? "s" : ""}`);
+    setPage("gastos");
+  };
+
   const submitQuick = () => {
     const parsed = parseQuick(quick);
     if (!parsed) { showToast("Não entendi — tente: \"Gastei R$50 com comida\""); return; }
@@ -107,7 +153,7 @@ function App() {
     if (!settings.autoCat) exp.categoria = "outros";
     setExpenses(prev => [exp, ...prev]);
     setQuick("");
-    showToast(`+ ${fmtBRL(parsed.valor)} · ${CAT_MAP[exp.categoria].nome}`);
+    showToast(`+ ${fmtBRL(parsed.valor)} · ${CAT_MAP[exp.categoria]?.nome || exp.categoria}`);
   };
 
   const resetData = () => { setExpenses(seedData()); showToast("Dados de exemplo restaurados"); };
@@ -116,9 +162,7 @@ function App() {
 
   return (
     <div className="app">
-      {/* Sidebar */}
-      <div className={"sidebar-backdrop" + (menuOpen ? " show" : "")} onClick={() => setMenuOpen(false)} />
-      <aside className={"sidebar glass" + (menuOpen ? " open" : "")}>
+      <aside className="sidebar glass">
         <div className="brand">
           <div className="brand-mark"><Ic.coins size={22} color="#06251a" /></div>
           <div>
@@ -132,7 +176,7 @@ function App() {
             const I = n.icon;
             return (
               <div key={n.id} className={"nav-item" + (page === n.id ? " active" : "")}
-                onClick={() => { setPage(n.id); setMenuOpen(false); }}>
+                onClick={() => setPage(n.id)}>
                 <I size={19} />{n.nome}
               </div>
             );
@@ -149,20 +193,15 @@ function App() {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="main glass">
         <div className="main-scroll">
           <div className="page-head">
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <button className="btn btn-ghost menu-btn" style={{ padding: 10 }} onClick={() => setMenuOpen(true)}><Ic.menu size={20} /></button>
-              <div>
-                <h1 className="page-title">{meta.t}</h1>
-                <div className="page-sub">{meta.s}</div>
-              </div>
+            <div>
+              <h1 className="page-title">{meta.t}</h1>
+              <div className="page-sub">{meta.s}</div>
             </div>
           </div>
 
-          {/* Quick add (dashboard + gastos) */}
           {(page === "dashboard" || page === "gastos") && (
             <div className="quick glass">
               <Ic.sparkle size={20} />
@@ -175,18 +214,21 @@ function App() {
 
           {page === "dashboard" && (
             <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})} />
+              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
+              budget={settings.budget} />
           )}
           {page === "gastos" && (
             <GastosView filtered={filtered} total={total} byCat={byCat}
               onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
+              onImport={importExpenses} allCats={allCats}
               {...{ period, setPeriod, cat, setCat, search, setSearch }} />
           )}
           {page === "relatorios" && (
             <RelatoriosView expenses={expenses} byCat={byCat} total={total} />
           )}
           {page === "config" && (
-            <ConfigView settings={settings} setSettings={setSettings} onReset={resetData} />
+            <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
+              allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat} />
           )}
         </div>
       </main>
@@ -195,7 +237,7 @@ function App() {
 
       {modal !== null && (
         <ExpenseModal initial={modal && modal.id ? modal : null}
-          onSave={saveExpense} onClose={() => setModal(null)} />
+          onSave={saveExpense} onClose={() => setModal(null)} allCats={allCats} />
       )}
       <Toast msg={toast} />
     </div>

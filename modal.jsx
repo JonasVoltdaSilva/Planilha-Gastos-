@@ -3,11 +3,13 @@
    ============================================================ */
 const { useState: useStateM, useEffect: useEffectM } = React;
 
-function ExpenseModal({ initial, onSave, onClose }) {
+function ExpenseModal({ initial, onSave, onClose, allCats }) {
+  const cats = allCats || CATEGORIES;
   const [data, setData] = useStateM(initial?.data || todayISO());
   const [descricao, setDescricao] = useStateM(initial?.descricao || "");
-  const [categoria, setCategoria] = useStateM(initial?.categoria || "comida");
+  const [categoria, setCategoria] = useStateM(initial?.categoria || cats[0]?.id || "comida");
   const [valor, setValor] = useStateM(initial?.valor != null ? String(initial.valor).replace(".", ",") : "");
+  const [tipo, setTipo] = useStateM(initial?.tipo || "outros");
   const [err, setErr] = useStateM("");
 
   useEffectM(() => {
@@ -16,7 +18,6 @@ function ExpenseModal({ initial, onSave, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // auto-detecta categoria ao digitar descrição (só se usuário não escolheu manual)
   const [touchedCat, setTouchedCat] = useStateM(!!initial);
   const onDesc = (v) => {
     setDescricao(v);
@@ -30,10 +31,7 @@ function ExpenseModal({ initial, onSave, onClose }) {
     const num = parseFloat(valor.replace(/\./g, "").replace(",", "."));
     if (!descricao.trim()) return setErr("Adicione uma descrição.");
     if (isNaN(num) || num <= 0) return setErr("Informe um valor válido.");
-    onSave({
-      id: initial?.id || uid(),
-      data, descricao: descricao.trim(), categoria, valor: num,
-    });
+    onSave({ id: initial?.id || uid(), data, descricao: descricao.trim(), categoria, valor: num, tipo });
   };
 
   return (
@@ -63,9 +61,22 @@ function ExpenseModal({ initial, onSave, onClose }) {
             </div>
           </div>
           <div className="form-row">
+            <label className="form-label">Tipo de pagamento</label>
+            <div className="tipo-picker">
+              {TIPOS.map(t => (
+                <button key={t.id} type="button"
+                  className={"tipo-opt" + (tipo === t.id ? " on" : "")}
+                  style={{ "--tipo-hex": t.hex }}
+                  onClick={() => setTipo(t.id)}>
+                  {t.nome}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="form-row">
             <label className="form-label">Categoria</label>
             <div className="cat-picker">
-              {CATEGORIES.map(c => (
+              {cats.map(c => (
                 <button key={c.id} type="button"
                   className={"cat-opt" + (categoria === c.id ? " on" : "")}
                   onClick={() => { setCategoria(c.id); setTouchedCat(true); }}>
