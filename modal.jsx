@@ -1,7 +1,7 @@
 /* ============================================================
    Modal de gasto / entrada (adicionar / editar) + Toast
    ============================================================ */
-const { useState: useStateM, useEffect: useEffectM } = React;
+const { useState: useStateM, useEffect: useEffectM, useRef: useRefM } = React;
 
 function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
   const cats = allCats || CATEGORIES;
@@ -17,6 +17,30 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
   const [forma, setForma] = useStateM(initial?.forma || "avista");
   const [parcelas, setParcelas] = useStateM(initial?.parcTotal > 1 ? String(initial.parcTotal) : "2");
   const [err, setErr] = useStateM("");
+
+  // Swipe down to close
+  const [swipeY, setSwipeY] = useStateM(0);
+  const swipeStart = useRefM(null);
+  const modalBodyRef = useRefM(null);
+
+  const onDragStart = (e) => {
+    swipeStart.current = e.touches[0].clientY;
+  };
+  const onDragMove = (e) => {
+    if (swipeStart.current === null) return;
+    // Only dismiss-swipe when modal content is scrolled to top
+    if (modalBodyRef.current && modalBodyRef.current.scrollTop > 4) return;
+    const diff = e.touches[0].clientY - swipeStart.current;
+    if (diff > 0) setSwipeY(diff);
+  };
+  const onDragEnd = () => {
+    if (swipeY > 80) {
+      onClose();
+    } else {
+      setSwipeY(0);
+    }
+    swipeStart.current = null;
+  };
 
   useEffectM(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -59,9 +83,21 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
     });
   };
 
+  const dragging = swipeY > 0;
+
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal glass">
+      <div
+        ref={modalBodyRef}
+        className="modal glass"
+        style={dragging ? { transform: `translateY(${swipeY}px)`, transition: "none" } : undefined}
+        onTouchStart={onDragStart}
+        onTouchMove={onDragMove}
+        onTouchEnd={onDragEnd}
+      >
+        {/* Drag handle — visible on mobile as swipe indicator */}
+        <div className="modal-handle" />
+
         <h3>{isEdit ? (kind === "entrada" ? "Editar entrada" : "Editar gasto") : "Novo lançamento"}</h3>
 
         {!isEdit && (
@@ -90,7 +126,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
           <div className="form-row two">
             <div className="form-row">
               <label className="form-label">Data</label>
-              <input className="form-input" type="date" value={data}
+              <input className="form-input form-input-date" type="date" value={data}
                 onChange={(e) => setData(e.target.value)} />
             </div>
             <div className="form-row">
