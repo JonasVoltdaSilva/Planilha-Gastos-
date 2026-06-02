@@ -88,7 +88,7 @@ function Filters({ period, setPeriod, cat, setCat, search, setSearch, allCats })
   const cats = allCats || CATEGORIES;
   return (
     <div className="filters">
-      <div className="field" style={{ flex: 1, minWidth: 180 }}>
+      <div className="field" style={{ flex: 1, minWidth: 0 }}>
         <input className="input" style={{ width: "100%", paddingLeft: 36 }}
           value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar descrição..." />
@@ -300,7 +300,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
   const monthGastos = monthExp.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
   const monthEntradas = monthExp.filter(e => e.kind === "entrada").reduce((s, e) => s + e.valor, 0);
-  const saldo = monthEntradas - monthGastos;
+  const saldo = (budget || 0) - monthGastos + monthEntradas;
   const pct = budget > 0 ? Math.min((monthGastos / budget) * 100, 100) : 0;
   const budgetColor = budget <= 0 ? "var(--accent-mint)"
     : pct < 60 ? "var(--accent-mint)"
@@ -319,7 +319,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
             <div className="home-greeting">{greeting}, <strong>Luiz Ricardo</strong>!</div>
             <div className="home-date">{fmtDateLong(todayISO())}</div>
           </div>
-          <button className="btn btn-primary" onClick={onAdd}>
+          <button className="btn btn-primary btn-desktop-only" onClick={onAdd}>
             <Ic.plus size={18} />Novo lançamento
           </button>
         </div>
@@ -330,19 +330,17 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
             <div className="home-stat-value" style={{ color: "#e08a7a" }}>{fmtBRL(monthGastos)}</div>
             <div className="home-stat-meta">{monthExp.filter(e => e.kind !== "entrada").length} lançamentos</div>
           </div>
-          {budget > 0 && (
-            <div className="home-stat-block">
-              <div className="home-stat-label">Restante</div>
-              <div className="home-stat-value" style={{ color: budgetColor }}>{fmtBRL(Math.max(0, budget - monthGastos))}</div>
-              <div className="home-stat-meta" style={{ color: budgetColor }}>{Math.round(pct)}% usado</div>
+          <div className="home-stat-block">
+            <div className="home-stat-label">Saldo disponível</div>
+            <div className="home-stat-value" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>{fmtBRL(saldo)}</div>
+            <div className="home-stat-meta" style={{ color: budgetColor }}>
+              {budget > 0 ? `${Math.round(pct)}% do orçamento usado` : `${monthEntradas > 0 ? "+" + fmtBRL(monthEntradas) : "sem entradas"}`}
             </div>
-          )}
+          </div>
           <div className="home-stat-block">
             <div className="home-stat-label">Entradas do mês</div>
             <div className="home-stat-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthEntradas)}</div>
-            <div className="home-stat-meta" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>
-              Saldo: {saldo >= 0 ? "+" : ""}{fmtBRL(saldo)}
-            </div>
+            <div className="home-stat-meta">{monthExp.filter(e => e.kind === "entrada").length} entradas</div>
           </div>
         </div>
 
@@ -389,15 +387,13 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
   const media = count ? total / count : 0;
   const topCat = byCat[0];
   const entradasTotal = entradas.reduce((s, e) => s + e.valor, 0);
-  const saldo = entradasTotal - total;
 
   return (
     <>
       <div className="stats">
         <Stat icon={Ic.coins} label="Gastos no período" value={fmtBRL(total)} accent meta={`${count} lançamentos`} />
         <Stat icon={Ic.trendUp} label="Entradas no período" value={fmtBRL(entradasTotal)}
-          meta={`Saldo: ${saldo >= 0 ? "+" : ""}${fmtBRL(saldo)}`}
-          metaDir={saldo >= 0 ? "down" : "up"} />
+          meta={`${entradas.length} entr${entradas.length === 1 ? "ada" : "adas"}`} />
         <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)} meta="por gasto" />
         <Stat icon={Ic.target} label="Maior categoria"
           value={topCat ? topCat.nome : "—"} meta={topCat ? fmtBRL(topCat.valor) : ""} />
@@ -407,7 +403,7 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
         <div className="panel glass">
           <div className="panel-head">
             <div className="panel-title">Lançamentos recentes</div>
-            <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
+            <button className="btn btn-primary btn-desktop-only" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
           <ExpenseTable rows={filtered.slice(0, 8)} onEdit={onEdit} onDelete={onDelete} />
         </div>
@@ -424,12 +420,6 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
         </div>
       </div>
 
-      <div className="grid-2" style={{ gridTemplateColumns: "1fr", marginTop: 16 }}>
-        <div className="panel glass">
-          <div className="panel-head"><div className="panel-title">Gastos dos últimos 7 dias</div></div>
-          <WeekBars expenses={expenses} />
-        </div>
-      </div>
     </>
   );
 }
