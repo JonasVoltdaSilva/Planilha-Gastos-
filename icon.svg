@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="120" fill="#0f172a"/>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a111f"/>
+      <stop offset="100%" stop-color="#112d20"/>
+    </linearGradient>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5ad9a8"/>
+      <stop offset="100%" stop-color="#5aa3e0"/>
+    </linearGradient>
+  </defs>
+  <!-- Cofre / cofrinho shape -->
+  <!-- Body -->
+  <ellipse cx="256" cy="290" rx="150" ry="130" fill="url(#grad)" opacity="0.15"/>
+  <ellipse cx="256" cy="290" rx="150" ry="130" fill="none" stroke="url(#grad)" stroke-width="22"/>
+  <!-- Slot no topo -->
+  <rect x="222" y="148" width="68" height="18" rx="9" fill="url(#grad)"/>
+  <!-- Olho -->
+  <circle cx="300" cy="265" r="16" fill="url(#grad)" opacity="0.8"/>
+  <circle cx="300" cy="265" r="7" fill="#0f172a"/>
+  <!-- Orelha -->
+  <path d="M388 240 Q420 240 420 270 Q420 300 388 300" fill="none" stroke="url(#grad)" stroke-width="20" stroke-linecap="round"/>
+  <!-- Pézinhos -->
+  <ellipse cx="196" cy="418" rx="40" ry="18" fill="url(#grad)" opacity="0.7"/>
+  <ellipse cx="316" cy="418" rx="40" ry="18" fill="url(#grad)" opacity="0.7"/>
+  <!-- Moeda símbolo R$ -->
+  <text x="218" y="315" font-family="system-ui,sans-serif" font-size="72" font-weight="700" fill="url(#grad)">R$</text>
+</svg>

@@ -247,7 +247,7 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
           <div className="panel-head"><div className="panel-title">Distribuição</div></div>
           {total > 0
             ? <>
-                <Donut data={byCat} total={total} />
+                <Donut data={byCat} total={total} budget={budget} />
                 <BudgetBar total={total} budget={budget} />
               </>
             : <div className="empty"><Ic.chart size={40} />Sem dados no período</div>

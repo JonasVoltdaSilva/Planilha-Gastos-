@@ -1,5 +1,5 @@
 /* ============================================================
-   Dados, categorias, helpers e parser de linguagem natural
+   Dados, categorias, helpers e categorização inteligente
    ============================================================ */
 
 const CATEGORIES = [
@@ -13,7 +13,6 @@ const CATEGORIES = [
   { id: "outros",     nome: "Outros",      cor: "var(--cat-outros)",     hex: "#9aa3b0" },
 ];
 
-// CAT_MAP é mutável: categorias personalizadas são adicionadas dinamicamente
 const CAT_MAP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
 const TIPOS = [
@@ -24,20 +23,100 @@ const TIPOS = [
 ];
 const TIPO_MAP = Object.fromEntries(TIPOS.map(t => [t.id, t]));
 
-// Paleta de cores para categorias personalizadas
 const CAT_PRESET_COLORS = [
   "#e05a5a", "#e09a5a", "#e0d05a", "#8ae05a",
   "#5ae0a0", "#5ab5e0", "#a05ae0", "#e05ab0",
 ];
 
+/* ---- Palavras-chave expandidas com marcas e termos brasileiros ---- */
 const KEYWORDS = {
-  comida: ["comida","almoço","almoco","jantar","lanche","café","cafe","restaurante","ifood","mercado","supermercado","padaria","pizza","hambúrguer","hamburguer","feira","açaí","acai","bar","cerveja"],
-  transporte: ["transporte","uber","99","gasolina","combustível","combustivel","ônibus","onibus","metrô","metro","passagem","estacionamento","pedágio","pedagio","carro","táxi","taxi","bilhete"],
-  moradia: ["aluguel","moradia","condomínio","condominio","casa","apartamento","reforma","móveis","moveis"],
-  lazer: ["lazer","cinema","show","viagem","jogo","game","netflix","spotify","streaming","festa","passeio","parque","academia","hobby"],
-  saude: ["saúde","saude","remédio","remedio","farmácia","farmacia","médico","medico","consulta","dentista","exame","plano","psicólogo","psicologo"],
-  compras: ["compras","roupa","roupas","tênis","tenis","sapato","loja","presente","eletrônico","eletronico","celular","amazon","shopping"],
-  contas: ["conta","contas","luz","água","agua","energia","internet","telefone","boleto","fatura","cartão","cartao","imposto","gás","gas","assinatura"],
+  comida: [
+    "comida","almoço","almoco","jantar","lanche","café","cafe","restaurante",
+    "ifood","rappi","james delivery","99food","ze delivery","zé delivery",
+    "aiqfome","uber eats",
+    "mercado","supermercado","hortifruti","feira","mercearia","sacolão",
+    "padaria","padoca","confeitaria","sorveteria","sorvete","açaí","acai",
+    "pizza","hambúrguer","hamburguer","sushi","temaki","churrascaria","churrasco",
+    "lanchonete","cantina","bistrô","bistro","boteco","bar","cerveja",
+    "marmita","quentinha","buffet","self service",
+    "mcdonalds","mc donalds","burger king","bob's","bobs","subway","kfc",
+    "giraffas","habibs","habib's","outback","madero","spoleto",
+    "dominos","domino's","pizza hut","papa johns",
+    "cacau show","kopenhagen","starbucks","rei do mate","casa do pão",
+    "carrefour","extra","pão de açúcar","panificadora",
+  ],
+  transporte: [
+    "transporte","uber","99","99pop","cabify","blabucar",
+    "gasolina","combustível","combustivel","etanol","álcool","alcool","diesel",
+    "shell","petrobras","ipiranga","br mania","ale","repsol","posto",
+    "ônibus","onibus","metrô","metro","trem","cptm","sptrans","brt","vlt",
+    "passagem","bilhete","cartão vt","vale transporte",
+    "estacionamento","pedágio","pedagio","multa trânsito",
+    "táxi","taxi","mototaxi","bicicleta","patinete","scooter",
+    "azul","latam","gol","passagem aérea","avião","aeroporto",
+    "detran","emplacamento","ipva","seguro auto","denatran",
+  ],
+  moradia: [
+    "aluguel","moradia","condomínio","condominio","casa","apartamento",
+    "reforma","construção","tinta","material","cimento","tijolo","telha",
+    "leroy merlin","leroy","sodimac","cassol","c&c","telhanorte",
+    "quinto andar","loft","zap imoveis","aluguel.com",
+    "eletricista","encanador","pedreiro","dedetização","faxina","limpeza",
+    "jardineiro","jardinagem","porteiro","zelador",
+    "iptu","condominio","taxa condominio",
+  ],
+  lazer: [
+    "lazer","cinema","show","viagem","passeio","clube","academia",
+    "netflix","spotify","amazon prime","disney","hbo","star+","globoplay",
+    "paramount","apple tv","youtube premium","deezer","tidal","crunchyroll",
+    "steam","epic games","playstation","xbox","nintendo","twitch",
+    "ingresso","sympla","eventim","ticketmaster","bilheteria",
+    "teatro","musical","exposição","expo","bienal","museu","zoológico","parque",
+    "crossfit","yoga","pilates","boxe","natação","boliche","karting",
+    "paintball","laser tag","escape room","adventure","trilha",
+    "hotel","pousada","hostel","airbnb","booking","trivago",
+    "jogo","game","dlc","assinatura gamer","psn","xbox live","gamepass",
+  ],
+  saude: [
+    "saúde","saude","remédio","remedio","medicamento","farmácia","farmacia",
+    "drogasil","droga raia","panvel","pacheco","ultrafarma","biopharma",
+    "pague menos","são joão","sao joao","genix","nisfarma",
+    "hospital","clínica","clinica","upa","pronto socorro","emergência",
+    "médico","medico","consulta","dentista","ortodontista","pediatra",
+    "fisioterapia","psicólogo","psicologo","psiquiatra","terapia",
+    "nutricionista","nutrição","ortopedista","dermatologista","oftalmologista",
+    "exame","raio x","ultrassom","ressonância","tomografia","mamografia",
+    "unimed","amil","bradesco saude","sulamerica","notre dame","intermédica",
+    "hapvida","gndi","careplus","plano de saude",
+    "academia","pilates","musculação","crossfit",
+    "vacina","vacinação","posto de saude",
+  ],
+  compras: [
+    "compras","roupa","roupas","vestuário","moda","acessório",
+    "tênis","tenis","sapato","sandália","bota","chinelo",
+    "renner","c&a","riachuelo","marisa","zara","h&m","forever 21",
+    "hering","malwee","puma","nike","adidas","mizuno","asics",
+    "arezzo","schutz","melissa","anacapri","vans","converse",
+    "mercado livre","shopee","shein","aliexpress","amazon","aliexpress",
+    "americanas","casas bahia","magazine luiza","magalu","extra",
+    "samsung","apple","lg","sony","positivo","vaio","philips","multilaser",
+    "notebook","computador","monitor","tablet","celular","smartphone","fone",
+    "presente","gift card","vale presente","loja","shopping",
+    "ikea","tok&stok","leroy","casa show","camicado","mobly",
+  ],
+  contas: [
+    "conta","contas","boleto","fatura","cobrança","débito automático",
+    "luz","energia","enel","cpfl","cemig","coelba","celpe","eletropaulo",
+    "água","agua","sabesp","cedae","saneago","embasa","copasa",
+    "internet","fibra","claro","vivo","tim","oi","net","sky","directv",
+    "telefone","celular","chip","plano","mensalidade telefone",
+    "gás","gas","comgás","ceg","copergás",
+    "condominio","aluguel","iptu","ipva","darf","ir","simples","mei",
+    "cartão","cartao","anuidade","taxa","tarifa bancária",
+    "adobe","canva","dropbox","google workspace","microsoft 365","icloud",
+    "assinatura","plano","mensalidade","anuidade",
+    "seguro","previdência","investimento","poupança",
+  ],
 };
 
 const fmtBRL = (n) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -61,14 +140,25 @@ const addDays = (iso, n) => {
 };
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+/* ---- Categorização inteligente ---- */
 function detectCategory(text) {
-  const t = text.toLowerCase();
-  for (const c of CATEGORIES) {
-    if (c.id === "outros") continue;
-    const kws = KEYWORDS[c.id] || [];
-    if (kws.some(k => t.includes(k))) return c.id;
+  const t = text.toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "") // remove acentos para comparação
+    .replace(/[^a-z0-9\s]/g, " "); // simplifica caracteres especiais
+
+  // Score por categoria (quanto mais palavras batem, mais confiante)
+  const scores = {};
+  for (const [catId, kws] of Object.entries(KEYWORDS)) {
+    let score = 0;
+    for (const kw of kws) {
+      const kwNorm = kw.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9\s]/g, " ");
+      if (t.includes(kwNorm)) score += kwNorm.length > 5 ? 2 : 1; // palavras longas valem mais
+    }
+    if (score > 0) scores[catId] = score;
   }
-  return "outros";
+
+  if (Object.keys(scores).length === 0) return "outros";
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
 }
 
 function detectTipo(text) {
@@ -93,7 +183,7 @@ function parseQuick(text) {
   const tipo = detectTipo(raw);
 
   let desc = raw
-    .replace(/gastei|paguei|comprei|gasto/gi, "")
+    .replace(/gastei|paguei|comprei|gasto|fui no|fui na|fui em/gi, "")
     .replace(/r\$\s*[\d.,]+/i, "")
     .replace(/\b[\d.,]+\b/, "")
     .replace(/^\s*(com|no|na|de|em|para|pra|reais?)\s+/i, " ")
@@ -106,17 +196,14 @@ function parseQuick(text) {
   return { valor, categoria, descricao: desc, tipo };
 }
 
-// Analisa texto colado de extrato bancário
 function parseStatement(text) {
   if (!text || !text.trim()) return [];
   const results = [];
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
 
   for (const line of lines) {
-    // Pula cabeçalhos e linhas sem valor monetário
     if (/saldo|extrato|período|periodo|limite|agência|agencia|cpf|cnpj|data\s+desc/i.test(line)) continue;
 
-    // Encontra valor monetário
     const amtMatch = line.match(/R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})/i);
     if (!amtMatch) continue;
 
@@ -124,10 +211,8 @@ function parseStatement(text) {
     const valor = parseFloat(numStr);
     if (isNaN(valor) || valor <= 0 || valor > 100000) continue;
 
-    // Pula entradas de crédito (dinheiro recebido)
     if (/\bcr\b|crédito recebido|recebimento pix|pix recebido|transferência recebida|ted recebida/i.test(line)) continue;
 
-    // Encontra data
     const dateMatch = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
     let iso;
     if (dateMatch) {
@@ -141,7 +226,6 @@ function parseStatement(text) {
       iso = todayISO();
     }
 
-    // Monta descrição removendo data e valor
     let desc = line
       .replace(amtMatch[0], "")
       .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/, "")
