@@ -3,18 +3,29 @@
    ============================================================ */
 const { useMemo } = React;
 
-function Donut({ data, total }) {
-  // data: [{ id, nome, hex, valor, pct }]
+function Donut({ data, total, budget }) {
   const R = 80, SW = 26, C = 2 * Math.PI * R;
   let offset = 0;
   const segs = data.filter(d => d.valor > 0);
 
+  // Cor do anel de fundo baseada no orçamento
+  const pct = budget > 0 ? (total / budget) * 100 : 0;
+  const budgetColor = budget <= 0 ? "rgba(255,255,255,0.06)"
+    : pct < 60  ? "oklch(0.78 0.12 165 / 0.18)"
+    : pct < 85  ? "oklch(0.82 0.15 80 / 0.18)"
+    : "oklch(0.74 0.13 20 / 0.22)";
+
   return (
     <div className="donut-wrap">
       <div className="donut">
-        <svg width="200" height="200" viewBox="0 0 200 200">
+        <svg width="200" height="200" viewBox="0 0 200 200"
+          style={{ display: "block", background: "transparent" }}>
+          {/* Fundo escuro do centro */}
+          <circle cx="100" cy="100" r="67" fill="rgba(10,17,30,0.6)" />
+          {/* Anel de fundo com cor de status */}
           <circle cx="100" cy="100" r={R} fill="none"
-            stroke="rgba(255,255,255,0.06)" strokeWidth={SW} />
+            stroke={budgetColor} strokeWidth={SW} />
+          {/* Arcos por categoria */}
           {segs.map((d) => {
             const frac = d.valor / total;
             const len = frac * C;
@@ -24,7 +35,7 @@ function Donut({ data, total }) {
                 strokeDasharray={`${Math.max(len - 2, 0)} ${C}`}
                 strokeDashoffset={-offset}
                 transform="rotate(-90 100 100)"
-                style={{ transition: "stroke-dasharray 0.7s ease, stroke-dashoffset 0.7s ease", filter: "drop-shadow(0 0 6px " + d.hex + "55)" }} />
+                style={{ transition: "stroke-dasharray 0.7s ease", filter: `drop-shadow(0 0 6px ${d.hex}55)` }} />
             );
             offset += len;
             return el;
@@ -33,6 +44,11 @@ function Donut({ data, total }) {
         <div className="donut-center">
           <div className="lab">Total</div>
           <div className="val">{fmtBRLshort(total)}</div>
+          {budget > 0 && (
+            <div className="donut-pct" style={{
+              color: pct < 60 ? "var(--accent-mint)" : pct < 85 ? "#e0c85a" : "var(--cat-saude)"
+            }}>{Math.round(pct)}%</div>
+          )}
         </div>
       </div>
       <div className="legend">
@@ -50,7 +66,6 @@ function Donut({ data, total }) {
 }
 
 function WeekBars({ expenses }) {
-  // agrupa por dia da semana (últimos 7 dias)
   const days = useMemo(() => {
     const arr = [];
     const t = todayISO();

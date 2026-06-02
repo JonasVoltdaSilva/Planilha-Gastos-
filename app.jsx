@@ -166,7 +166,7 @@ function App() {
         <div className="brand">
           <div className="brand-mark"><Ic.coins size={22} color="#06251a" /></div>
           <div>
-            <div className="brand-name">Cofre</div>
+            <div className="brand-name">Cofrinho do Luiz</div>
             <div className="brand-sub">Controle de gastos</div>
           </div>
         </div>
@@ -234,6 +234,11 @@ function App() {
       </main>
 
       <BottomNav page={page} setPage={setPage} />
+
+      {/* FAB — botão flutuante visível no celular */}
+      <button className="fab" onClick={() => setModal({})}>
+        <Ic.plus size={28} />
+      </button>
 
       {modal !== null && (
         <ExpenseModal initial={modal && modal.id ? modal : null}
