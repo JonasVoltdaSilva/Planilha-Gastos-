@@ -238,7 +238,7 @@ body.no-glow .bar, body.no-glow .donut circle { filter: none !important; }
 /* ---- Content grid ---- */
 .grid-2 { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; margin-top: 16px; }
 .panel { border-radius: var(--radius-lg); padding: 22px; }
-.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
 .panel-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
 
 /* ---- Filters ---- */
@@ -511,6 +511,12 @@ tbody tr:hover .row-actions { opacity: 1; }
 .color-dot:hover { transform: scale(1.2); }
 .color-dot.on { border-color: #fff; transform: scale(1.15); }
 
+/* ---- Gastos page action buttons ---- */
+.gastos-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ---- Config grid (1.2fr/1fr on desktop, 1fr on mobile) ---- */
+.config-grid { grid-template-columns: 1.2fr 1fr; align-items: start; }
+
 /* ---- Home view ---- */
 .home-hero {
   border-radius: var(--radius-xl);
@@ -596,6 +602,7 @@ tbody tr:hover .row-actions { opacity: 1; }
   .main-scroll {
     padding: 20px 16px calc(var(--bottom-nav-h) + 16px);
     overflow-y: auto;
+    overflow-x: hidden;
     height: 100%;
     -webkit-overflow-scrolling: touch;
   }
@@ -674,13 +681,30 @@ tbody tr:hover .row-actions { opacity: 1; }
 
   .bars { height: 160px; gap: 8px; }
   .bar-val { font-size: 9px; }
-}
 
+  /* import modal mobile */
   .import-row { flex-wrap: wrap; }
   .import-tags { order: 3; }
   .modal-wide { max-width: 100% !important; }
   .cat-grid { grid-template-columns: 1fr 1fr; }
   .cat-add-form { flex-direction: column; align-items: stretch; }
+
+  /* bottom nav: prevent label overflow with 5 items */
+  .bottom-nav-item span {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 100%; line-height: 1.1; display: block;
+  }
+
+  /* gastos page: action buttons row fills full width */
+  .gastos-actions { width: 100%; display: flex; gap: 8px; }
+  .gastos-actions .btn { flex: 1; justify-content: center; }
+
+  /* config grid collapses to single column on mobile */
+  .config-grid { grid-template-columns: 1fr; }
+
+  /* home hero: stack add-button below greeting on tablet */
+  .home-hero-top { gap: 12px; }
+}
 
 /* ============================================================
    MOBILE  ≤ 480px
@@ -746,9 +770,60 @@ tbody tr:hover .row-actions { opacity: 1; }
 
   .toast { font-size: 13px; padding: 12px 18px; max-width: calc(100vw - 32px); }
 
-  .home-hero { padding: 18px 16px; }
-  .home-greeting { font-size: 20px; }
-  .home-stat-block { padding: 14px 14px; min-width: 90px; }
-  .home-stat-value { font-size: 18px; }
+  .home-hero { padding: 18px 16px; margin-bottom: 14px; }
+  .home-greeting { font-size: 19px; }
+
+  /* home hero: add-button full width */
+  .home-hero-top .btn { width: 100%; justify-content: center; }
+
+  /* home stats: 2-column grid, 3rd item spans full width */
+  .home-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    gap: 8px;
+  }
+  .home-stat-block {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.025);
+    padding: 14px 12px;
+    min-width: 0;
+  }
+  .home-stat-block:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .home-stat-value { font-size: 16px; }
   .home-stat-label { font-size: 10px; }
+  .home-stat-meta { font-size: 11px; }
+}
+
+/* ============================================================
+   VERY SMALL  ≤ 360px
+   ============================================================ */
+@media (max-width: 360px) {
+  .main-scroll { padding: 12px 10px calc(var(--bottom-nav-h) + 10px); }
+
+  .page-title { font-size: 18px; }
+
+  .stats { gap: 8px; }
+  .stat { padding: 12px 10px; }
+  .stat-value { font-size: 15px; }
+  .stat-label { font-size: 10.5px; }
+
+  .home-greeting { font-size: 17px; }
+  .home-stat-value { font-size: 14px; }
+  .home-stat-block { padding: 11px 10px; }
+
+  .bottom-nav-item { gap: 2px; padding: 8px 2px; min-height: 56px; }
+  .bottom-nav-item svg { width: 20px; height: 20px; }
+  .bottom-nav-item span { font-size: 8.5px; }
+
+  .panel { padding: 12px 10px; }
+  .btn { font-size: 12.5px; padding: 11px 12px; }
+
+  .expense-val { font-size: 13px; }
+  .exp-tag { font-size: 10px; padding: 2px 7px; }
 }

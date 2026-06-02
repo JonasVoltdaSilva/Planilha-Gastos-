@@ -426,18 +426,18 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
     <>
       {showImport && <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />}
       <div className="panel glass" style={{ marginBottom: 16 }}>
-        <div className="panel-head" style={{ flexWrap: "wrap", gap: 10 }}>
+        <div className="panel-head" style={{ gap: 10 }}>
           <Filters {...{ period, setPeriod, cat, setCat, search, setSearch, allCats }} />
-          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <div className="gastos-actions">
             <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
               <Ic.download size={17} />Extrato
             </button>
             <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, padding: "0 2px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
           <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Total filtrado</span>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>{fmtBRL(total)}</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>{fmtBRL(total)}</span>
           <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {filtered.length} lançamentos</span>
         </div>
         <ExpenseTable rows={filtered} onEdit={onEdit} onDelete={onDelete} />
@@ -521,7 +521,7 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="grid-2" style={{ gridTemplateColumns: "1.2fr 1fr", alignItems: "start" }}>
+      <div className="grid-2 config-grid">
         {/* Preferências */}
         <div className="panel glass">
           <div className="panel-head"><div className="panel-title">Preferências</div></div>
