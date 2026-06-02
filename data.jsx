@@ -140,6 +140,17 @@ const addDays = (iso, n) => {
 };
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+const addMonths = (iso, n) => {
+  const d = new Date(iso + "T12:00:00");
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+const FORMAS = [
+  { id: "avista",    nome: "À vista" },
+  { id: "parcelado", nome: "Parcelado" },
+];
+
 /* ---- Categorização inteligente ---- */
 function detectCategory(text) {
   const t = text.toLowerCase()
@@ -193,7 +204,7 @@ function parseQuick(text) {
   if (!desc) desc = CAT_MAP[categoria]?.nome || "Gasto";
   desc = desc.charAt(0).toUpperCase() + desc.slice(1);
 
-  return { valor, categoria, descricao: desc, tipo };
+  return { valor, categoria, descricao: desc, tipo, kind: "gasto", forma: "avista", parcTotal: 1, parcNum: 1 };
 }
 
 function parseStatement(text) {
@@ -240,6 +251,10 @@ function parseStatement(text) {
       categoria: detectCategory(desc),
       valor,
       tipo: detectTipo(line),
+      kind: "gasto",
+      forma: "avista",
+      parcTotal: 1,
+      parcNum: 1,
     });
   }
 
@@ -279,11 +294,16 @@ function seedData() {
     categoria: cat,
     valor: val,
     tipo: tipo || "outros",
+    kind: "gasto",
+    forma: "avista",
+    parcTotal: 1,
+    parcNum: 1,
   })).sort((a, b) => b.data.localeCompare(a.data));
 }
 
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
+  FORMAS, addMonths,
   parseQuick, parseStatement, detectCategory, detectTipo,
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,

@@ -1,4 +1,4 @@
-const CACHE = 'cofrinho-v4';
+const CACHE = 'cofrinho-v5';
 const LOCAL = [
   './',
   './index.html',

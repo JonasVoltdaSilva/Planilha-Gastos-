@@ -39,7 +39,10 @@ function ExpenseTable({ rows, onEdit, onDelete }) {
   return (
     <div className="expense-list">
       {rows.map(e => {
-        const c = CAT_MAP[e.categoria] || CAT_MAP["outros"];
+        const isEntrada = e.kind === "entrada";
+        const c = isEntrada
+          ? { hex: "#5ad9a8", nome: "Entrada" }
+          : (CAT_MAP[e.categoria] || CAT_MAP["outros"]);
         const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
         return (
           <div className="expense-row" key={e.id} style={{ "--row-accent": c.hex }}>
@@ -49,16 +52,24 @@ function ExpenseTable({ rows, onEdit, onDelete }) {
                 <span className="expense-desc">{e.descricao}</span>
                 <div className="expense-meta">
                   <span className="expense-date">{fmtDate(e.data)}</span>
-                  <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>
-                    {c.nome}
-                  </span>
+                  {isEntrada ? (
+                    <span className="exp-tag" style={{ background: "rgba(90,217,168,0.15)", color: "var(--accent-mint)", borderColor: "rgba(90,217,168,0.3)" }}>
+                      Entrada
+                    </span>
+                  ) : (
+                    <span className="exp-tag" style={{ background: (CAT_MAP[e.categoria] || CAT_MAP["outros"]).hex + "22", color: (CAT_MAP[e.categoria] || CAT_MAP["outros"]).hex, borderColor: (CAT_MAP[e.categoria] || CAT_MAP["outros"]).hex + "44" }}>
+                      {(CAT_MAP[e.categoria] || CAT_MAP["outros"]).nome}
+                    </span>
+                  )}
                   <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
                     {t.nome}
                   </span>
                 </div>
               </div>
               <div className="expense-right">
-                <span className="expense-val">{fmtBRL(e.valor)}</span>
+                <span className="expense-val" style={isEntrada ? { color: "var(--accent-mint)" } : {}}>
+                  {isEntrada ? "+" : ""}{fmtBRL(e.valor)}
+                </span>
                 <div className="row-actions">
                   <button className="icon-btn" title="Editar" onClick={() => onEdit(e)}><Ic.edit size={15} /></button>
                   <button className="icon-btn danger" title="Excluir" onClick={() => onDelete(e.id)}><Ic.trash size={15} /></button>
@@ -287,9 +298,10 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
   const now = new Date();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
-  const monthTotal = monthExp.reduce((s, e) => s + e.valor, 0);
-  const todayTotal = expenses.filter(e => e.data === todayISO()).reduce((s, e) => s + e.valor, 0);
-  const pct = budget > 0 ? Math.min((monthTotal / budget) * 100, 100) : 0;
+  const monthGastos = monthExp.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
+  const monthEntradas = monthExp.filter(e => e.kind === "entrada").reduce((s, e) => s + e.valor, 0);
+  const saldo = monthEntradas - monthGastos;
+  const pct = budget > 0 ? Math.min((monthGastos / budget) * 100, 100) : 0;
   const budgetColor = budget <= 0 ? "var(--accent-mint)"
     : pct < 60 ? "var(--accent-mint)"
     : pct < 85 ? "#e0c85a"
@@ -308,27 +320,29 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
             <div className="home-date">{fmtDateLong(todayISO())}</div>
           </div>
           <button className="btn btn-primary" onClick={onAdd}>
-            <Ic.plus size={18} />Novo gasto
+            <Ic.plus size={18} />Novo lançamento
           </button>
         </div>
 
         <div className="home-stats-row">
           <div className="home-stat-block">
             <div className="home-stat-label">Gasto em {monthName}</div>
-            <div className="home-stat-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthTotal)}</div>
-            <div className="home-stat-meta">{monthExp.length} lançamentos</div>
+            <div className="home-stat-value" style={{ color: "#e08a7a" }}>{fmtBRL(monthGastos)}</div>
+            <div className="home-stat-meta">{monthExp.filter(e => e.kind !== "entrada").length} lançamentos</div>
           </div>
           {budget > 0 && (
             <div className="home-stat-block">
               <div className="home-stat-label">Restante</div>
-              <div className="home-stat-value" style={{ color: budgetColor }}>{fmtBRL(Math.max(0, budget - monthTotal))}</div>
+              <div className="home-stat-value" style={{ color: budgetColor }}>{fmtBRL(Math.max(0, budget - monthGastos))}</div>
               <div className="home-stat-meta" style={{ color: budgetColor }}>{Math.round(pct)}% usado</div>
             </div>
           )}
           <div className="home-stat-block">
-            <div className="home-stat-label">Gastos hoje</div>
-            <div className="home-stat-value">{fmtBRL(todayTotal)}</div>
-            <div className="home-stat-meta">hoje</div>
+            <div className="home-stat-label">Entradas do mês</div>
+            <div className="home-stat-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthEntradas)}</div>
+            <div className="home-stat-meta" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>
+              Saldo: {saldo >= 0 ? "+" : ""}{fmtBRL(saldo)}
+            </div>
           </div>
         </div>
 
@@ -336,7 +350,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
           <div style={{ marginTop: 18 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7, fontSize: 12, color: "var(--text-lo)" }}>
               <span>Orçamento mensal</span>
-              <span style={{ color: budgetColor, fontWeight: 700 }}>{fmtBRL(monthTotal)} / {fmtBRL(budget)}</span>
+              <span style={{ color: budgetColor, fontWeight: 700 }}>{fmtBRL(monthGastos)} / {fmtBRL(budget)}</span>
             </div>
             <div className="budget-bar-track">
               <div className="budget-bar-fill" style={{ width: `${pct}%`, background: budgetColor }} />
@@ -369,20 +383,24 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
    DASHBOARD
    ============================================================ */
 function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onAdd, budget }) {
-  const count = filtered.length;
+  const gastos = filtered.filter(e => e.kind !== "entrada");
+  const entradas = filtered.filter(e => e.kind === "entrada");
+  const count = gastos.length;
   const media = count ? total / count : 0;
   const topCat = byCat[0];
+  const entradasTotal = entradas.reduce((s, e) => s + e.valor, 0);
+  const saldo = entradasTotal - total;
 
   return (
     <>
       <div className="stats">
-        <Stat icon={Ic.coins} label="Total no período" value={fmtBRL(total)} accent meta={`${count} lançamentos`} />
-        <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)} meta="por lançamento" />
+        <Stat icon={Ic.coins} label="Gastos no período" value={fmtBRL(total)} accent meta={`${count} lançamentos`} />
+        <Stat icon={Ic.trendUp} label="Entradas no período" value={fmtBRL(entradasTotal)}
+          meta={`Saldo: ${saldo >= 0 ? "+" : ""}${fmtBRL(saldo)}`}
+          metaDir={saldo >= 0 ? "down" : "up"} />
+        <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)} meta="por gasto" />
         <Stat icon={Ic.target} label="Maior categoria"
           value={topCat ? topCat.nome : "—"} meta={topCat ? fmtBRL(topCat.valor) : ""} />
-        <Stat icon={Ic.calendar} label="Gasto hoje"
-          value={fmtBRL(expenses.filter(e => e.data === todayISO()).reduce((s, e) => s + e.valor, 0))}
-          meta={fmtDateLong(todayISO())} />
       </div>
 
       <div className="grid-2">
@@ -422,6 +440,16 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
 function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
   period, setPeriod, cat, setCat, search, setSearch, allCats }) {
   const [showImport, setShowImport] = useS(false);
+  const [kindFilter, setKindFilter] = useS("all");
+
+  const gastosTotal = useM(() => filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0), [filtered]);
+  const entradasTotal = useM(() => filtered.filter(e => e.kind === "entrada").reduce((s, e) => s + e.valor, 0), [filtered]);
+  const displayRows = useM(() => {
+    if (kindFilter === "gastos") return filtered.filter(e => e.kind !== "entrada");
+    if (kindFilter === "entradas") return filtered.filter(e => e.kind === "entrada");
+    return filtered;
+  }, [filtered, kindFilter]);
+
   return (
     <>
       {showImport && <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />}
@@ -435,12 +463,29 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
             <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
-          <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Total filtrado</span>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>{fmtBRL(total)}</span>
-          <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {filtered.length} lançamentos</span>
+        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+          {[["all", "Todos"], ["gastos", "Gastos"], ["entradas", "Entradas"]].map(([k, l]) => (
+            <button key={k} type="button"
+              className={"tipo-opt" + (kindFilter === k ? " on" : "")}
+              style={{ "--tipo-hex": k === "entradas" ? "var(--accent-mint)" : k === "gastos" ? "#e08a7a" : "var(--text-mid)" }}
+              onClick={() => setKindFilter(k)}>
+              {l}
+            </button>
+          ))}
         </div>
-        <ExpenseTable rows={filtered} onEdit={onEdit} onDelete={onDelete} />
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
+          <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Gastos</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#e08a7a", fontVariantNumeric: "tabular-nums" }}>−{fmtBRL(gastosTotal)}</span>
+          {entradasTotal > 0 && (
+            <>
+              <span style={{ color: "var(--text-lo)", fontSize: 13 }}>·</span>
+              <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Entradas</span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>+{fmtBRL(entradasTotal)}</span>
+            </>
+          )}
+          <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
+        </div>
+        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} />
       </div>
     </>
   );

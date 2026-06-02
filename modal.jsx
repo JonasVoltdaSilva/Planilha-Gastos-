@@ -1,15 +1,21 @@
 /* ============================================================
-   Modal de gasto (adicionar / editar) + Toast
+   Modal de gasto / entrada (adicionar / editar) + Toast
    ============================================================ */
 const { useState: useStateM, useEffect: useEffectM } = React;
 
-function ExpenseModal({ initial, onSave, onClose, allCats }) {
+function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
   const cats = allCats || CATEGORIES;
+  const defaultKind = initial?.kind || initKind || "gasto";
+  const isEdit = !!initial?.id;
+
+  const [kind, setKind] = useStateM(defaultKind);
   const [data, setData] = useStateM(initial?.data || todayISO());
   const [descricao, setDescricao] = useStateM(initial?.descricao || "");
   const [categoria, setCategoria] = useStateM(initial?.categoria || cats[0]?.id || "comida");
   const [valor, setValor] = useStateM(initial?.valor != null ? String(initial.valor).replace(".", ",") : "");
   const [tipo, setTipo] = useStateM(initial?.tipo || "outros");
+  const [forma, setForma] = useStateM(initial?.forma || "avista");
+  const [parcelas, setParcelas] = useStateM(initial?.parcTotal > 1 ? String(initial.parcTotal) : "2");
   const [err, setErr] = useStateM("");
 
   useEffectM(() => {
@@ -21,30 +27,65 @@ function ExpenseModal({ initial, onSave, onClose, allCats }) {
   const [touchedCat, setTouchedCat] = useStateM(!!initial);
   const onDesc = (v) => {
     setDescricao(v);
-    if (!touchedCat && v.trim().length > 2) {
+    if (kind === "gasto" && !touchedCat && v.trim().length > 2) {
       const det = detectCategory(v);
       if (det !== "outros") setCategoria(det);
     }
   };
 
+  const parcNum = parseInt(parcelas) || 0;
+  const numVal = parseFloat(valor.replace(/\./g, "").replace(",", "."));
+  const parcelVal = parcNum >= 2 && !isNaN(numVal) && numVal > 0
+    ? Math.round((numVal / parcNum) * 100) / 100
+    : 0;
+
   const submit = () => {
     const num = parseFloat(valor.replace(/\./g, "").replace(",", "."));
     if (!descricao.trim()) return setErr("Adicione uma descrição.");
     if (isNaN(num) || num <= 0) return setErr("Informe um valor válido.");
-    onSave({ id: initial?.id || uid(), data, descricao: descricao.trim(), categoria, valor: num, tipo });
+    if (kind === "gasto" && forma === "parcelado" && (parcNum < 2 || parcNum > 60))
+      return setErr("Informe parcelas entre 2 e 60.");
+    onSave({
+      id: initial?.id || uid(),
+      data,
+      descricao: descricao.trim(),
+      categoria,
+      valor: num,
+      tipo,
+      kind,
+      forma: kind === "gasto" ? forma : "avista",
+      parcTotal: kind === "gasto" && forma === "parcelado" ? parcNum : 1,
+      parcNum: 1,
+    });
   };
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal glass">
-        <h3>{initial ? "Editar gasto" : "Novo gasto"}</h3>
+        <h3>{isEdit ? (kind === "entrada" ? "Editar entrada" : "Editar gasto") : "Novo lançamento"}</h3>
+
+        {!isEdit && (
+          <div className="kind-picker">
+            <button type="button"
+              className={"kind-opt gasto" + (kind === "gasto" ? " on" : "")}
+              onClick={() => setKind("gasto")}>
+              <Ic.receipt size={15} />Gasto
+            </button>
+            <button type="button"
+              className={"kind-opt entrada" + (kind === "entrada" ? " on" : "")}
+              onClick={() => setKind("entrada")}>
+              <Ic.trendUp size={15} />Entrada
+            </button>
+          </div>
+        )}
+
         <div className="form-grid">
           <div className="form-row">
             <label className="form-label">Descrição</label>
             <input className="form-input" autoFocus value={descricao}
               onChange={(e) => onDesc(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
-              placeholder="Ex.: Almoço no restaurante" />
+              placeholder={kind === "entrada" ? "Ex.: Salário, Freelance..." : "Ex.: Almoço no restaurante"} />
           </div>
           <div className="form-row two">
             <div className="form-row">
@@ -60,38 +101,74 @@ function ExpenseModal({ initial, onSave, onClose, allCats }) {
                 placeholder="0,00" />
             </div>
           </div>
-          <div className="form-row">
-            <label className="form-label">Tipo de pagamento</label>
-            <div className="tipo-picker">
-              {TIPOS.map(t => (
-                <button key={t.id} type="button"
-                  className={"tipo-opt" + (tipo === t.id ? " on" : "")}
-                  style={{ "--tipo-hex": t.hex }}
-                  onClick={() => setTipo(t.id)}>
-                  {t.nome}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="form-row">
-            <label className="form-label">Categoria</label>
-            <div className="cat-picker">
-              {cats.map(c => (
-                <button key={c.id} type="button"
-                  className={"cat-opt" + (categoria === c.id ? " on" : "")}
-                  onClick={() => { setCategoria(c.id); setTouchedCat(true); }}>
-                  <span className="dot" style={{ background: c.hex }} />
-                  {c.nome}
-                </button>
-              ))}
-            </div>
-          </div>
+
+          {kind === "gasto" && (
+            <>
+              <div className="form-row">
+                <label className="form-label">Forma de pagamento</label>
+                <div className="tipo-picker">
+                  {FORMAS.map(f => (
+                    <button key={f.id} type="button"
+                      className={"tipo-opt" + (forma === f.id ? " on" : "")}
+                      style={{ "--tipo-hex": "var(--accent-mint)" }}
+                      onClick={() => setForma(f.id)}>
+                      {f.nome}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {forma === "parcelado" && (
+                <div className="form-row">
+                  <label className="form-label">Número de parcelas</label>
+                  <input className="form-input" inputMode="numeric" value={parcelas}
+                    onChange={(e) => setParcelas(e.target.value.replace(/\D/g, ""))}
+                    onKeyDown={(e) => e.key === "Enter" && submit()}
+                    placeholder="Ex.: 3" style={{ maxWidth: 120 }} />
+                  {parcNum >= 2 && parcelVal > 0 && (
+                    <div className="parc-preview">
+                      {parcNum}× de {fmtBRL(parcelVal)} · total {fmtBRL(numVal)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="form-row">
+                <label className="form-label">Tipo de pagamento</label>
+                <div className="tipo-picker">
+                  {TIPOS.map(t => (
+                    <button key={t.id} type="button"
+                      className={"tipo-opt" + (tipo === t.id ? " on" : "")}
+                      style={{ "--tipo-hex": t.hex }}
+                      onClick={() => setTipo(t.id)}>
+                      {t.nome}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="form-row">
+                <label className="form-label">Categoria</label>
+                <div className="cat-picker">
+                  {cats.map(c => (
+                    <button key={c.id} type="button"
+                      className={"cat-opt" + (categoria === c.id ? " on" : "")}
+                      onClick={() => { setCategoria(c.id); setTouchedCat(true); }}>
+                      <span className="dot" style={{ background: c.hex }} />
+                      {c.nome}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
           {err && <div style={{ color: "var(--cat-saude)", fontSize: 13, fontWeight: 600 }}>{err}</div>}
         </div>
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
           <button className="btn btn-primary" onClick={submit}>
-            <Ic.check size={17} />{initial ? "Salvar" : "Adicionar"}
+            <Ic.check size={17} />
+            {isEdit ? "Salvar" : kind === "entrada" ? "Adicionar entrada" : "Adicionar"}
           </button>
         </div>
       </div>
