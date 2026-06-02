@@ -3,8 +3,30 @@
    ============================================================ */
 const { useState: useS, useMemo: useM } = React;
 
-/* ---------- Tabela de gastos reutilizável ---------- */
-function ExpenseTable({ rows, onEdit, onDelete, compact }) {
+/* ---------- Barra de orçamento com semáforo ---------- */
+function BudgetBar({ total, budget }) {
+  if (!budget || budget <= 0) return null;
+  const pct = Math.min((total / budget) * 100, 100);
+  const color = pct < 60 ? "var(--accent-mint)" : pct < 85 ? "#e0c85a" : "var(--cat-saude)";
+  const status = pct < 60 ? "Dentro do orçamento" : pct < 85 ? "Atenção — chegando perto" : "Perto do limite!";
+  return (
+    <div className="budget-bar-wrap">
+      <div className="budget-bar-labels">
+        <span style={{ color: "var(--text-mid)", fontSize: 12.5, fontWeight: 600 }}>
+          {fmtBRL(total)} <span style={{ color: "var(--text-lo)" }}>/ {fmtBRL(budget)}</span>
+        </span>
+        <span style={{ color, fontWeight: 700, fontSize: 13 }}>{Math.round(pct)}%</span>
+      </div>
+      <div className="budget-bar-track">
+        <div className="budget-bar-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <div style={{ color, fontSize: 12, fontWeight: 600, marginTop: 5 }}>{status}</div>
+    </div>
+  );
+}
+
+/* ---------- Tabela de gastos ---------- */
+function ExpenseTable({ rows, onEdit, onDelete }) {
   if (rows.length === 0) {
     return (
       <div className="empty">
@@ -15,51 +37,44 @@ function ExpenseTable({ rows, onEdit, onDelete, compact }) {
     );
   }
   return (
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th className="col-hide">Categoria</th>
-            <th className="right">Valor</th>
-            <th className="right" style={{ width: 90 }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(e => {
-            const c = CAT_MAP[e.categoria];
-            return (
-              <tr key={e.id}>
-                <td className="cell-date">{fmtDate(e.data)}</td>
-                <td className="cell-desc">
-                  {e.descricao}
-                  <span className="col-show-tag" style={{ display: "none" }}></span>
-                </td>
-                <td className="col-hide">
-                  <span className="tag">
-                    <span className="dot" style={{ background: c.hex }} />
+    <div className="expense-list">
+      {rows.map(e => {
+        const c = CAT_MAP[e.categoria] || CAT_MAP["outros"];
+        const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
+        return (
+          <div className="expense-row" key={e.id} style={{ "--row-accent": c.hex }}>
+            <div className="expense-accent" />
+            <div className="expense-main">
+              <div className="expense-info">
+                <span className="expense-desc">{e.descricao}</span>
+                <div className="expense-meta">
+                  <span className="expense-date">{fmtDate(e.data)}</span>
+                  <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>
                     {c.nome}
                   </span>
-                </td>
-                <td className="right cell-val">{fmtBRL(e.valor)}</td>
-                <td className="right">
-                  <div className="row-actions">
-                    <button className="icon-btn" title="Editar" onClick={() => onEdit(e)}><Ic.edit size={15} /></button>
-                    <button className="icon-btn danger" title="Excluir" onClick={() => onDelete(e.id)}><Ic.trash size={15} /></button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
+                    {t.nome}
+                  </span>
+                </div>
+              </div>
+              <div className="expense-right">
+                <span className="expense-val">{fmtBRL(e.valor)}</span>
+                <div className="row-actions">
+                  <button className="icon-btn" title="Editar" onClick={() => onEdit(e)}><Ic.edit size={15} /></button>
+                  <button className="icon-btn danger" title="Excluir" onClick={() => onDelete(e.id)}><Ic.trash size={15} /></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 /* ---------- Filtros ---------- */
-function Filters({ period, setPeriod, cat, setCat, search, setSearch }) {
+function Filters({ period, setPeriod, cat, setCat, search, setSearch, allCats }) {
+  const cats = allCats || CATEGORIES;
   return (
     <div className="filters">
       <div className="field" style={{ flex: 1, minWidth: 180 }}>
@@ -81,7 +96,7 @@ function Filters({ period, setPeriod, cat, setCat, search, setSearch }) {
       <div className="field sel">
         <select className="select" value={cat} onChange={(e) => setCat(e.target.value)}>
           <option value="all">Todas categorias</option>
-          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          {cats.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
         </select>
       </div>
     </div>
@@ -106,11 +121,103 @@ function Stat({ icon, label, value, meta, metaDir, accent }) {
   );
 }
 
+/* ---------- Modal de importação de extrato ---------- */
+function BankImportModal({ onImport, onClose }) {
+  const [text, setText] = useS("");
+  const [preview, setPreview] = useS(null);
+  const [selected, setSelected] = useS(new Set());
+
+  const analyze = () => {
+    const results = parseStatement(text);
+    setPreview(results);
+    setSelected(new Set(results.map((_, i) => i)));
+  };
+
+  const toggleRow = (i) => {
+    setSelected(s => {
+      const n = new Set(s);
+      n.has(i) ? n.delete(i) : n.add(i);
+      return n;
+    });
+  };
+
+  const doImport = () => {
+    onImport(preview.filter((_, i) => selected.has(i)));
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal glass modal-wide">
+        {!preview ? (
+          <>
+            <h3>Importar extrato bancário</h3>
+            <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
+              Cole o texto do seu extrato abaixo. O app vai detectar as transações e categorizá-las automaticamente.
+            </p>
+            <textarea className="import-textarea"
+              value={text} onChange={e => setText(e.target.value)}
+              placeholder={"02/06 PIX MERCADO LIVRE R$150,00\n02/06 DÉBITO UBER R$22,90\n03/06 CARTÃO CRÉDITO AMAZON R$89,99\n..."} />
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+              <button className="btn btn-primary" onClick={analyze} disabled={!text.trim()}>
+                <Ic.search size={17} />Analisar
+              </button>
+            </div>
+          </>
+        ) : preview.length === 0 ? (
+          <>
+            <h3>Nenhuma transação encontrada</h3>
+            <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
+              Não consegui identificar transações no texto. Verifique o formato e tente novamente.
+            </p>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setPreview(null)}>Tentar novamente</button>
+              <button className="btn btn-primary" onClick={onClose}>Fechar</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h3>{preview.length} transações detectadas</h3>
+            <p style={{ color: "var(--text-mid)", fontSize: 13, marginBottom: 14 }}>
+              Selecione as que deseja importar ({selected.size} selecionadas).
+            </p>
+            <div className="import-preview">
+              {preview.map((e, i) => {
+                const c = CAT_MAP[e.categoria] || CAT_MAP["outros"];
+                const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
+                const on = selected.has(i);
+                return (
+                  <div key={i} className={"import-row" + (on ? " sel" : "")} onClick={() => toggleRow(i)}>
+                    <div className={"import-check" + (on ? " on" : "")}>{on ? "✓" : ""}</div>
+                    <div className="import-date">{fmtDate(e.data)}</div>
+                    <div className="import-desc">{e.descricao}</div>
+                    <div className="import-tags">
+                      <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>{c.nome}</span>
+                      <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>{t.nome}</span>
+                    </div>
+                    <div className="import-val">{fmtBRL(e.valor)}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setPreview(null)}>Voltar</button>
+              <button className="btn btn-primary" onClick={doImport} disabled={selected.size === 0}>
+                <Ic.download size={17} />Importar {selected.size}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================
    DASHBOARD
    ============================================================ */
-function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onAdd }) {
-  const now = total;
+function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onAdd, budget }) {
   const count = filtered.length;
   const media = count ? total / count : 0;
   const topCat = byCat[0];
@@ -118,13 +225,10 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
   return (
     <>
       <div className="stats">
-        <Stat icon={Ic.coins} label="Total no período" value={fmtBRL(total)} accent
-          meta={`${count} lançamentos`} />
-        <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)}
-          meta="por lançamento" />
+        <Stat icon={Ic.coins} label="Total no período" value={fmtBRL(total)} accent meta={`${count} lançamentos`} />
+        <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)} meta="por lançamento" />
         <Stat icon={Ic.target} label="Maior categoria"
-          value={topCat ? topCat.nome : "—"}
-          meta={topCat ? fmtBRL(topCat.valor) : ""} />
+          value={topCat ? topCat.nome : "—"} meta={topCat ? fmtBRL(topCat.valor) : ""} />
         <Stat icon={Ic.calendar} label="Gasto hoje"
           value={fmtBRL(expenses.filter(e => e.data === todayISO()).reduce((s, e) => s + e.valor, 0))}
           meta={fmtDateLong(todayISO())} />
@@ -134,18 +238,20 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
         <div className="panel glass">
           <div className="panel-head">
             <div className="panel-title">Lançamentos recentes</div>
-            <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar gasto</button>
+            <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
           <ExpenseTable rows={filtered.slice(0, 8)} onEdit={onEdit} onDelete={onDelete} />
         </div>
 
         <div className="panel glass">
-          <div className="panel-head">
-            <div className="panel-title">Distribuição</div>
-          </div>
+          <div className="panel-head"><div className="panel-title">Distribuição</div></div>
           {total > 0
-            ? <Donut data={byCat} total={total} />
-            : <div className="empty"><Ic.chart size={40} />Sem dados no período</div>}
+            ? <>
+                <Donut data={byCat} total={total} />
+                <BudgetBar total={total} budget={budget} />
+              </>
+            : <div className="empty"><Ic.chart size={40} />Sem dados no período</div>
+          }
         </div>
       </div>
 
@@ -160,20 +266,27 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
 }
 
 /* ============================================================
-   GASTOS (planilha completa)
+   GASTOS
    ============================================================ */
-function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd,
-  period, setPeriod, cat, setCat, search, setSearch }) {
+function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
+  period, setPeriod, cat, setCat, search, setSearch, allCats }) {
+  const [showImport, setShowImport] = useS(false);
   return (
     <>
+      {showImport && <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />}
       <div className="panel glass" style={{ marginBottom: 16 }}>
-        <div className="panel-head" style={{ flexWrap: "wrap" }}>
-          <Filters {...{ period, setPeriod, cat, setCat, search, setSearch }} />
-          <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar gasto</button>
+        <div className="panel-head" style={{ flexWrap: "wrap", gap: 10 }}>
+          <Filters {...{ period, setPeriod, cat, setCat, search, setSearch, allCats }} />
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
+              <Ic.download size={17} />Extrato
+            </button>
+            <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, padding: "0 2px" }}>
           <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Total filtrado</span>
-          <span className="cell-val" style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, color: "var(--accent-mint)" }}>{fmtBRL(total)}</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>{fmtBRL(total)}</span>
           <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {filtered.length} lançamentos</span>
         </div>
         <ExpenseTable rows={filtered} onEdit={onEdit} onDelete={onDelete} />
@@ -199,7 +312,7 @@ function RelatoriosView({ expenses, byCat, total }) {
                   <span style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
                     <span className="dot" style={{ background: c.hex }} />{c.nome}
                   </span>
-                  <span className="cell-val">{fmtBRL(c.valor)}</span>
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{fmtBRL(c.valor)}</span>
                 </div>
                 <div style={{ height: 9, borderRadius: 20, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
                   <div style={{ height: "100%", borderRadius: 20, width: `${(c.valor / maxCat) * 100}%`,
@@ -227,38 +340,117 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
+  const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
+
+  const [newCatName, setNewCatName] = useS("");
+  const [newCatColor, setNewCatColor] = useS(CAT_PRESET_COLORS[0]);
+  const [budgetInput, setBudgetInput] = useS(String(settings.budget || ""));
+
+  const submitCat = () => {
+    const nome = newCatName.trim();
+    if (!nome) return;
+    const id = nome.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "") + "_" + uid().slice(0,4);
+    onAddCat({ id, nome, hex: newCatColor, cor: newCatColor });
+    setNewCatName("");
+  };
+
+  const saveBudget = () => {
+    const v = parseFloat(budgetInput.replace(",", "."));
+    setSettings(s => ({ ...s, budget: isNaN(v) ? 0 : v }));
+  };
+
   const rows = [
     ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."],
     ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."],
     ["animations", "Animações de fundo", "Movimento suave do gradiente ambiente."],
     ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."],
   ];
+
   return (
-    <div className="grid-2" style={{ gridTemplateColumns: "1.3fr 1fr", alignItems: "start" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="grid-2" style={{ gridTemplateColumns: "1.2fr 1fr", alignItems: "start" }}>
+        {/* Preferências */}
+        <div className="panel glass">
+          <div className="panel-head"><div className="panel-title">Preferências</div></div>
+          <div className="set-list">
+            {rows.map(([k, t, d]) => (
+              <div className="set-row" key={k}>
+                <div className="set-info"><div className="t">{t}</div><div className="d">{d}</div></div>
+                <div className={"switch" + (settings[k] ? " on" : "")} onClick={() => toggle(k)} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Conta & Orçamento */}
+        <div className="panel glass">
+          <div className="panel-head"><div className="panel-title">Conta & dados</div></div>
+          <div className="set-row">
+            <div className="set-info"><div className="t">Moeda</div><div className="d">Real brasileiro (BRL)</div></div>
+            <span className="exp-tag" style={{ color: "var(--cat-saude)", borderColor: "var(--cat-saude)44", background: "var(--cat-saude)22" }}>R$</span>
+          </div>
+          <div className="set-row" style={{ flexWrap: "wrap", gap: 10 }}>
+            <div className="set-info">
+              <div className="t">Orçamento mensal</div>
+              <div className="d">Teto de gastos para os alertas de cor</div>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input className="form-input" style={{ width: 110, textAlign: "right", padding: "10px 12px" }}
+                type="number" min="0" value={budgetInput}
+                onChange={e => setBudgetInput(e.target.value)}
+                onBlur={saveBudget}
+                onKeyDown={e => e.key === "Enter" && saveBudget()}
+                placeholder="2000" />
+            </div>
+          </div>
+          <div className="set-row">
+            <div className="set-info"><div className="t">Restaurar exemplo</div><div className="d">Recarrega os dados de demonstração</div></div>
+            <button className="btn btn-ghost" style={{ padding: "10px 14px" }} onClick={onReset}>Restaurar</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Categorias */}
       <div className="panel glass">
-        <div className="panel-head"><div className="panel-title">Preferências</div></div>
-        <div className="set-list">
-          {rows.map(([k, t, d]) => (
-            <div className="set-row" key={k}>
-              <div className="set-info"><div className="t">{t}</div><div className="d">{d}</div></div>
-              <div className={"switch" + (settings[k] ? " on" : "")} onClick={() => toggle(k)} />
+        <div className="panel-head"><div className="panel-title">Categorias</div></div>
+        <div className="cat-grid">
+          {allCats.map(c => (
+            <div className="cat-item" key={c.id}>
+              <span className="dot" style={{ background: c.hex, width: 10, height: 10 }} />
+              <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>{c.nome}</span>
+              {!baseCatIds.has(c.id) && (
+                <button className="icon-btn danger" style={{ width: 28, height: 28, opacity: 0.7 }}
+                  onClick={() => onDeleteCat(c.id)}>
+                  <Ic.trash size={13} />
+                </button>
+              )}
             </div>
           ))}
         </div>
-      </div>
-      <div className="panel glass">
-        <div className="panel-head"><div className="panel-title">Conta & dados</div></div>
-        <div className="set-row"><div className="set-info"><div className="t">Moeda</div><div className="d">Real brasileiro (BRL)</div></div>
-          <span className="tag"><span className="dot" style={{ background: "var(--cat-saude)" }} />R$</span></div>
-        <div className="set-row"><div className="set-info"><div className="t">Orçamento mensal</div><div className="d">Meta de gastos do mês</div></div>
-          <span className="cell-val" style={{ fontFamily: "var(--font-display)" }}>R$ 4.000</span></div>
-        <div className="set-row"><div className="set-info"><div className="t">Restaurar exemplo</div><div className="d">Recarrega os dados de demonstração</div></div>
-          <button className="btn btn-ghost" onClick={onReset}>Restaurar</button></div>
+        <div className="cat-add-form">
+          <input className="form-input" style={{ flex: 1 }}
+            value={newCatName} onChange={e => setNewCatName(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && submitCat()}
+            placeholder="Nome da nova categoria" />
+          <div className="color-palette">
+            {CAT_PRESET_COLORS.map(hex => (
+              <div key={hex} className={"color-dot" + (newCatColor === hex ? " on" : "")}
+                style={{ background: hex }}
+                onClick={() => setNewCatColor(hex)} />
+            ))}
+          </div>
+          <button className="btn btn-primary" style={{ padding: "10px 16px" }} onClick={submitCat}>
+            <Ic.plus size={16} />Adicionar
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-Object.assign(window, { DashboardView, GastosView, RelatoriosView, ConfigView, ExpenseTable, Filters, Stat });
+Object.assign(window, {
+  DashboardView, GastosView, RelatoriosView, ConfigView,
+  ExpenseTable, Filters, Stat, BudgetBar, BankImportModal,
+});
