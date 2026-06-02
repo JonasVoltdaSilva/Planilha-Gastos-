@@ -121,24 +121,47 @@ function Stat({ icon, label, value, meta, metaDir, accent }) {
   );
 }
 
-/* ---------- Modal de importação de extrato ---------- */
+/* ---------- Modal de importação de extrato (texto + PDF) ---------- */
 function BankImportModal({ onImport, onClose }) {
+  const [tab, setTab] = useS("text");
   const [text, setText] = useS("");
   const [preview, setPreview] = useS(null);
   const [selected, setSelected] = useS(new Set());
+  const [pdfLoading, setPdfLoading] = useS(false);
+  const [pdfName, setPdfName] = useS("");
 
-  const analyze = () => {
-    const results = parseStatement(text);
+  const runAnalysis = (raw) => {
+    const results = parseStatement(raw);
     setPreview(results);
     setSelected(new Set(results.map((_, i) => i)));
   };
 
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPdfName(file.name);
+    setPdfLoading(true);
+    try {
+      const lib = window.pdfjsLib;
+      if (!lib) throw new Error("PDF.js não carregado");
+      const buf = await file.arrayBuffer();
+      const pdf = await lib.getDocument({ data: buf }).promise;
+      let full = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const pg = await pdf.getPage(i);
+        const ct = await pg.getTextContent();
+        full += ct.items.map(it => it.str).join(" ") + "\n";
+      }
+      runAnalysis(full);
+    } catch (err) {
+      alert("Não foi possível ler o PDF. Tente colar o texto manualmente.");
+      setPdfName("");
+    }
+    setPdfLoading(false);
+  };
+
   const toggleRow = (i) => {
-    setSelected(s => {
-      const n = new Set(s);
-      n.has(i) ? n.delete(i) : n.add(i);
-      return n;
-    });
+    setSelected(s => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); return n; });
   };
 
   const doImport = () => {
@@ -152,27 +175,70 @@ function BankImportModal({ onImport, onClose }) {
         {!preview ? (
           <>
             <h3>Importar extrato bancário</h3>
-            <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
-              Cole o texto do seu extrato abaixo. O app vai detectar as transações e categorizá-las automaticamente.
-            </p>
-            <textarea className="import-textarea"
-              value={text} onChange={e => setText(e.target.value)}
-              placeholder={"02/06 PIX MERCADO LIVRE R$150,00\n02/06 DÉBITO UBER R$22,90\n03/06 CARTÃO CRÉDITO AMAZON R$89,99\n..."} />
-            <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-              <button className="btn btn-primary" onClick={analyze} disabled={!text.trim()}>
-                <Ic.search size={17} />Analisar
-              </button>
+            <div className="import-tabs">
+              <div className={"import-tab" + (tab === "text" ? " on" : "")} onClick={() => setTab("text")}>
+                <Ic.edit size={15} />Colar texto
+              </div>
+              <div className={"import-tab" + (tab === "pdf" ? " on" : "")} onClick={() => setTab("pdf")}>
+                <Ic.upload size={15} />Enviar PDF
+              </div>
             </div>
+
+            {tab === "text" ? (
+              <>
+                <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
+                  Cole o texto do seu extrato. O app detecta e categoriza as transações automaticamente.
+                </p>
+                <textarea className="import-textarea"
+                  value={text} onChange={e => setText(e.target.value)}
+                  placeholder={"02/06 PIX MERCADO LIVRE R$150,00\n02/06 DÉBITO UBER R$22,90\n03/06 AMAZON R$89,99\n..."} />
+                <div className="modal-actions">
+                  <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+                  <button className="btn btn-primary" onClick={() => runAnalysis(text)} disabled={!text.trim()}>
+                    <Ic.search size={17} />Analisar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
+                  Envie o PDF do extrato bancário. O app extrai e categoriza as transações automaticamente.
+                </p>
+                <label className="pdf-upload-area">
+                  <input type="file" accept="application/pdf" onChange={handlePdfUpload} style={{ display: "none" }} />
+                  {pdfLoading ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                      <div className="pdf-spinner" />
+                      <span style={{ color: "var(--text-mid)", fontSize: 13 }}>Lendo PDF...</span>
+                    </div>
+                  ) : pdfName ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                      <Ic.receipt size={30} style={{ color: "var(--accent-mint)" }} />
+                      <span style={{ color: "var(--text-hi)", fontWeight: 600, fontSize: 14 }}>{pdfName}</span>
+                      <span style={{ color: "var(--text-lo)", fontSize: 12 }}>Clique para trocar o arquivo</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                      <Ic.upload size={34} style={{ color: "var(--text-lo)" }} />
+                      <span style={{ color: "var(--text-mid)", fontSize: 14, fontWeight: 600 }}>Selecionar PDF do extrato</span>
+                      <span style={{ color: "var(--text-lo)", fontSize: 12 }}>Toque para escolher o arquivo</span>
+                    </div>
+                  )}
+                </label>
+                <div className="modal-actions">
+                  <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+                </div>
+              </>
+            )}
           </>
         ) : preview.length === 0 ? (
           <>
             <h3>Nenhuma transação encontrada</h3>
             <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
-              Não consegui identificar transações no texto. Verifique o formato e tente novamente.
+              Não identifiquei transações. Tente outro formato ou cole o texto manualmente.
             </p>
             <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={() => setPreview(null)}>Tentar novamente</button>
+              <button className="btn btn-ghost" onClick={() => { setPreview(null); setPdfName(""); }}>Tentar novamente</button>
               <button className="btn btn-primary" onClick={onClose}>Fechar</button>
             </div>
           </>
@@ -202,7 +268,7 @@ function BankImportModal({ onImport, onClose }) {
               })}
             </div>
             <div className="modal-actions">
-              <button className="btn btn-ghost" onClick={() => setPreview(null)}>Voltar</button>
+              <button className="btn btn-ghost" onClick={() => { setPreview(null); setPdfName(""); }}>Voltar</button>
               <button className="btn btn-primary" onClick={doImport} disabled={selected.size === 0}>
                 <Ic.download size={17} />Importar {selected.size}
               </button>
@@ -211,6 +277,91 @@ function BankImportModal({ onImport, onClose }) {
         )}
       </div>
     </div>
+  );
+}
+
+/* ============================================================
+   HOME / INÍCIO
+   ============================================================ */
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
+  const monthTotal = monthExp.reduce((s, e) => s + e.valor, 0);
+  const todayTotal = expenses.filter(e => e.data === todayISO()).reduce((s, e) => s + e.valor, 0);
+  const pct = budget > 0 ? Math.min((monthTotal / budget) * 100, 100) : 0;
+  const budgetColor = budget <= 0 ? "var(--accent-mint)"
+    : pct < 60 ? "var(--accent-mint)"
+    : pct < 85 ? "#e0c85a"
+    : "var(--cat-saude)";
+  const h = now.getHours();
+  const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 6);
+  const monthName = now.toLocaleString("pt-BR", { month: "long" });
+
+  return (
+    <>
+      <div className="home-hero glass">
+        <div className="home-hero-top">
+          <div>
+            <div className="home-greeting">{greeting}, <strong>Luiz Ricardo</strong>!</div>
+            <div className="home-date">{fmtDateLong(todayISO())}</div>
+          </div>
+          <button className="btn btn-primary" onClick={onAdd}>
+            <Ic.plus size={18} />Novo gasto
+          </button>
+        </div>
+
+        <div className="home-stats-row">
+          <div className="home-stat-block">
+            <div className="home-stat-label">Gasto em {monthName}</div>
+            <div className="home-stat-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthTotal)}</div>
+            <div className="home-stat-meta">{monthExp.length} lançamentos</div>
+          </div>
+          {budget > 0 && (
+            <div className="home-stat-block">
+              <div className="home-stat-label">Restante</div>
+              <div className="home-stat-value" style={{ color: budgetColor }}>{fmtBRL(Math.max(0, budget - monthTotal))}</div>
+              <div className="home-stat-meta" style={{ color: budgetColor }}>{Math.round(pct)}% usado</div>
+            </div>
+          )}
+          <div className="home-stat-block">
+            <div className="home-stat-label">Gastos hoje</div>
+            <div className="home-stat-value">{fmtBRL(todayTotal)}</div>
+            <div className="home-stat-meta">hoje</div>
+          </div>
+        </div>
+
+        {budget > 0 && (
+          <div style={{ marginTop: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7, fontSize: 12, color: "var(--text-lo)" }}>
+              <span>Orçamento mensal</span>
+              <span style={{ color: budgetColor, fontWeight: 700 }}>{fmtBRL(monthTotal)} / {fmtBRL(budget)}</span>
+            </div>
+            <div className="budget-bar-track">
+              <div className="budget-bar-fill" style={{ width: `${pct}%`, background: budgetColor }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {recent.length > 0 ? (
+        <div className="panel glass">
+          <div className="panel-head">
+            <div className="panel-title">Últimos lançamentos</div>
+          </div>
+          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} />
+        </div>
+      ) : (
+        <div className="panel glass">
+          <div className="empty" style={{ padding: "44px 20px" }}>
+            <Ic.coins size={40} />
+            <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Nenhum gasto registrado</div>
+            <div style={{ fontSize: 13, marginTop: 6 }}>Toque em "Novo gasto" para começar.</div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -451,6 +602,6 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
 }
 
 Object.assign(window, {
-  DashboardView, GastosView, RelatoriosView, ConfigView,
+  HomeView, DashboardView, GastosView, RelatoriosView, ConfigView,
   ExpenseTable, Filters, Stat, BudgetBar, BankImportModal,
 });

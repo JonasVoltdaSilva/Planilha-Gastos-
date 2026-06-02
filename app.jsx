@@ -4,6 +4,7 @@
 const { useState, useMemo, useEffect } = React;
 
 const NAV = [
+  { id: "home",      nome: "Início",    icon: Ic.home },
   { id: "dashboard", nome: "Dashboard", icon: Ic.dashboard },
   { id: "gastos",    nome: "Gastos",    icon: Ic.wallet },
   { id: "relatorios",nome: "Relatórios",icon: Ic.chart },
@@ -11,10 +12,11 @@ const NAV = [
 ];
 
 const PAGE_META = {
-  dashboard:  { t: "Dashboard",    s: "Visão geral das suas finanças pessoais" },
-  gastos:     { t: "Gastos",       s: "Sua planilha completa de lançamentos" },
-  relatorios: { t: "Relatórios",   s: "Análise da distribuição dos seus gastos" },
-  config:     { t: "Configurações",s: "Personalize sua experiência" },
+  home:        { t: "Início",        s: "" },
+  dashboard:   { t: "Dashboard",     s: "Visão geral das suas finanças pessoais" },
+  gastos:      { t: "Gastos",        s: "Sua planilha completa de lançamentos" },
+  relatorios:  { t: "Relatórios",    s: "Análise da distribuição dos seus gastos" },
+  config:      { t: "Configurações", s: "Personalize sua experiência" },
 };
 
 const LS_KEY  = "planilha_gastos_v1";
@@ -22,7 +24,7 @@ const LS_SET  = "planilha_gastos_settings_v1";
 const LS_CATS = "planilha_gastos_cats_v1";
 
 function App() {
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState("home");
 
   // ---------- Categorias personalizadas ----------
   const [customCats, setCustomCats] = useState(() => {
@@ -184,10 +186,9 @@ function App() {
         </nav>
         <div className="sidebar-foot">
           <div className="user-chip">
-            <div className="avatar">MR</div>
+            <div className="avatar">LR</div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Maria Rocha</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-lo)" }}>Plano pessoal</div>
+              <div style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Luiz Ricardo</div>
             </div>
           </div>
         </div>
@@ -195,12 +196,14 @@ function App() {
 
       <main className="main glass">
         <div className="main-scroll">
-          <div className="page-head">
-            <div>
-              <h1 className="page-title">{meta.t}</h1>
-              <div className="page-sub">{meta.s}</div>
+          {page !== "home" && (
+            <div className="page-head">
+              <div>
+                <h1 className="page-title">{meta.t}</h1>
+                {meta.s && <div className="page-sub">{meta.s}</div>}
+              </div>
             </div>
-          </div>
+          )}
 
           {(page === "dashboard" || page === "gastos") && (
             <div className="quick glass">
@@ -212,6 +215,10 @@ function App() {
             </div>
           )}
 
+          {page === "home" && (
+            <HomeView expenses={expenses} budget={settings.budget}
+              onAdd={() => setModal({})} onEdit={(e) => setModal(e)} onDelete={deleteExpense} />
+          )}
           {page === "dashboard" && (
             <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
               onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
