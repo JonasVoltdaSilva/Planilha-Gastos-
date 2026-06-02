@@ -191,12 +191,31 @@ function App() {
         </div>
       </main>
 
+      <BottomNav page={page} setPage={setPage} />
+
       {modal !== null && (
         <ExpenseModal initial={modal && modal.id ? modal : null}
           onSave={saveExpense} onClose={() => setModal(null)} />
       )}
       <Toast msg={toast} />
     </div>
+  );
+}
+
+function BottomNav({ page, setPage }) {
+  return (
+    <nav className="bottom-nav">
+      {NAV.map(n => {
+        const I = n.icon;
+        return (
+          <div key={n.id} className={"bottom-nav-item" + (page === n.id ? " active" : "")}
+            onClick={() => setPage(n.id)}>
+            <I size={22} />
+            <span>{n.nome}</span>
+          </div>
+        );
+      })}
+    </nav>
   );
 }
 
