@@ -81,6 +81,7 @@ function App() {
   });
 
   const [modal, setModal] = useState(null);
+  const [fabOpen, setFabOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [quick, setQuick] = useState("");
 
@@ -114,11 +115,15 @@ function App() {
     return arr.sort((a, b) => b.data.localeCompare(a.data) || b.valor - a.valor);
   }, [expenses, period, cat, search]);
 
-  const total = useMemo(() => filtered.reduce((s, e) => s + e.valor, 0), [filtered]);
+  const total = useMemo(() =>
+    filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0),
+    [filtered]);
 
   const byCat = useMemo(() => {
     const map = {};
-    filtered.forEach(e => { map[e.categoria] = (map[e.categoria] || 0) + e.valor; });
+    filtered.filter(e => e.kind !== "entrada").forEach(e => {
+      map[e.categoria] = (map[e.categoria] || 0) + e.valor;
+    });
     return allCats
       .map(c => ({ id: c.id, nome: c.nome, hex: c.hex, valor: map[c.id] || 0 }))
       .filter(c => c.valor > 0)
@@ -126,19 +131,36 @@ function App() {
   }, [filtered, allCats]);
 
   // ---------- Ações ----------
-  const saveExpense = (exp) => {
-    setExpenses(prev => {
-      const exists = prev.some(e => e.id === exp.id);
-      return exists ? prev.map(e => e.id === exp.id ? exp : e) : [exp, ...prev];
-    });
-    setModal(null);
-    showToast(modal && modal.id ? "Gasto atualizado" : "Gasto adicionado");
+  const saveTransaction = (exp) => {
+    if (exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
+      const parcelVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
+      const grupo = uid();
+      const parcList = Array.from({ length: exp.parcTotal }, (_, i) => ({
+        ...exp, id: uid(), data: addMonths(exp.data, i),
+        valor: parcelVal,
+        descricao: `${exp.descricao} (${i + 1}/${exp.parcTotal})`,
+        parcNum: i + 1, parcGrupo: grupo,
+      }));
+      setExpenses(prev => [...parcList, ...prev]);
+      setModal(null);
+      showToast(`${exp.parcTotal}× de ${fmtBRL(parcelVal)} adicionadas`);
+    } else {
+      setExpenses(prev => {
+        const exists = prev.some(e => e.id === exp.id);
+        return exists ? prev.map(e => e.id === exp.id ? exp : e) : [exp, ...prev];
+      });
+      setModal(null);
+      showToast(modal?.id
+        ? (exp.kind === "entrada" ? "Entrada atualizada" : "Gasto atualizado")
+        : (exp.kind === "entrada" ? "Entrada adicionada!" : "Gasto adicionado!"));
+    }
   };
 
   const deleteExpense = (id) => {
-    if (settings.confirmDelete && !window.confirm("Excluir este gasto?")) return;
+    const exp = expenses.find(e => e.id === id);
+    if (settings.confirmDelete && !window.confirm("Excluir este lançamento?")) return;
     setExpenses(prev => prev.filter(e => e.id !== id));
-    showToast("Gasto excluído");
+    showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído");
   };
 
   const importExpenses = (list) => {
@@ -151,7 +173,7 @@ function App() {
   const submitQuick = () => {
     const parsed = parseQuick(quick);
     if (!parsed) { showToast("Não entendi — tente: \"Gastei R$50 com comida\""); return; }
-    const exp = { id: uid(), data: todayISO(), ...parsed };
+    const exp = { id: uid(), data: todayISO(), kind: "gasto", forma: "avista", parcTotal: 1, parcNum: 1, ...parsed };
     if (!settings.autoCat) exp.categoria = "outros";
     setExpenses(prev => [exp, ...prev]);
     setQuick("");
@@ -242,14 +264,26 @@ function App() {
 
       <BottomNav page={page} setPage={setPage} />
 
-      {/* FAB — botão flutuante visível no celular */}
-      <button className="fab" onClick={() => setModal({})}>
+      {fabOpen && <div className="fab-overlay" onClick={() => setFabOpen(false)} />}
+      {fabOpen && (
+        <div className="fab-sheet">
+          <div className="fab-action fab-action-entrada"
+            onClick={() => { setFabOpen(false); setModal({ kind: "entrada" }); }}>
+            <Ic.trendUp size={16} />Entrada
+          </div>
+          <div className="fab-action fab-action-gasto"
+            onClick={() => { setFabOpen(false); setModal({ kind: "gasto" }); }}>
+            <Ic.receipt size={16} />Gasto
+          </div>
+        </div>
+      )}
+      <button className={"fab" + (fabOpen ? " open" : "")} onClick={() => setFabOpen(v => !v)}>
         <Ic.plus size={28} />
       </button>
 
       {modal !== null && (
-        <ExpenseModal initial={modal && modal.id ? modal : null}
-          onSave={saveExpense} onClose={() => setModal(null)} allCats={allCats} />
+        <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
+          onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} />
       )}
       <Toast msg={toast} />
     </div>
