@@ -261,6 +261,18 @@ function parseStatement(text) {
   return results;
 }
 
+function calcFaturaRef(dataISO, card) {
+  if (!card) return null;
+  const d = new Date(dataISO + "T12:00:00");
+  const day = d.getDate();
+  const closing = card.diaFechamento || 20;
+  if (day > closing) {
+    const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+  }
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function seedData() {
   const t = todayISO();
   const raw = [
@@ -298,12 +310,14 @@ function seedData() {
     forma: "avista",
     parcTotal: 1,
     parcNum: 1,
+    cardId: null,
+    faturaRef: null,
   })).sort((a, b) => b.data.localeCompare(a.data));
 }
 
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
-  FORMAS, addMonths,
+  FORMAS, addMonths, calcFaturaRef,
   parseQuick, parseStatement, detectCategory, detectTipo,
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,

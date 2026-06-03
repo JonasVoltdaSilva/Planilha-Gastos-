@@ -26,7 +26,7 @@ function BudgetBar({ total, budget }) {
 }
 
 /* ---------- Tabela de gastos ---------- */
-function ExpenseTable({ rows, onEdit, onDelete }) {
+function ExpenseTable({ rows, onEdit, onDelete, cards }) {
   if (rows.length === 0) {
     return (
       <div className="empty">
@@ -44,6 +44,7 @@ function ExpenseTable({ rows, onEdit, onDelete }) {
           ? { hex: "#5ad9a8", nome: "Entrada" }
           : (CAT_MAP[e.categoria] || CAT_MAP["outros"]);
         const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
+        const linkedCard = e.cardId && cards ? cards.find(cd => cd.id === e.cardId) : null;
         return (
           <div className="expense-row" key={e.id} style={{ "--row-accent": c.hex }}>
             <div className="expense-accent" />
@@ -64,6 +65,11 @@ function ExpenseTable({ rows, onEdit, onDelete }) {
                   <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
                     {t.nome}
                   </span>
+                  {linkedCard && (
+                    <span className="exp-tag" style={{ background: linkedCard.cor + "22", color: linkedCard.cor, borderColor: linkedCard.cor + "44" }}>
+                      <Ic.card size={10} />{linkedCard.nome}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="expense-right">
@@ -83,7 +89,7 @@ function ExpenseTable({ rows, onEdit, onDelete }) {
   );
 }
 
-/* ---------- Filtros ---------- */
+/* ---------- Filtros (legado, mantido para compatibilidade) ---------- */
 function Filters({ period, setPeriod, cat, setCat, search, setSearch, allCats }) {
   const cats = allCats || CATEGORIES;
   return (
@@ -109,6 +115,215 @@ function Filters({ period, setPeriod, cat, setCat, search, setSearch, allCats })
           <option value="all">Todas categorias</option>
           {cats.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
         </select>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- FilterSheet — modal com chips de filtro avançado ---------- */
+function FilterSheet({ allCats, cards, cat, setCat, tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onClose }) {
+  return (
+    <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal glass">
+        <div className="modal-handle" />
+        <h3>Filtros avançados</h3>
+
+        <div className="filter-section">
+          <div className="filter-section-title">Categoria</div>
+          <div className="filter-chips">
+            <button type="button" className={"filter-chip" + (cat === "all" ? " on" : "")}
+              style={{ "--chip-color": "var(--text-mid)" }} onClick={() => setCat("all")}>
+              Todas
+            </button>
+            {(allCats || CATEGORIES).map(c => (
+              <button key={c.id} type="button" className={"filter-chip" + (cat === c.id ? " on" : "")}
+                style={{ "--chip-color": c.hex }} onClick={() => setCat(c.id)}>
+                <span className="dot" style={{ background: c.hex }} />{c.nome}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-section">
+          <div className="filter-section-title">Tipo de pagamento</div>
+          <div className="filter-chips">
+            <button type="button" className={"filter-chip" + (tipoFilter === "all" ? " on" : "")}
+              style={{ "--chip-color": "var(--text-mid)" }} onClick={() => setTipoFilter("all")}>
+              Todos
+            </button>
+            {TIPOS.map(t => (
+              <button key={t.id} type="button" className={"filter-chip" + (tipoFilter === t.id ? " on" : "")}
+                style={{ "--chip-color": t.hex }} onClick={() => setTipoFilter(t.id)}>
+                {t.nome}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {cards && cards.length > 0 && (
+          <div className="filter-section">
+            <div className="filter-section-title">Cartão</div>
+            <div className="filter-chips">
+              <button type="button" className={"filter-chip" + (cardIdFilter === "all" ? " on" : "")}
+                style={{ "--chip-color": "var(--text-mid)" }} onClick={() => setCardIdFilter("all")}>
+                Todos
+              </button>
+              {cards.map(c => (
+                <button key={c.id} type="button" className={"filter-chip" + (cardIdFilter === c.id ? " on" : "")}
+                  style={{ "--chip-color": c.cor || "var(--accent-mint)" }} onClick={() => setCardIdFilter(c.id)}>
+                  <Ic.card size={13} />{c.nome}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={() => { setCat("all"); setTipoFilter("all"); setCardIdFilter("all"); }}>
+            Limpar
+          </button>
+          <button className="btn btn-primary" onClick={onClose}>
+            <Ic.check size={17} />Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- FilterBar — barra de busca + período + botão filtros ---------- */
+function FilterBar({ period, setPeriod, cat, setCat, search, setSearch, tipoFilter, setTipoFilter,
+  cardIdFilter, setCardIdFilter, allCats, cards, onOpenSheet }) {
+  const activeCount = (cat !== "all" ? 1 : 0) + (tipoFilter !== "all" ? 1 : 0) + (cardIdFilter !== "all" ? 1 : 0);
+  const cats = allCats || CATEGORIES;
+
+  return (
+    <>
+      <div className="filter-bar">
+        <div className="field" style={{ flex: 1, minWidth: 0 }}>
+          <input className="input" style={{ width: "100%", paddingLeft: 36 }}
+            value={search} onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar descrição..." />
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-lo)", display: "flex" }}>
+            <Ic.search size={16} />
+          </span>
+        </div>
+        <div className="field sel">
+          <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="7">7 dias</option>
+            <option value="30">30 dias</option>
+            <option value="90">90 dias</option>
+            <option value="all">Todo período</option>
+          </select>
+        </div>
+        <button className={"btn btn-ghost filter-btn" + (activeCount > 0 ? " active" : "")} onClick={onOpenSheet}>
+          <Ic.filter size={16} />Filtros
+          {activeCount > 0 && <span className="filter-badge">{activeCount}</span>}
+        </button>
+      </div>
+      {activeCount > 0 && (
+        <div className="active-filters">
+          {cat !== "all" && (() => {
+            const c = cats.find(x => x.id === cat);
+            return c ? (
+              <button className="active-chip" style={{ "--chip-color": c.hex }} onClick={() => setCat("all")}>
+                <span className="dot" style={{ background: c.hex }} />{c.nome} ×
+              </button>
+            ) : null;
+          })()}
+          {tipoFilter !== "all" && (() => {
+            const t = TIPOS.find(x => x.id === tipoFilter);
+            return t ? (
+              <button className="active-chip" style={{ "--chip-color": t.hex }} onClick={() => setTipoFilter("all")}>
+                {t.nome} ×
+              </button>
+            ) : null;
+          })()}
+          {cardIdFilter !== "all" && cards && (() => {
+            const c = cards.find(x => x.id === cardIdFilter);
+            return c ? (
+              <button className="active-chip" style={{ "--chip-color": c.cor || "var(--accent-mint)" }} onClick={() => setCardIdFilter("all")}>
+                <Ic.card size={11} />{c.nome} ×
+              </button>
+            ) : null;
+          })()}
+          <button className="active-chip active-chip-clear"
+            onClick={() => { setCat("all"); setTipoFilter("all"); setCardIdFilter("all"); }}>
+            Limpar tudo
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ---------- CardManager — CRUD de cartões ---------- */
+const CARD_COLORS = ["#a98ae0", "#5aa3e0", "#5ad9a8", "#e0a85a", "#e08a7a", "#e08ac8", "#5ac4d9", "#9aa3b0"];
+
+function CardManager({ cards, onAddCard, onDeleteCard }) {
+  const [name, setName] = useS("");
+  const [fechamento, setFechamento] = useS("20");
+  const [vencimento, setVencimento] = useS("5");
+  const [cor, setCor] = useS(CARD_COLORS[0]);
+
+  const submit = () => {
+    const nome = name.trim();
+    if (!nome) return;
+    const fech = Math.max(1, Math.min(31, parseInt(fechamento) || 20));
+    const venc = Math.max(1, Math.min(31, parseInt(vencimento) || 5));
+    onAddCard({ id: uid(), nome, diaFechamento: fech, diaVencimento: venc, cor });
+    setName("");
+  };
+
+  return (
+    <div className="panel glass">
+      <div className="panel-head"><div className="panel-title">Cartões de crédito</div></div>
+      {cards.length > 0 && (
+        <div className="card-list">
+          {cards.map(c => (
+            <div className="card-item" key={c.id}>
+              <span className="card-color-dot" style={{ background: c.cor }} />
+              <Ic.card size={16} style={{ color: c.cor, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontWeight: 600, fontSize: 13.5 }}>{c.nome}</span>
+              <span className="exp-tag" style={{ background: c.cor + "22", color: c.cor, borderColor: c.cor + "44" }}>
+                fecha {c.diaFechamento}
+              </span>
+              <span className="exp-tag" style={{ background: "rgba(255,255,255,0.05)", color: "var(--text-mid)", borderColor: "var(--glass-border)" }}>
+                vence {c.diaVencimento}
+              </span>
+              <button className="icon-btn danger" onClick={() => onDeleteCard(c.id)}><Ic.trash size={14} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="card-add-form">
+        <input className="form-input" value={name} onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && submit()}
+          placeholder="Nome do cartão (ex.: Nubank, Inter)" />
+        <div className="card-form-row">
+          <div>
+            <div className="form-label" style={{ marginBottom: 6 }}>Dia fechamento</div>
+            <input className="form-input" inputMode="numeric" value={fechamento}
+              onChange={e => setFechamento(e.target.value.replace(/\D/g, ""))}
+              placeholder="20" />
+          </div>
+          <div>
+            <div className="form-label" style={{ marginBottom: 6 }}>Dia vencimento</div>
+            <input className="form-input" inputMode="numeric" value={vencimento}
+              onChange={e => setVencimento(e.target.value.replace(/\D/g, ""))}
+              placeholder="5" />
+          </div>
+          <div>
+            <div className="form-label" style={{ marginBottom: 6 }}>Cor</div>
+            <div className="color-palette" style={{ paddingTop: 4 }}>
+              {CARD_COLORS.map(hex => (
+                <div key={hex} className={"color-dot" + (cor === hex ? " on" : "")}
+                  style={{ background: hex }} onClick={() => setCor(hex)} />
+              ))}
+            </div>
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={submit}><Ic.plus size={16} />Adicionar cartão</button>
       </div>
     </div>
   );
@@ -294,8 +509,9 @@ function BankImportModal({ onImport, onClose }) {
 /* ============================================================
    HOME / INÍCIO
    ============================================================ */
-function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards }) {
   const now = new Date();
+  const todayDay = now.getDate();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
   const monthGastos = monthExp.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
@@ -311,8 +527,20 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
   const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 6);
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
 
+  const dueAlerts = cards ? cards.filter(c => {
+    const venc = c.diaVencimento;
+    return venc >= todayDay && (venc - todayDay) <= 7;
+  }) : [];
+
   return (
     <>
+      {dueAlerts.map(c => (
+        <div key={c.id} className="due-alert">
+          <Ic.bell size={16} />
+          Fatura do <strong>{c.nome}</strong> vence dia {c.diaVencimento} — {c.diaVencimento - todayDay === 0 ? "hoje!" : `em ${c.diaVencimento - todayDay} dia${c.diaVencimento - todayDay === 1 ? "" : "s"}`}
+        </div>
+      ))}
+
       <div className="home-hero glass">
         <div className="home-hero-top">
           <div>
@@ -362,7 +590,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
           <div className="panel-head">
             <div className="panel-title">Últimos lançamentos</div>
           </div>
-          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} />
+          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} cards={cards} />
         </div>
       ) : (
         <div className="panel glass">
@@ -380,7 +608,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete }) {
 /* ============================================================
    DASHBOARD
    ============================================================ */
-function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onAdd, budget }) {
+function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onAdd, budget, cards }) {
   const gastos = filtered.filter(e => e.kind !== "entrada");
   const entradas = filtered.filter(e => e.kind === "entrada");
   const count = gastos.length;
@@ -405,7 +633,7 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
             <div className="panel-title">Lançamentos recentes</div>
             <button className="btn btn-primary btn-desktop-only" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
-          <ExpenseTable rows={filtered.slice(0, 8)} onEdit={onEdit} onDelete={onDelete} />
+          <ExpenseTable rows={filtered.slice(0, 8)} onEdit={onEdit} onDelete={onDelete} cards={cards} />
         </div>
 
         <div className="panel glass">
@@ -428,8 +656,10 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
    GASTOS
    ============================================================ */
 function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
-  period, setPeriod, cat, setCat, search, setSearch, allCats }) {
+  period, setPeriod, cat, setCat, search, setSearch, allCats,
+  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, cards }) {
   const [showImport, setShowImport] = useS(false);
+  const [showFilterSheet, setShowFilterSheet] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
 
   const gastosTotal = useM(() => filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0), [filtered]);
@@ -443,9 +673,26 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
   return (
     <>
       {showImport && <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />}
+      {showFilterSheet && (
+        <FilterSheet
+          allCats={allCats} cards={cards}
+          cat={cat} setCat={setCat}
+          tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+          cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+          onClose={() => setShowFilterSheet(false)}
+        />
+      )}
       <div className="panel glass" style={{ marginBottom: 16 }}>
-        <div className="panel-head" style={{ gap: 10 }}>
-          <Filters {...{ period, setPeriod, cat, setCat, search, setSearch, allCats }} />
+        <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
+          <FilterBar
+            period={period} setPeriod={setPeriod}
+            cat={cat} setCat={setCat}
+            search={search} setSearch={setSearch}
+            tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+            cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+            allCats={allCats} cards={cards}
+            onOpenSheet={() => setShowFilterSheet(true)}
+          />
           <div className="gastos-actions">
             <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
               <Ic.download size={17} />Extrato
@@ -475,7 +722,7 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
           )}
           <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
         </div>
-        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} />
+        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} cards={cards} />
       </div>
     </>
   );
@@ -526,7 +773,7 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -598,6 +845,9 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
         </div>
       </div>
 
+      {/* Cartões de crédito */}
+      <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
+
       {/* Categorias */}
       <div className="panel glass">
         <div className="panel-head"><div className="panel-title">Categorias</div></div>
@@ -638,5 +888,5 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
 
 Object.assign(window, {
   HomeView, DashboardView, GastosView, RelatoriosView, ConfigView,
-  ExpenseTable, Filters, Stat, BudgetBar, BankImportModal,
+  ExpenseTable, Filters, FilterBar, FilterSheet, CardManager, Stat, BudgetBar, BankImportModal,
 });

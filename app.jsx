@@ -19,9 +19,10 @@ const PAGE_META = {
   config:      { t: "Configurações", s: "Personalize sua experiência" },
 };
 
-const LS_KEY  = "planilha_gastos_v1";
-const LS_SET  = "planilha_gastos_settings_v1";
-const LS_CATS = "planilha_gastos_cats_v1";
+const LS_KEY   = "planilha_gastos_v1";
+const LS_SET   = "planilha_gastos_settings_v1";
+const LS_CATS  = "planilha_gastos_cats_v1";
+const LS_CARDS = "planilha_gastos_cards_v1";
 
 function App() {
   const [page, setPage] = useState("home");
@@ -80,6 +81,27 @@ function App() {
     return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000 };
   });
 
+  // ---------- Cartões ----------
+  const [cards, setCards] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS_CARDS);
+      if (s) return JSON.parse(s);
+    } catch (e) {}
+    return [];
+  });
+
+  const addCard = (card) => {
+    const updated = [...cards, card];
+    setCards(updated);
+    try { localStorage.setItem(LS_CARDS, JSON.stringify(updated)); } catch (e) {}
+  };
+
+  const deleteCard = (id) => {
+    const updated = cards.filter(c => c.id !== id);
+    setCards(updated);
+    try { localStorage.setItem(LS_CARDS, JSON.stringify(updated)); } catch (e) {}
+  };
+
   const [modal, setModal] = useState(null);
   const [fabOpen, setFabOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -87,8 +109,10 @@ function App() {
 
   // filtros
   const [period, setPeriod] = useState("30");
-  const [cat, setCat]       = useState("all");
-  const [search, setSearch] = useState("");
+  const [cat, setCat]         = useState("all");
+  const [search, setSearch]   = useState("");
+  const [tipoFilter, setTipoFilter]       = useState("all");
+  const [cardIdFilter, setCardIdFilter]   = useState("all");
 
   useEffect(() => { try { localStorage.setItem(LS_KEY,  JSON.stringify(expenses)); } catch (e) {} }, [expenses]);
   useEffect(() => { try { localStorage.setItem(LS_SET,  JSON.stringify(settings)); } catch (e) {} }, [settings]);
@@ -108,12 +132,14 @@ function App() {
       arr = arr.filter(e => e.data >= min);
     }
     if (cat !== "all") arr = arr.filter(e => e.categoria === cat);
+    if (tipoFilter !== "all") arr = arr.filter(e => e.tipo === tipoFilter);
+    if (cardIdFilter !== "all") arr = arr.filter(e => e.cardId === cardIdFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       arr = arr.filter(e => e.descricao.toLowerCase().includes(q));
     }
     return arr.sort((a, b) => b.data.localeCompare(a.data) || b.valor - a.valor);
-  }, [expenses, period, cat, search]);
+  }, [expenses, period, cat, tipoFilter, cardIdFilter, search]);
 
   const total = useMemo(() =>
     filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0),
@@ -238,18 +264,20 @@ function App() {
           )}
 
           {page === "home" && (
-            <HomeView expenses={expenses} budget={settings.budget}
+            <HomeView expenses={expenses} budget={settings.budget} cards={cards}
               onAdd={() => setModal({})} onEdit={(e) => setModal(e)} onDelete={deleteExpense} />
           )}
           {page === "dashboard" && (
             <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
               onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
-              budget={settings.budget} />
+              budget={settings.budget} cards={cards} />
           )}
           {page === "gastos" && (
             <GastosView filtered={filtered} total={total} byCat={byCat}
               onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
-              onImport={importExpenses} allCats={allCats}
+              onImport={importExpenses} allCats={allCats} cards={cards}
+              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
               {...{ period, setPeriod, cat, setCat, search, setSearch }} />
           )}
           {page === "relatorios" && (
@@ -257,7 +285,8 @@ function App() {
           )}
           {page === "config" && (
             <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
-              allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat} />
+              allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
+              cards={cards} onAddCard={addCard} onDeleteCard={deleteCard} />
           )}
         </div>
       </main>
@@ -283,7 +312,7 @@ function App() {
 
       {modal !== null && (
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
-          onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} />
+          onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
       )}
       <Toast msg={toast} />
     </div>
