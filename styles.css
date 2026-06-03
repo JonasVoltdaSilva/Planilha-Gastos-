@@ -613,7 +613,7 @@ tbody tr:hover .row-actions { opacity: 1; }
   }
 
   .main-scroll {
-    padding: 20px 16px calc(var(--bottom-nav-h) + 16px);
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(var(--bottom-nav-h) + 16px);
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
@@ -726,7 +726,7 @@ tbody tr:hover .row-actions { opacity: 1; }
    MOBILE  ≤ 480px
    ============================================================ */
 @media (max-width: 480px) {
-  .main-scroll { padding: 14px 12px calc(var(--bottom-nav-h) + 12px); }
+  .main-scroll { padding: calc(14px + env(safe-area-inset-top, 0px)) 12px calc(var(--bottom-nav-h) + 12px); }
 
   .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat { padding: 14px 12px; }
@@ -835,7 +835,7 @@ tbody tr:hover .row-actions { opacity: 1; }
    VERY SMALL  ≤ 360px
    ============================================================ */
 @media (max-width: 360px) {
-  .main-scroll { padding: 12px 10px calc(var(--bottom-nav-h) + 10px); }
+  .main-scroll { padding: calc(12px + env(safe-area-inset-top, 0px)) 10px calc(var(--bottom-nav-h) + 10px); }
 
   .page-title { font-size: 18px; }
 
