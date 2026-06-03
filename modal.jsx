@@ -3,7 +3,7 @@
    ============================================================ */
 const { useState: useStateM, useEffect: useEffectM, useRef: useRefM } = React;
 
-function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
+function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
   const cats = allCats || CATEGORIES;
   const defaultKind = initial?.kind || initKind || "gasto";
   const isEdit = !!initial?.id;
@@ -16,6 +16,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
   const [tipo, setTipo] = useStateM(initial?.tipo || "outros");
   const [forma, setForma] = useStateM(initial?.forma || "avista");
   const [parcelas, setParcelas] = useStateM(initial?.parcTotal > 1 ? String(initial.parcTotal) : "2");
+  const [cardId, setCardId] = useStateM(initial?.cardId || null);
   const [err, setErr] = useStateM("");
 
   // Swipe down to close
@@ -69,6 +70,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
     if (isNaN(num) || num <= 0) return setErr("Informe um valor válido.");
     if (kind === "gasto" && forma === "parcelado" && (parcNum < 2 || parcNum > 60))
       return setErr("Informe parcelas entre 2 e 60.");
+    const selectedCard = cards && cardId ? cards.find(c => c.id === cardId) : null;
     onSave({
       id: initial?.id || uid(),
       data,
@@ -80,6 +82,8 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
       forma: kind === "gasto" ? forma : "avista",
       parcTotal: kind === "gasto" && forma === "parcelado" ? parcNum : 1,
       parcNum: 1,
+      cardId: kind === "gasto" && tipo === "credito" ? (cardId || null) : null,
+      faturaRef: kind === "gasto" && tipo === "credito" && selectedCard ? calcFaturaRef(data, selectedCard) : null,
     });
   };
 
@@ -182,6 +186,27 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats }) {
                   ))}
                 </div>
               </div>
+              {tipo === "credito" && cards && cards.length > 0 && (
+                <div className="form-row">
+                  <label className="form-label">Cartão de crédito</label>
+                  <div className="tipo-picker">
+                    <button type="button"
+                      className={"tipo-opt" + (!cardId ? " on" : "")}
+                      style={{ "--tipo-hex": "var(--text-mid)" }}
+                      onClick={() => setCardId(null)}>
+                      Nenhum
+                    </button>
+                    {cards.map(card => (
+                      <button key={card.id} type="button"
+                        className={"tipo-opt" + (cardId === card.id ? " on" : "")}
+                        style={{ "--tipo-hex": card.cor || "var(--accent-mint)" }}
+                        onClick={() => setCardId(card.id)}>
+                        <Ic.card size={13} />{card.nome}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="form-row">
                 <label className="form-label">Categoria</label>
                 <div className="cat-picker">

@@ -943,3 +943,96 @@ tbody tr:hover .row-actions { opacity: 1; }
   font-weight: 600;
   margin-top: 5px;
 }
+
+/* ============================================================
+   Filter bar + active chips
+   ============================================================ */
+.filter-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center; width: 100%;
+}
+.filter-btn {
+  display: inline-flex; align-items: center; gap: 7px; position: relative; flex-shrink: 0;
+}
+.filter-btn.active {
+  background: var(--accent-mint-soft);
+  border-color: oklch(0.78 0.12 165 / 0.35);
+  color: var(--accent-mint);
+}
+.filter-badge {
+  background: var(--accent-mint); color: #06251a;
+  font-size: 10px; font-weight: 800;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: grid; place-items: center; margin-left: 2px;
+}
+.active-filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 10px; }
+.active-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  background: color-mix(in srgb, var(--chip-color, var(--accent-mint)) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color, var(--accent-mint)) 35%, transparent);
+  color: var(--chip-color, var(--accent-mint));
+  transition: opacity 0.15s;
+}
+.active-chip:hover { opacity: 0.75; }
+.active-chip-clear {
+  --chip-color: var(--text-lo);
+  background: rgba(255,255,255,0.04);
+  border-color: var(--glass-border);
+  color: var(--text-mid);
+}
+
+/* ============================================================
+   FilterSheet chip grid
+   ============================================================ */
+.filter-section { margin-bottom: 20px; }
+.filter-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-lo); margin-bottom: 10px;
+}
+.filter-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 999px;
+  font-size: 13px; font-weight: 700;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+  color: var(--text-mid); cursor: pointer; transition: all 0.16s;
+}
+.filter-chip:hover { background: rgba(255,255,255,0.09); }
+.filter-chip.on {
+  background: color-mix(in srgb, var(--chip-color, var(--accent-mint)) 15%, transparent);
+  border-color: color-mix(in srgb, var(--chip-color, var(--accent-mint)) 40%, transparent);
+  color: var(--chip-color, var(--accent-mint));
+}
+
+/* ============================================================
+   Card list & add form (CardManager)
+   ============================================================ */
+.card-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.card-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+}
+.card-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.card-add-form { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--glass-border); }
+.card-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: start; }
+
+/* ============================================================
+   Due date alert
+   ============================================================ */
+.due-alert {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  background: rgba(224,138,122,0.1); border: 1px solid rgba(224,138,122,0.25);
+  font-size: 13px; font-weight: 600; color: #e08a7a;
+  margin-bottom: 10px;
+}
+.due-alert svg { flex-shrink: 0; }
+.due-alert strong { color: #eda090; }
+
+@media (max-width: 480px) {
+  .card-form-row { grid-template-columns: 1fr 1fr; }
+  .card-form-row > :nth-child(3) { grid-column: 1 / -1; }
+  .filter-chip { font-size: 12px; padding: 6px 12px; }
+}
