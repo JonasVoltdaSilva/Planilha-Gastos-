@@ -128,10 +128,15 @@ function App() {
   const [toast, setToast] = useState({ msg: "", icon: "check" });
   const [quick, setQuick] = useState("");
 
-  // filtros globais (período, categoria, busca) — tipo/cartão ficam em GastosView
+  // filtros globais (período, categoria, busca)
   const [period, setPeriod] = useState("30");
   const [cat, setCat]       = useState("all");
   const [search, setSearch] = useState("");
+
+  // filtros de tipo/cartão ficam aqui para o FilterSheet poder ser renderizado no App
+  const [tipoFilter, setTipoFilter] = useState("all");
+  const [cardIdFilter, setCardIdFilter] = useState("all");
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
 
   useEffect(() => { try { localStorage.setItem(LS_KEY,  JSON.stringify(expenses)); } catch (e) {} }, [expenses]);
   useEffect(() => { try { localStorage.setItem(LS_SET,  JSON.stringify(settings)); } catch (e) {} }, [settings]);
@@ -316,6 +321,9 @@ function App() {
             <GastosView filtered={filtered} total={total} byCat={byCat}
               onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
               onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
+              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+              onOpenFilterSheet={() => setShowFilterSheet(true)}
               {...{ period, setPeriod, cat, setCat, search, setSearch }} />
           )}
           {page === "relatorios" && (
@@ -332,6 +340,16 @@ function App() {
       </main>
 
       <BottomNav page={page} setPage={setPage} />
+
+      {showFilterSheet && (
+        <FilterSheet
+          allCats={allCats} cards={cards}
+          cat={cat} setCat={setCat}
+          tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+          cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+          onClose={() => setShowFilterSheet(false)}
+        />
+      )}
 
       {fabOpen && <div className="fab-overlay" onClick={() => setFabOpen(false)} />}
       {fabOpen && (

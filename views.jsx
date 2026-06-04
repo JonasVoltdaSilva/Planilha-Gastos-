@@ -669,12 +669,10 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
    GASTOS
    ============================================================ */
 function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, onAdd, onImport,
-  period, setPeriod, cat, setCat, search, setSearch, allCats, cards }) {
+  period, setPeriod, cat, setCat, search, setSearch, allCats, cards,
+  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet }) {
   const [showImport, setShowImport] = useS(false);
-  const [showFilterSheet, setShowFilterSheet] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
-  const [tipoFilter, setTipoFilter] = useS("all");
-  const [cardIdFilter, setCardIdFilter] = useS("all");
 
   // Aplica filtros locais de tipo/cartão sobre o filtered global (período+cat+busca)
   const localFiltered = useM(() => {
@@ -703,16 +701,6 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
         <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />,
         document.body
       )}
-      {showFilterSheet && ReactDOM.createPortal(
-        <FilterSheet
-          allCats={allCats} cards={cards}
-          cat={cat} setCat={setCat}
-          tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
-          cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
-          onClose={() => setShowFilterSheet(false)}
-        />,
-        document.body
-      )}
       <div className="panel glass" style={{ marginBottom: 16 }}>
         <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
           <FilterBar
@@ -722,7 +710,7 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
             tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
             cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
             allCats={allCats} cards={cards}
-            onOpenSheet={() => setShowFilterSheet(true)}
+            onOpenSheet={onOpenFilterSheet}
           />
           <div className="gastos-actions">
             <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
