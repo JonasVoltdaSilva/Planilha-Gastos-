@@ -27,6 +27,28 @@ const LS_CARDS = "planilha_gastos_cards_v1";
 function App() {
   const [page, setPage] = useState("home");
 
+  // ---------- Perfil do usuário ----------
+  const [profile, setProfile] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS_PROFILE);
+      if (s) return JSON.parse(s);
+    } catch (e) {}
+    return null;
+  });
+
+  useEffect(() => { applyTheme(profile?.theme || "default"); }, [profile?.theme]);
+
+  const handleThemeChange = (themeId) => {
+    const updated = { ...(profile || {}), theme: themeId };
+    setProfile(updated);
+    try { localStorage.setItem(LS_PROFILE, JSON.stringify(updated)); } catch (e) {}
+  };
+
+  const resetProfile = () => {
+    try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
+    setProfile(null);
+  };
+
   // ---------- Categorias personalizadas ----------
   const [customCats, setCustomCats] = useState(() => {
     try {
@@ -209,6 +231,11 @@ function App() {
   const resetData = () => { setExpenses(seedData()); showToast("Dados de exemplo restaurados"); };
 
   const meta = PAGE_META[page];
+  const userName = profile?.name || "Luiz Ricardo";
+
+  if (!profile) {
+    return <OnboardingPage onEnter={(p) => setProfile(p)} />;
+  }
 
   return (
     <div className="app">
@@ -234,9 +261,9 @@ function App() {
         </nav>
         <div className="sidebar-foot">
           <div className="user-chip">
-            <div className="avatar">LR</div>
+            <div className="avatar">{userName.slice(0, 2).toUpperCase()}</div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Luiz Ricardo</div>
+              <div style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
             </div>
           </div>
         </div>
@@ -264,7 +291,7 @@ function App() {
           )}
 
           {page === "home" && (
-            <HomeView expenses={expenses} budget={settings.budget} cards={cards}
+            <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
               onAdd={() => setModal({})} onEdit={(e) => setModal(e)} onDelete={deleteExpense} />
           )}
           {page === "dashboard" && (
@@ -286,7 +313,9 @@ function App() {
           {page === "config" && (
             <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
               allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
-              cards={cards} onAddCard={addCard} onDeleteCard={deleteCard} />
+              cards={cards} onAddCard={addCard} onDeleteCard={deleteCard}
+              currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
+              onResetProfile={resetProfile} />
           )}
         </div>
       </main>
