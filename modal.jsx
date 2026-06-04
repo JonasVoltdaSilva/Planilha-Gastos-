@@ -14,32 +14,25 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
   const [categoria, setCategoria] = useStateM(initial?.categoria || cats[0]?.id || "comida");
   const [valor, setValor] = useStateM(initial?.valor != null ? String(initial.valor).replace(".", ",") : "");
   const [tipo, setTipo] = useStateM(initial?.tipo || "outros");
-  const [forma, setForma] = useStateM(initial?.forma || "avista");
+  const [parcelado, setParcelado] = useStateM(initial?.forma === "parcelado");
   const [parcelas, setParcelas] = useStateM(initial?.parcTotal > 1 ? String(initial.parcTotal) : "2");
   const [cardId, setCardId] = useStateM(initial?.cardId || null);
   const [err, setErr] = useStateM("");
 
-  // Swipe down to close
   const [swipeY, setSwipeY] = useStateM(0);
   const swipeStart = useRefM(null);
   const modalBodyRef = useRefM(null);
 
-  const onDragStart = (e) => {
-    swipeStart.current = e.touches[0].clientY;
-  };
+  const onDragStart = (e) => { swipeStart.current = e.touches[0].clientY; };
   const onDragMove = (e) => {
     if (swipeStart.current === null) return;
-    // Only dismiss-swipe when modal content is scrolled to top
     if (modalBodyRef.current && modalBodyRef.current.scrollTop > 4) return;
     const diff = e.touches[0].clientY - swipeStart.current;
     if (diff > 0) setSwipeY(diff);
   };
   const onDragEnd = () => {
-    if (swipeY > 80) {
-      onClose();
-    } else {
-      setSwipeY(0);
-    }
+    if (swipeY > 80) onClose();
+    else setSwipeY(0);
     swipeStart.current = null;
   };
 
@@ -58,19 +51,34 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
     }
   };
 
+  const onTipo = (t) => {
+    setTipo(t);
+    if (t !== "credito") setParcelado(false);
+  };
+
   const parcNum = parseInt(parcelas) || 0;
   const numVal = parseFloat(valor.replace(/\./g, "").replace(",", "."));
   const parcelVal = parcNum >= 2 && !isNaN(numVal) && numVal > 0
     ? Math.round((numVal / parcNum) * 100) / 100
     : 0;
 
+  const selectedCard = cards && cardId ? cards.find(c => c.id === cardId) : null;
+  const faturaHint = kind === "gasto" && tipo === "credito" && selectedCard && data
+    ? (() => {
+        const ref = calcFaturaRef(data, selectedCard);
+        if (!ref) return null;
+        const d = new Date(ref + "-01T12:00:00");
+        return d.toLocaleString("pt-BR", { month: "long", year: "numeric" });
+      })()
+    : null;
+
   const submit = () => {
     const num = parseFloat(valor.replace(/\./g, "").replace(",", "."));
     if (!descricao.trim()) return setErr("Adicione uma descrição.");
     if (isNaN(num) || num <= 0) return setErr("Informe um valor válido.");
+    const forma = tipo === "credito" && parcelado ? "parcelado" : "avista";
     if (kind === "gasto" && forma === "parcelado" && (parcNum < 2 || parcNum > 60))
       return setErr("Informe parcelas entre 2 e 60.");
-    const selectedCard = cards && cardId ? cards.find(c => c.id === cardId) : null;
     onSave({
       id: initial?.id || uid(),
       data,
@@ -99,7 +107,6 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
         onTouchMove={onDragMove}
         onTouchEnd={onDragEnd}
       >
-        {/* Drag handle — visible on mobile as swipe indicator */}
         <div className="modal-handle" />
 
         <h3>{isEdit ? (kind === "entrada" ? "Editar entrada" : "Editar gasto") : "Novo lançamento"}</h3>
@@ -145,68 +152,74 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
           {kind === "gasto" && (
             <>
               <div className="form-row">
-                <label className="form-label">Forma de pagamento</label>
-                <div className="tipo-picker">
-                  {FORMAS.map(f => (
-                    <button key={f.id} type="button"
-                      className={"tipo-opt" + (forma === f.id ? " on" : "")}
-                      style={{ "--tipo-hex": "var(--accent-mint)" }}
-                      onClick={() => setForma(f.id)}>
-                      {f.nome}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {forma === "parcelado" && (
-                <div className="form-row">
-                  <label className="form-label">Número de parcelas</label>
-                  <input className="form-input" inputMode="numeric" value={parcelas}
-                    onChange={(e) => setParcelas(e.target.value.replace(/\D/g, ""))}
-                    onKeyDown={(e) => e.key === "Enter" && submit()}
-                    placeholder="Ex.: 3" style={{ maxWidth: 120 }} />
-                  {parcNum >= 2 && parcelVal > 0 && (
-                    <div className="parc-preview">
-                      {parcNum}× de {fmtBRL(parcelVal)} · total {fmtBRL(numVal)}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="form-row">
-                <label className="form-label">Tipo de pagamento</label>
+                <label className="form-label">Como pagou?</label>
                 <div className="tipo-picker">
                   {TIPOS.map(t => (
                     <button key={t.id} type="button"
                       className={"tipo-opt" + (tipo === t.id ? " on" : "")}
                       style={{ "--tipo-hex": t.hex }}
-                      onClick={() => setTipo(t.id)}>
+                      onClick={() => onTipo(t.id)}>
                       {t.nome}
                     </button>
                   ))}
                 </div>
               </div>
-              {tipo === "credito" && cards && cards.length > 0 && (
-                <div className="form-row">
-                  <label className="form-label">Cartão de crédito</label>
-                  <div className="tipo-picker">
-                    <button type="button"
-                      className={"tipo-opt" + (!cardId ? " on" : "")}
-                      style={{ "--tipo-hex": "var(--text-mid)" }}
-                      onClick={() => setCardId(null)}>
-                      Nenhum
-                    </button>
-                    {cards.map(card => (
-                      <button key={card.id} type="button"
-                        className={"tipo-opt" + (cardId === card.id ? " on" : "")}
-                        style={{ "--tipo-hex": card.cor || "var(--accent-mint)" }}
-                        onClick={() => setCardId(card.id)}>
-                        <Ic.card size={13} />{card.nome}
-                      </button>
-                    ))}
+
+              {tipo === "credito" && (
+                <>
+                  <div className="form-row">
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div className={"switch" + (parcelado ? " on" : "")} onClick={() => setParcelado(v => !v)} />
+                      <label className="form-label" style={{ margin: 0, cursor: "pointer" }} onClick={() => setParcelado(v => !v)}>
+                        Parcelado
+                      </label>
+                    </div>
                   </div>
-                </div>
+
+                  {parcelado && (
+                    <div className="form-row">
+                      <label className="form-label">Número de parcelas</label>
+                      <input className="form-input" inputMode="numeric" value={parcelas}
+                        onChange={(e) => setParcelas(e.target.value.replace(/\D/g, ""))}
+                        onKeyDown={(e) => e.key === "Enter" && submit()}
+                        placeholder="Ex.: 3" style={{ maxWidth: 120 }} />
+                      {parcNum >= 2 && parcelVal > 0 && (
+                        <div className="parc-preview">
+                          {parcNum}× de {fmtBRL(parcelVal)} · total {fmtBRL(numVal)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {cards && cards.length > 0 && (
+                    <div className="form-row">
+                      <label className="form-label">Cartão de crédito</label>
+                      <div className="tipo-picker">
+                        <button type="button"
+                          className={"tipo-opt" + (!cardId ? " on" : "")}
+                          style={{ "--tipo-hex": "var(--text-mid)" }}
+                          onClick={() => setCardId(null)}>
+                          Nenhum
+                        </button>
+                        {cards.map(card => (
+                          <button key={card.id} type="button"
+                            className={"tipo-opt" + (cardId === card.id ? " on" : "")}
+                            style={{ "--tipo-hex": card.cor || "var(--accent-mint)" }}
+                            onClick={() => setCardId(card.id)}>
+                            <Ic.card size={13} />{card.nome}
+                          </button>
+                        ))}
+                      </div>
+                      {faturaHint && (
+                        <div style={{ fontSize: 12, color: "var(--text-mid)", marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                          <Ic.receipt size={12} />Fatura de {faturaHint}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
+
               <div className="form-row">
                 <label className="form-label">Categoria</label>
                 <div className="cat-picker">
@@ -237,11 +250,12 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
   );
 }
 
-function Toast({ msg }) {
+function Toast({ msg, icon }) {
   if (!msg) return null;
+  const I = icon === "trash" ? Ic.trash : Ic.check;
   return (
     <div className="toast">
-      <Ic.check size={18} />{msg}
+      <I size={18} />{msg}
     </div>
   );
 }
