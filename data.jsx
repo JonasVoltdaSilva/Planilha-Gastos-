@@ -383,6 +383,35 @@ function computeFaturas(cards, expenses, faturaOverrides) {
   return results.sort((a, b) => b.mes.localeCompare(a.mes) || a.cardId.localeCompare(b.cardId));
 }
 
+function exportToCSV(expenses) {
+  const headers = ["Data","Descrição","Categoria","Tipo Pagamento","Valor","Forma","Parcela","Lançamento"];
+  const rows = expenses.map(e => [
+    e.data,
+    `"${(e.descricao || "").replace(/"/g, '""')}"`,
+    e.kind === "entrada" ? "Entrada" : (CAT_MAP[e.categoria]?.nome || e.categoria),
+    TIPO_MAP[e.tipo]?.nome || e.tipo || "Outros",
+    e.valor.toFixed(2).replace(".", ","),
+    e.forma === "parcelado" ? "Parcelado" : "À vista",
+    e.parcTotal > 1 ? `${e.parcNum}/${e.parcTotal}` : "—",
+    e.kind === "entrada" ? "Entrada" : "Gasto",
+  ]);
+  const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `cofrinho_${todayISO()}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportToJSON(expenses, cards, settings, customCats) {
+  const data = { version: 1, exportedAt: new Date().toISOString(), expenses, cards, settings, customCats };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `backup_cofrinho_${todayISO()}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
   FORMAS, addMonths, calcFaturaRef, makeTransaction,
@@ -390,4 +419,5 @@ Object.assign(window, {
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,
   LS_FATURAS, formatMes, computeFaturas,
+  exportToCSV, exportToJSON,
 });

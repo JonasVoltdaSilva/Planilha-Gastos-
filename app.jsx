@@ -147,9 +147,12 @@ function App() {
   };
 
   const deleteCard = (id) => {
+    const linked = expenses.filter(e => e.cardId === id).length;
+    if (linked > 0 && !window.confirm(`Este cartão tem ${linked} lançamento${linked > 1 ? "s" : ""} vinculado${linked > 1 ? "s" : ""}. Excluí-lo não remove os lançamentos, mas eles perderão o vínculo. Continuar?`)) return;
     const updated = cards.filter(c => c.id !== id);
     setCards(updated);
     try { localStorage.setItem(LS_CARDS, JSON.stringify(updated)); } catch (e) {}
+    showToast("Cartão excluído", "trash");
   };
 
   const [modal, setModal] = useState(null);
@@ -214,11 +217,14 @@ function App() {
   const saveTransaction = (exp) => {
     const isEditing = !!modal?.id;
     if (exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
-      const parcelVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
+      // Fix rounding: base value for N-1 parcels, last absorbs remainder
+      const baseVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
+      const lastVal = Math.round((exp.valor - baseVal * (exp.parcTotal - 1)) * 100) / 100;
       const grupo = uid();
       const linkedCard = exp.cardId ? cards.find(c => c.id === exp.cardId) : null;
       const parcList = Array.from({ length: exp.parcTotal }, (_, i) => {
         const parcelData = addMonths(exp.data, i);
+        const parcelVal = i === exp.parcTotal - 1 ? lastVal : baseVal;
         return {
           ...exp, id: uid(), data: parcelData,
           valor: parcelVal,
@@ -229,7 +235,7 @@ function App() {
       });
       setExpenses(prev => [...parcList, ...prev]);
       setModal(null);
-      showToast(`${exp.parcTotal}× de ${fmtBRL(parcelVal)} adicionadas`);
+      showToast(`${exp.parcTotal}× de ${fmtBRL(baseVal)} adicionadas`);
     } else {
       setExpenses(prev => {
         const exists = prev.some(e => e.id === exp.id);
@@ -280,6 +286,12 @@ function App() {
   };
 
   const resetData = () => { setExpenses(seedData()); showToast("Dados de exemplo restaurados"); };
+
+  const restoreBackup = (data) => {
+    if (data.expenses) setExpenses(data.expenses);
+    if (data.cards) { setCards(data.cards); try { localStorage.setItem(LS_CARDS, JSON.stringify(data.cards)); } catch (e) {} }
+    showToast(`${(data.expenses || []).length} lançamentos restaurados`);
+  };
 
   const meta = PAGE_META[page];
   const userName = profile?.name || "Luiz Ricardo";
@@ -343,8 +355,10 @@ function App() {
 
           {page === "home" && (
             <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
+              faturaOverrides={faturaOverrides}
               onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
-              onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup} />
+              onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+              onGoToFaturas={() => setPage("faturas")} />
           )}
           {page === "dashboard" && (
             <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
@@ -379,7 +393,9 @@ function App() {
               allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
               cards={cards} onAddCard={addCard} onDeleteCard={deleteCard}
               currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
-              onResetProfile={resetProfile} />
+              onResetProfile={resetProfile}
+              expenses={expenses} customCats={customCats}
+              onRestoreBackup={restoreBackup} />
           )}
         </div>
       </main>

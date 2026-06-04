@@ -518,9 +518,8 @@ function BankImportModal({ onImport, onClose }) {
 /* ============================================================
    HOME / INÍCIO
    ============================================================ */
-function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName }) {
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName, faturaOverrides, onGoToFaturas }) {
   const now = new Date();
-  const todayDay = now.getDate();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
   const monthGastos = monthExp.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
@@ -536,10 +535,22 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
   const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 6);
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
 
+  // Projeção mensal: com base nos dias decorridos
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const projection = dayOfMonth > 0 ? Math.round((monthGastos / dayOfMonth) * daysInMonth * 100) / 100 : 0;
+  const projectionOver = budget > 0 && projection > budget;
+
+  // Faturas abertas/fechadas com saldo
+  const pendingFaturas = useM(() => {
+    if (!cards || cards.length === 0) return [];
+    return computeFaturas(cards, expenses, faturaOverrides || {})
+      .filter(f => f.status !== "paga" && f.total > 0);
+  }, [cards, expenses, faturaOverrides]);
+
   const dueAlerts = (cards || []).map(c => {
     const today = new Date();
-    const vencDay = c.diaVencimento;
-    const dueDate = new Date(today.getFullYear(), today.getMonth(), vencDay);
+    const dueDate = new Date(today.getFullYear(), today.getMonth(), c.diaVencimento);
     if (dueDate < today) dueDate.setMonth(dueDate.getMonth() + 1);
     const diffDays = Math.ceil((dueDate - today) / 86400000);
     return { ...c, diffDays };
@@ -594,9 +605,52 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
             <div className="budget-bar-track">
               <div className="budget-bar-fill" style={{ width: `${pct}%`, background: budgetColor }} />
             </div>
+            {projection > 0 && (
+              <div style={{ marginTop: 7, fontSize: 11.5, color: projectionOver ? "#e08a7a" : "var(--text-lo)", display: "flex", alignItems: "center", gap: 5 }}>
+                {projectionOver ? <Ic.trendUp size={12} /> : <Ic.target size={12} />}
+                Projeção do mês: <strong style={{ color: projectionOver ? "#e08a7a" : "var(--text-mid)" }}>{fmtBRL(projection)}</strong>
+                {projectionOver && ` · ${fmtBRL(projection - budget)} acima do orçamento`}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Faturas pendentes */}
+      {pendingFaturas.length > 0 && (
+        <div className="panel glass" style={{ marginBottom: 16 }}>
+          <div className="panel-head" style={{ marginBottom: 12 }}>
+            <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Ic.invoice size={17} />Faturas pendentes
+            </div>
+            {onGoToFaturas && (
+              <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+                onClick={onGoToFaturas}>
+                Ver todas
+              </button>
+            )}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {pendingFaturas.map(f => {
+              const statusColor = f.status === "aberta" ? "var(--accent-mint)" : "#e0c85a";
+              const statusLabel = f.status === "aberta" ? "Em aberto" : "Fechada — pagar";
+              return (
+                <div key={f.id} className="fatura-alert-row">
+                  <span className="fatura-alert-dot" style={{ background: f.card.cor || "var(--accent-mint)" }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700 }}>{f.card.nome}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-lo)", textTransform: "capitalize" }}>{formatMes(f.mes)}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>{fmtBRL(f.total)}</div>
+                    <span style={{ fontSize: 11, color: statusColor, fontWeight: 700 }}>{statusLabel}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {recent.length > 0 ? (
         <div className="panel glass">
@@ -628,6 +682,8 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
   const media = count ? total / count : 0;
   const topCat = byCat[0];
   const entradasTotal = entradas.reduce((s, e) => s + e.valor, 0);
+  const saldo = entradasTotal - total;
+  const savingsRate = entradasTotal > 0 ? Math.round((saldo / entradasTotal) * 100) : null;
 
   return (
     <>
@@ -636,8 +692,10 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
         <Stat icon={Ic.trendUp} label="Entradas no período" value={fmtBRL(entradasTotal)}
           meta={`${entradas.length} entr${entradas.length === 1 ? "ada" : "adas"}`} />
         <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)} meta="por gasto" />
-        <Stat icon={Ic.target} label="Maior categoria"
-          value={topCat ? topCat.nome : "—"} meta={topCat ? fmtBRL(topCat.valor) : ""} />
+        <Stat icon={Ic.target} label="Saldo do período"
+          value={fmtBRL(Math.abs(saldo))}
+          meta={savingsRate !== null ? `${savingsRate >= 0 ? "+" : ""}${savingsRate}% da renda` : (saldo >= 0 ? "positivo" : "negativo")}
+          metaDir={saldo >= 0 ? "down" : "up"} />
       </div>
 
       <div className="grid-2">
@@ -715,6 +773,9 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
           <div className="gastos-actions">
             <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
               <Ic.download size={17} />Extrato
+            </button>
+            <button className="btn btn-ghost" title="Exportar CSV" onClick={() => exportToCSV(displayRows)}>
+              <Ic.upload size={17} />CSV
             </button>
             <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
@@ -869,6 +930,46 @@ function RelatoriosView({ expenses, byCat, total }) {
           <WeekBars expenses={expenses} />
         </div>
       </div>
+
+      {/* Resumo financeiro mensal */}
+      <div className="panel glass" style={{ marginTop: 16 }}>
+        <div className="panel-head"><div className="panel-title">Resumo mensal — últimos 4 meses</div></div>
+        <div style={{ display: "grid", gap: 12 }}>
+          {monthlyData.map(m => {
+            const net = m.entradas - m.gastos;
+            const rate = m.entradas > 0 ? Math.round((net / m.entradas) * 100) : null;
+            const rateColor = rate === null ? "var(--text-lo)" : rate >= 20 ? "var(--accent-mint)" : rate >= 0 ? "#e0c85a" : "var(--cat-saude)";
+            return (
+              <div key={m.mStr} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ minWidth: 38, fontSize: 13, fontWeight: 600, color: "var(--text-lo)", textTransform: "capitalize" }}>{m.label}</div>
+                <div style={{ flex: 1, display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  {m.entradas > 0 && (
+                    <span style={{ fontSize: 13, color: "var(--accent-mint)", fontWeight: 600 }}>+{fmtBRL(m.entradas)}</span>
+                  )}
+                  {m.gastos > 0 && (
+                    <span style={{ fontSize: 13, color: "#e08a7a", fontWeight: 600 }}>−{fmtBRL(m.gastos)}</span>
+                  )}
+                  {m.gastos === 0 && m.entradas === 0 && (
+                    <span style={{ fontSize: 13, color: "var(--text-lo)" }}>Sem dados</span>
+                  )}
+                </div>
+                {rate !== null && (
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: rateColor }}>{rate >= 0 ? "+" : ""}{rate}%</div>
+                    <div style={{ fontSize: 10.5, color: "var(--text-lo)" }}>poupança</div>
+                  </div>
+                )}
+                {rate === null && m.gastos > 0 && (
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#e08a7a" }}>−{fmtBRL(m.gastos)}</div>
+                    <div style={{ fontSize: 10.5, color: "var(--text-lo)" }}>só gastos</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }
@@ -876,7 +977,7 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -973,6 +1074,59 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
 
       {/* Cartões de crédito */}
       <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
+
+      {/* Backup & Exportação */}
+      <div className="panel glass">
+        <div className="panel-head"><div className="panel-title">Backup & Exportação</div></div>
+        <div className="set-list">
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Exportar CSV</div>
+              <div className="d">Baixa todos os lançamentos em formato de planilha</div>
+            </div>
+            <button className="btn btn-ghost" style={{ padding: "10px 14px", whiteSpace: "nowrap" }}
+              onClick={() => exportToCSV(expenses || [])}>
+              <Ic.upload size={15} />Exportar
+            </button>
+          </div>
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Backup completo (JSON)</div>
+              <div className="d">Salva lançamentos e cartões para restauração futura</div>
+            </div>
+            <button className="btn btn-ghost" style={{ padding: "10px 14px", whiteSpace: "nowrap" }}
+              onClick={() => exportToJSON(expenses || [], cards || [], settings, customCats || [])}>
+              <Ic.download size={15} />Baixar
+            </button>
+          </div>
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Restaurar backup</div>
+              <div className="d">Importa um arquivo de backup .json gerado por este app</div>
+            </div>
+            <label className="btn btn-ghost" style={{ padding: "10px 14px", cursor: "pointer", whiteSpace: "nowrap" }}>
+              <Ic.upload size={15} />Importar
+              <input type="file" accept="application/json,.json" style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    try {
+                      const data = JSON.parse(ev.target.result);
+                      if (!Array.isArray(data.expenses)) throw new Error("Formato inválido");
+                      if (window.confirm(`Restaurar ${data.expenses.length} lançamentos? Isso substituirá todos os dados atuais.`)) {
+                        onRestoreBackup(data);
+                      }
+                    } catch { alert("Arquivo inválido ou corrompido."); }
+                  };
+                  reader.readAsText(file);
+                  e.target.value = "";
+                }} />
+            </label>
+          </div>
+        </div>
+      </div>
 
       {/* Categorias */}
       <div className="panel glass">
