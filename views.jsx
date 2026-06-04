@@ -509,7 +509,7 @@ function BankImportModal({ onImport, onClose }) {
 /* ============================================================
    HOME / INÍCIO
    ============================================================ */
-function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards }) {
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards, userName }) {
   const now = new Date();
   const todayDay = now.getDate();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -544,7 +544,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards }) {
       <div className="home-hero glass">
         <div className="home-hero-top">
           <div>
-            <div className="home-greeting">{greeting}, <strong>Luiz Ricardo</strong>!</div>
+            <div className="home-greeting">{greeting}, <strong>{userName || "Luiz Ricardo"}</strong>!</div>
             <div className="home-date">{fmtDateLong(todayISO())}</div>
           </div>
           <button className="btn btn-primary btn-desktop-only" onClick={onAdd}>
@@ -773,7 +773,7 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -803,6 +803,25 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Tema visual */}
+      <div className="panel glass">
+        <div className="panel-head"><div className="panel-title">Tema visual</div></div>
+        <div className="onb-theme-grid">
+          {(window.THEMES || []).map(t => (
+            <button key={t.id} type="button"
+              className={"onb-theme-opt" + (currentTheme === t.id ? " on" : "")}
+              onClick={() => onThemeChange(t.id)}>
+              <div className="onb-theme-swatch"
+                style={{ background: `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})` }}>
+                {currentTheme === t.id && <Ic.check size={14} />}
+              </div>
+              <span>{t.nome}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid-2 config-grid">
         {/* Preferências */}
         <div className="panel glass">
@@ -841,6 +860,10 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
           <div className="set-row">
             <div className="set-info"><div className="t">Restaurar exemplo</div><div className="d">Recarrega os dados de demonstração</div></div>
             <button className="btn btn-ghost" style={{ padding: "10px 14px" }} onClick={onReset}>Restaurar</button>
+          </div>
+          <div className="set-row">
+            <div className="set-info"><div className="t">Redefinir perfil</div><div className="d">Volta à tela de personalização inicial</div></div>
+            <button className="btn btn-ghost" style={{ padding: "10px 14px", color: "var(--cat-saude)" }} onClick={onResetProfile}>Redefinir</button>
           </div>
         </div>
       </div>

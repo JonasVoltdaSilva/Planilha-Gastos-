@@ -1,4 +1,4 @@
-const CACHE = 'cofrinho-v7';
+const CACHE = 'cofrinho-v8';
 const LOCAL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const LOCAL = [
   './icon.svg',
   './icons.jsx',
   './data.jsx',
+  './onboarding.jsx',
   './chart.jsx',
   './modal.jsx',
   './views.jsx',
