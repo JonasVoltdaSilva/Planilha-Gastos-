@@ -7,6 +7,7 @@ const NAV = [
   { id: "home",      nome: "Início",    icon: Ic.home },
   { id: "dashboard", nome: "Dashboard", icon: Ic.dashboard },
   { id: "gastos",    nome: "Gastos",    icon: Ic.wallet },
+  { id: "faturas",   nome: "Faturas",   icon: Ic.invoice },
   { id: "relatorios",nome: "Relatórios",icon: Ic.chart },
   { id: "config",    nome: "Config.",   icon: Ic.settings },
 ];
@@ -15,6 +16,7 @@ const PAGE_META = {
   home:        { t: "Início",        s: "" },
   dashboard:   { t: "Dashboard",     s: "Visão geral das suas finanças pessoais" },
   gastos:      { t: "Gastos",        s: "Sua planilha completa de lançamentos" },
+  faturas:     { t: "Faturas",       s: "Gestão de faturas dos seus cartões de crédito" },
   relatorios:  { t: "Relatórios",    s: "Análise da distribuição dos seus gastos" },
   config:      { t: "Configurações", s: "Personalize sua experiência" },
 };
@@ -23,6 +25,7 @@ const LS_KEY   = "planilha_gastos_v1";
 const LS_SET   = "planilha_gastos_settings_v1";
 const LS_CATS  = "planilha_gastos_cats_v1";
 const LS_CARDS = "planilha_gastos_cards_v1";
+const LS_FAT   = "planilha_gastos_faturas_v1";
 
 function App() {
   const [page, setPage] = useState("home");
@@ -111,6 +114,32 @@ function App() {
     return [];
   });
 
+  // ---------- Fatura overrides (mark as paid) ----------
+  const [faturaOverrides, setFaturaOverrides] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS_FAT);
+      if (s) return JSON.parse(s);
+    } catch (e) {}
+    return {};
+  });
+
+  const markFaturaPaid = (cardId, mes) => {
+    const key = `${cardId}:${mes}`;
+    const updated = { ...faturaOverrides, [key]: { status: "paga", paidAt: todayISO() } };
+    setFaturaOverrides(updated);
+    try { localStorage.setItem(LS_FAT, JSON.stringify(updated)); } catch (e) {}
+    showToast("Fatura marcada como paga");
+  };
+
+  const unmarkFaturaPaid = (cardId, mes) => {
+    const key = `${cardId}:${mes}`;
+    const updated = { ...faturaOverrides };
+    delete updated[key];
+    setFaturaOverrides(updated);
+    try { localStorage.setItem(LS_FAT, JSON.stringify(updated)); } catch (e) {}
+    showToast("Fatura reaberta");
+  };
+
   const addCard = (card) => {
     const updated = [...cards, card];
     setCards(updated);
@@ -187,12 +216,17 @@ function App() {
     if (exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
       const parcelVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
       const grupo = uid();
-      const parcList = Array.from({ length: exp.parcTotal }, (_, i) => ({
-        ...exp, id: uid(), data: addMonths(exp.data, i),
-        valor: parcelVal,
-        descricao: `${exp.descricao} (${i + 1}/${exp.parcTotal})`,
-        parcNum: i + 1, parcGrupo: grupo,
-      }));
+      const linkedCard = exp.cardId ? cards.find(c => c.id === exp.cardId) : null;
+      const parcList = Array.from({ length: exp.parcTotal }, (_, i) => {
+        const parcelData = addMonths(exp.data, i);
+        return {
+          ...exp, id: uid(), data: parcelData,
+          valor: parcelVal,
+          descricao: `${exp.descricao} (${i + 1}/${exp.parcTotal})`,
+          parcNum: i + 1, parcGrupo: grupo,
+          faturaRef: linkedCard ? calcFaturaRef(parcelData, linkedCard) : (exp.faturaRef || null),
+        };
+      });
       setExpenses(prev => [...parcList, ...prev]);
       setModal(null);
       showToast(`${exp.parcTotal}× de ${fmtBRL(parcelVal)} adicionadas`);
@@ -325,6 +359,17 @@ function App() {
               cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
               onOpenFilterSheet={() => setShowFilterSheet(true)}
               {...{ period, setPeriod, cat, setCat, search, setSearch }} />
+          )}
+          {page === "faturas" && (
+            <FaturasView
+              cards={cards} expenses={expenses}
+              faturaOverrides={faturaOverrides}
+              onMarkPaid={markFaturaPaid}
+              onUnmarkPaid={unmarkFaturaPaid}
+              onEdit={(e) => setModal(e)}
+              onDelete={deleteExpense}
+              onDeleteGroup={deleteExpenseGroup}
+            />
           )}
           {page === "relatorios" && (
             <RelatoriosView expenses={expenses} byCat={byCat} total={total} />

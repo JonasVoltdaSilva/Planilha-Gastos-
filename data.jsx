@@ -336,10 +336,58 @@ function seedData() {
   })).sort((a, b) => b.data.localeCompare(a.data));
 }
 
+const LS_FATURAS = "planilha_gastos_faturas_v1";
+
+function formatMes(mesISO) {
+  const [y, m] = mesISO.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleString("pt-BR", { month: "long", year: "numeric" });
+}
+
+function computeFaturas(cards, expenses, faturaOverrides) {
+  const today = new Date();
+  const results = [];
+  for (const card of cards) {
+    const cardExps = expenses.filter(e => e.cardId === card.id && e.tipo === "credito" && e.kind !== "entrada");
+    const byMes = {};
+    for (const exp of cardExps) {
+      const ref = exp.faturaRef || calcFaturaRef(exp.data, card);
+      if (!ref) continue;
+      if (!byMes[ref]) byMes[ref] = [];
+      byMes[ref].push(exp);
+    }
+    const currMes = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    const nd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMes = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}`;
+    if (!byMes[currMes]) byMes[currMes] = [];
+    if (!byMes[nextMes]) byMes[nextMes] = [];
+    for (const [mes, transacoes] of Object.entries(byMes)) {
+      const [y, m] = mes.split("-").map(Number);
+      const closingDay = card.diaFechamento || 20;
+      const dataFechamento = `${mes}-${String(closingDay).padStart(2, "0")}`;
+      const vencDate = new Date(y, m, card.diaVencimento || 5);
+      const dataVencimento = vencDate.toISOString().slice(0, 10);
+      const key = `${card.id}:${mes}`;
+      const override = faturaOverrides?.[key];
+      const status = override?.status === "paga" ? "paga"
+        : today > new Date(dataFechamento + "T23:59:59") ? "fechada"
+        : "aberta";
+      results.push({
+        id: key, cardId: card.id, card, mes,
+        dataFechamento, dataVencimento, status,
+        total: transacoes.reduce((s, e) => s + e.valor, 0),
+        transacoes: [...transacoes].sort((a, b) => b.data.localeCompare(a.data)),
+        paidAt: override?.paidAt || null,
+      });
+    }
+  }
+  return results.sort((a, b) => b.mes.localeCompare(a.mes) || a.cardId.localeCompare(b.cardId));
+}
+
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
   FORMAS, addMonths, calcFaturaRef, makeTransaction,
   parseQuick, parseStatement, detectCategory, detectTipo,
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,
+  LS_FATURAS, formatMes, computeFaturas,
 });

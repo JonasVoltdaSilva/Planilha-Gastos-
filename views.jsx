@@ -1012,7 +1012,174 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
   );
 }
 
+/* ============================================================
+   FATURAS
+   ============================================================ */
+function FaturaCard({ fatura, onMarkPaid, onUnmarkPaid, onEdit, onDelete, onDeleteGroup }) {
+  const [expanded, setExpanded] = useS(fatura.status === "aberta");
+
+  const statusColor = fatura.status === "aberta" ? "var(--accent-mint)"
+    : fatura.status === "fechada" ? "#e0c85a"
+    : "var(--text-lo)";
+  const statusLabel = fatura.status === "aberta" ? "Em aberto"
+    : fatura.status === "fechada" ? "Fechada"
+    : "Paga";
+
+  return (
+    <div className={"panel glass fatura-card" + (fatura.status === "aberta" ? " fatura-destaque" : "")}>
+      <div className="fatura-header" onClick={() => setExpanded(v => !v)}>
+        <div style={{ flex: 1 }}>
+          <div className="fatura-mes">{formatMes(fatura.mes)}</div>
+          <div className="fatura-dates">
+            <Ic.calendar size={11} />
+            Fecha {fmtDate(fatura.dataFechamento)} · Vence {fmtDate(fatura.dataVencimento)}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div className="fatura-total" style={fatura.status === "paga" ? { color: "var(--text-lo)" } : {}}>
+            {fmtBRL(fatura.total)}
+          </div>
+          <span className="exp-tag"
+            style={{ color: statusColor, borderColor: statusColor + "44", background: statusColor + "18" }}>
+            {statusLabel}
+          </span>
+        </div>
+        <div className={"fatura-chevron" + (expanded ? " expanded" : "")}>
+          <Ic.chevron size={18} />
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--glass-border)" }}>
+          {fatura.status !== "paga" ? (
+            <div style={{ marginBottom: 14 }}>
+              <button className="btn btn-ghost" style={{ fontSize: 13, padding: "8px 14px", minHeight: 38 }}
+                onClick={(e) => { e.stopPropagation(); onMarkPaid(); }}>
+                <Ic.check size={15} />Marcar como paga
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, color: "var(--text-lo)", display: "flex", alignItems: "center", gap: 5 }}>
+                <Ic.check size={13} />Paga em {fmtDate(fatura.paidAt)}
+              </span>
+              <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 12px", minHeight: 34 }}
+                onClick={(e) => { e.stopPropagation(); onUnmarkPaid(); }}>
+                Reabrir
+              </button>
+            </div>
+          )}
+          {fatura.transacoes.length > 0 ? (
+            <ExpenseTable rows={fatura.transacoes} onEdit={onEdit} onDelete={onDelete}
+              onDeleteGroup={onDeleteGroup} cards={[fatura.card]} />
+          ) : (
+            <div style={{ color: "var(--text-lo)", fontSize: 13, textAlign: "center", padding: "16px 0" }}>
+              Sem transações nesta fatura
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FaturasView({ cards, expenses, faturaOverrides, onMarkPaid, onUnmarkPaid, onEdit, onDelete, onDeleteGroup }) {
+  const [selectedCardId, setSelectedCardId] = useS(cards?.[0]?.id || null);
+
+  const selectedCard = useM(() => cards?.find(c => c.id === selectedCardId), [cards, selectedCardId]);
+
+  const faturas = useM(() => {
+    if (!cards || cards.length === 0) return [];
+    const all = computeFaturas(cards, expenses, faturaOverrides);
+    return selectedCardId ? all.filter(f => f.cardId === selectedCardId) : all;
+  }, [cards, expenses, faturaOverrides, selectedCardId]);
+
+  const totalAberto = useM(() =>
+    faturas.filter(f => f.status === "aberta").reduce((s, f) => s + f.total, 0), [faturas]);
+
+  const totalFechado = useM(() =>
+    faturas.filter(f => f.status === "fechada").reduce((s, f) => s + f.total, 0), [faturas]);
+
+  if (!cards || cards.length === 0) {
+    return (
+      <div className="panel glass">
+        <div className="empty" style={{ padding: "44px 20px" }}>
+          <Ic.card size={40} />
+          <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Nenhum cartão cadastrado</div>
+          <div style={{ fontSize: 13, marginTop: 6 }}>
+            Adicione um cartão em Configurações para ver as faturas.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Seletor de cartão + resumo */}
+      <div className="panel glass" style={{ marginBottom: 16 }}>
+        <div className="tipo-picker">
+          {cards.map(c => (
+            <button key={c.id} type="button"
+              className={"tipo-opt" + (selectedCardId === c.id ? " on" : "")}
+              style={{ "--tipo-hex": c.cor || "var(--accent-mint)" }}
+              onClick={() => setSelectedCardId(c.id)}>
+              <Ic.card size={14} />{c.nome}
+            </button>
+          ))}
+        </div>
+        {selectedCard && (
+          <div style={{ display: "flex", gap: 24, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--glass-border)", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Dia fechamento</div>
+              <div style={{ fontWeight: 700, fontSize: 17 }}>{selectedCard.diaFechamento}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Dia vencimento</div>
+              <div style={{ fontWeight: 700, fontSize: 17 }}>{selectedCard.diaVencimento}</div>
+            </div>
+            {totalAberto > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Em aberto</div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: "var(--accent-mint)" }}>{fmtBRL(totalAberto)}</div>
+              </div>
+            )}
+            {totalFechado > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>A pagar</div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: "#e0c85a" }}>{fmtBRL(totalFechado)}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Lista de faturas */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {faturas.map(f => (
+          <FaturaCard key={f.id} fatura={f}
+            onMarkPaid={() => onMarkPaid(f.cardId, f.mes)}
+            onUnmarkPaid={() => onUnmarkPaid(f.cardId, f.mes)}
+            onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} />
+        ))}
+      </div>
+
+      {faturas.length === 0 && (
+        <div className="panel glass" style={{ marginTop: 0 }}>
+          <div className="empty" style={{ padding: "44px 20px" }}>
+            <Ic.receipt size={40} />
+            <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Sem transações no crédito</div>
+            <div style={{ fontSize: 13, marginTop: 6 }}>
+              Adicione gastos com Crédito vinculados a "{selectedCard?.nome}" para ver as faturas.
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 Object.assign(window, {
-  HomeView, DashboardView, GastosView, RelatoriosView, ConfigView,
+  HomeView, DashboardView, GastosView, RelatoriosView, ConfigView, FaturasView, FaturaCard,
   ExpenseTable, FilterBar, FilterSheet, CardManager, Stat, BudgetBar, BankImportModal,
 });
