@@ -699,15 +699,19 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
 
   return (
     <>
-      {showImport && <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />}
-      {showFilterSheet && (
+      {showImport && ReactDOM.createPortal(
+        <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />,
+        document.body
+      )}
+      {showFilterSheet && ReactDOM.createPortal(
         <FilterSheet
           allCats={allCats} cards={cards}
           cat={cat} setCat={setCat}
           tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
           cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
           onClose={() => setShowFilterSheet(false)}
-        />
+        />,
+        document.body
       )}
       <div className="panel glass" style={{ marginBottom: 16 }}>
         <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
