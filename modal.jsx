@@ -90,7 +90,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
       forma: kind === "gasto" ? forma : "avista",
       parcTotal: kind === "gasto" && forma === "parcelado" ? parcNum : 1,
       parcNum: 1,
-      cardId: kind === "gasto" && tipo === "credito" ? (cardId || null) : null,
+      cardId: kind === "gasto" && (tipo === "credito" || tipo === "debito") ? (cardId || null) : null,
       faturaRef: kind === "gasto" && tipo === "credito" && selectedCard ? calcFaturaRef(data, selectedCard) : null,
     });
   };
@@ -190,34 +190,34 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
                       )}
                     </div>
                   )}
+                </>
+              )}
 
-                  {cards && cards.length > 0 && (
-                    <div className="form-row">
-                      <label className="form-label">Cartão de crédito</label>
-                      <div className="tipo-picker">
-                        <button type="button"
-                          className={"tipo-opt" + (!cardId ? " on" : "")}
-                          style={{ "--tipo-hex": "var(--text-mid)" }}
-                          onClick={() => setCardId(null)}>
-                          Nenhum
-                        </button>
-                        {cards.map(card => (
-                          <button key={card.id} type="button"
-                            className={"tipo-opt" + (cardId === card.id ? " on" : "")}
-                            style={{ "--tipo-hex": card.cor || "var(--accent-mint)" }}
-                            onClick={() => setCardId(card.id)}>
-                            <Ic.card size={13} />{card.nome}
-                          </button>
-                        ))}
-                      </div>
-                      {faturaHint && (
-                        <div style={{ fontSize: 12, color: "var(--text-mid)", marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
-                          <Ic.receipt size={12} />Fatura de {faturaHint}
-                        </div>
-                      )}
+              {(tipo === "credito" || tipo === "debito") && cards && cards.length > 0 && (
+                <div className="form-row">
+                  <label className="form-label">Cartão</label>
+                  <div className="tipo-picker">
+                    <button type="button"
+                      className={"tipo-opt" + (!cardId ? " on" : "")}
+                      style={{ "--tipo-hex": "var(--text-mid)" }}
+                      onClick={() => setCardId(null)}>
+                      Nenhum
+                    </button>
+                    {cards.map(card => (
+                      <button key={card.id} type="button"
+                        className={"tipo-opt" + (cardId === card.id ? " on" : "")}
+                        style={{ "--tipo-hex": card.cor || "var(--accent-mint)" }}
+                        onClick={() => setCardId(card.id)}>
+                        <Ic.card size={13} />{card.nome}
+                      </button>
+                    ))}
+                  </div>
+                  {tipo === "credito" && faturaHint && (
+                    <div style={{ fontSize: 12, color: "var(--text-mid)", marginTop: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                      <Ic.receipt size={12} />Fatura de {faturaHint}
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               <div className="form-row">
