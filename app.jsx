@@ -55,7 +55,6 @@ function App() {
       const s = localStorage.getItem(LS_CATS);
       if (s) {
         const cats = JSON.parse(s);
-        // Adiciona ao global imediatamente, antes do primeiro render
         cats.forEach(c => { if (!CAT_MAP[c.id]) { CATEGORIES.push(c); CAT_MAP[c.id] = c; } });
         return cats;
       }
@@ -126,15 +125,13 @@ function App() {
 
   const [modal, setModal] = useState(null);
   const [fabOpen, setFabOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({ msg: "", icon: "check" });
   const [quick, setQuick] = useState("");
 
-  // filtros
+  // filtros globais (período, categoria, busca) — tipo/cartão ficam em GastosView
   const [period, setPeriod] = useState("30");
-  const [cat, setCat]         = useState("all");
-  const [search, setSearch]   = useState("");
-  const [tipoFilter, setTipoFilter]       = useState("all");
-  const [cardIdFilter, setCardIdFilter]   = useState("all");
+  const [cat, setCat]       = useState("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => { try { localStorage.setItem(LS_KEY,  JSON.stringify(expenses)); } catch (e) {} }, [expenses]);
   useEffect(() => { try { localStorage.setItem(LS_SET,  JSON.stringify(settings)); } catch (e) {} }, [settings]);
@@ -144,9 +141,12 @@ function App() {
     document.body.classList.toggle("no-glow", !settings.glow);
   }, [settings.animations, settings.glow]);
 
-  const showToast = (m) => { setToast(m); setTimeout(() => setToast(""), 2400); };
+  const showToast = (msg, icon = "check") => {
+    setToast({ msg, icon });
+    setTimeout(() => setToast({ msg: "", icon: "check" }), 2400);
+  };
 
-  // ---------- Filtragem ----------
+  // ---------- Filtragem global (sem tipo/cartão — esses ficam em GastosView) ----------
   const filtered = useMemo(() => {
     let arr = [...expenses];
     if (period !== "all") {
@@ -154,14 +154,12 @@ function App() {
       arr = arr.filter(e => e.data >= min);
     }
     if (cat !== "all") arr = arr.filter(e => e.categoria === cat);
-    if (tipoFilter !== "all") arr = arr.filter(e => e.tipo === tipoFilter);
-    if (cardIdFilter !== "all") arr = arr.filter(e => e.cardId === cardIdFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       arr = arr.filter(e => e.descricao.toLowerCase().includes(q));
     }
     return arr.sort((a, b) => b.data.localeCompare(a.data) || b.valor - a.valor);
-  }, [expenses, period, cat, tipoFilter, cardIdFilter, search]);
+  }, [expenses, period, cat, search]);
 
   const total = useMemo(() =>
     filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0),
@@ -180,6 +178,7 @@ function App() {
 
   // ---------- Ações ----------
   const saveTransaction = (exp) => {
+    const isEditing = !!modal?.id;
     if (exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
       const parcelVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
       const grupo = uid();
@@ -198,9 +197,11 @@ function App() {
         return exists ? prev.map(e => e.id === exp.id ? exp : e) : [exp, ...prev];
       });
       setModal(null);
-      showToast(modal?.id
-        ? (exp.kind === "entrada" ? "Entrada atualizada" : "Gasto atualizado")
-        : (exp.kind === "entrada" ? "Entrada adicionada!" : "Gasto adicionado!"));
+      showToast(
+        isEditing
+          ? (exp.kind === "entrada" ? "Entrada atualizada" : "Gasto atualizado")
+          : (exp.kind === "entrada" ? "Entrada adicionada!" : "Gasto adicionado!")
+      );
     }
   };
 
@@ -208,7 +209,15 @@ function App() {
     const exp = expenses.find(e => e.id === id);
     if (settings.confirmDelete && !window.confirm("Excluir este lançamento?")) return;
     setExpenses(prev => prev.filter(e => e.id !== id));
-    showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído");
+    showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído", "trash");
+  };
+
+  const deleteExpenseGroup = (parcGrupo) => {
+    const group = expenses.filter(e => e.parcGrupo === parcGrupo);
+    if (!group.length) return;
+    if (settings.confirmDelete && !window.confirm(`Excluir todas as ${group.length} parcelas?`)) return;
+    setExpenses(prev => prev.filter(e => e.parcGrupo !== parcGrupo));
+    showToast(`${group.length} parcelas excluídas`, "trash");
   };
 
   const importExpenses = (list) => {
@@ -221,11 +230,14 @@ function App() {
   const submitQuick = () => {
     const parsed = parseQuick(quick);
     if (!parsed) { showToast("Não entendi — tente: \"Gastei R$50 com comida\""); return; }
-    const exp = { id: uid(), data: todayISO(), kind: "gasto", forma: "avista", parcTotal: 1, parcNum: 1, ...parsed };
-    if (!settings.autoCat) exp.categoria = "outros";
-    setExpenses(prev => [exp, ...prev]);
+    if (parsed.kind !== "entrada" && !settings.autoCat) parsed.categoria = "outros";
+    setExpenses(prev => [parsed, ...prev]);
     setQuick("");
-    showToast(`+ ${fmtBRL(parsed.valor)} · ${CAT_MAP[exp.categoria]?.nome || exp.categoria}`);
+    showToast(
+      parsed.kind === "entrada"
+        ? `+${fmtBRL(parsed.valor)} entrada adicionada`
+        : `+${fmtBRL(parsed.valor)} · ${CAT_MAP[parsed.categoria]?.nome || parsed.categoria}`
+    );
   };
 
   const resetData = () => { setExpenses(seedData()); showToast("Dados de exemplo restaurados"); };
@@ -285,26 +297,25 @@ function App() {
               <Ic.sparkle size={20} />
               <input value={quick} onChange={(e) => setQuick(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitQuick()}
-                placeholder='Adição rápida — ex.: "Gastei R$50 com comida no almoço"' />
+                placeholder='Adição rápida — ex.: "Gastei R$50 com comida" ou "Recebi R$1500 salário"' />
               <button className="btn btn-primary" onClick={submitQuick}><Ic.plus size={17} />Lançar</button>
             </div>
           )}
 
           {page === "home" && (
             <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
-              onAdd={() => setModal({})} onEdit={(e) => setModal(e)} onDelete={deleteExpense} />
+              onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
+              onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup} />
           )}
           {page === "dashboard" && (
             <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
-              budget={settings.budget} cards={cards} />
+              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+              onAdd={() => setModal({})} budget={settings.budget} cards={cards} />
           )}
           {page === "gastos" && (
             <GastosView filtered={filtered} total={total} byCat={byCat}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onAdd={() => setModal({})}
-              onImport={importExpenses} allCats={allCats} cards={cards}
-              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
-              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+              onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
               {...{ period, setPeriod, cat, setCat, search, setSearch }} />
           )}
           {page === "relatorios" && (
@@ -343,7 +354,7 @@ function App() {
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
       )}
-      <Toast msg={toast} />
+      <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );
 }

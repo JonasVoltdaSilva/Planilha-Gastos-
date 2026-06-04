@@ -26,13 +26,13 @@ function BudgetBar({ total, budget }) {
 }
 
 /* ---------- Tabela de gastos ---------- */
-function ExpenseTable({ rows, onEdit, onDelete, cards }) {
+function ExpenseTable({ rows, onEdit, onDelete, onDeleteGroup, cards, emptyText }) {
   if (rows.length === 0) {
     return (
       <div className="empty">
         <Ic.receipt size={40} />
-        <div style={{ fontWeight: 600, color: "var(--text-mid)" }}>Nenhum gasto encontrado</div>
-        <div style={{ fontSize: 13, marginTop: 4 }}>Adicione um gasto ou ajuste os filtros.</div>
+        <div style={{ fontWeight: 600, color: "var(--text-mid)" }}>{emptyText || "Nenhum lançamento encontrado"}</div>
+        <div style={{ fontSize: 13, marginTop: 4 }}>Adicione um lançamento ou ajuste os filtros.</div>
       </div>
     );
   }
@@ -58,13 +58,15 @@ function ExpenseTable({ rows, onEdit, onDelete, cards }) {
                       Entrada
                     </span>
                   ) : (
-                    <span className="exp-tag" style={{ background: (CAT_MAP[e.categoria] || CAT_MAP["outros"]).hex + "22", color: (CAT_MAP[e.categoria] || CAT_MAP["outros"]).hex, borderColor: (CAT_MAP[e.categoria] || CAT_MAP["outros"]).hex + "44" }}>
-                      {(CAT_MAP[e.categoria] || CAT_MAP["outros"]).nome}
+                    <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>
+                      {c.nome}
                     </span>
                   )}
-                  <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
-                    {t.nome}
-                  </span>
+                  {!isEntrada && (
+                    <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
+                      {t.nome}
+                    </span>
+                  )}
                   {linkedCard && (
                     <span className="exp-tag" style={{ background: linkedCard.cor + "22", color: linkedCard.cor, borderColor: linkedCard.cor + "44" }}>
                       <Ic.card size={10} />{linkedCard.nome}
@@ -78,6 +80,13 @@ function ExpenseTable({ rows, onEdit, onDelete, cards }) {
                 </span>
                 <div className="row-actions">
                   <button className="icon-btn" title="Editar" onClick={() => onEdit(e)}><Ic.edit size={15} /></button>
+                  {e.parcGrupo && onDeleteGroup && (
+                    <button className="icon-btn" title={`Excluir todas as ${e.parcTotal} parcelas`}
+                      style={{ fontSize: 9, gap: 2 }}
+                      onClick={() => onDeleteGroup(e.parcGrupo)}>
+                      <Ic.trash size={13} /><span style={{ fontSize: 9, lineHeight: 1 }}>×{e.parcTotal}</span>
+                    </button>
+                  )}
                   <button className="icon-btn danger" title="Excluir" onClick={() => onDelete(e.id)}><Ic.trash size={15} /></button>
                 </div>
               </div>
@@ -509,7 +518,7 @@ function BankImportModal({ onImport, onClose }) {
 /* ============================================================
    HOME / INÍCIO
    ============================================================ */
-function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards, userName }) {
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName }) {
   const now = new Date();
   const todayDay = now.getDate();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -527,17 +536,21 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards, userName }
   const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 6);
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
 
-  const dueAlerts = cards ? cards.filter(c => {
-    const venc = c.diaVencimento;
-    return venc >= todayDay && (venc - todayDay) <= 7;
-  }) : [];
+  const dueAlerts = (cards || []).map(c => {
+    const today = new Date();
+    const vencDay = c.diaVencimento;
+    const dueDate = new Date(today.getFullYear(), today.getMonth(), vencDay);
+    if (dueDate < today) dueDate.setMonth(dueDate.getMonth() + 1);
+    const diffDays = Math.ceil((dueDate - today) / 86400000);
+    return { ...c, diffDays };
+  }).filter(c => c.diffDays >= 0 && c.diffDays <= 7);
 
   return (
     <>
       {dueAlerts.map(c => (
         <div key={c.id} className="due-alert">
           <Ic.bell size={16} />
-          Fatura do <strong>{c.nome}</strong> vence dia {c.diaVencimento} — {c.diaVencimento - todayDay === 0 ? "hoje!" : `em ${c.diaVencimento - todayDay} dia${c.diaVencimento - todayDay === 1 ? "" : "s"}`}
+          Fatura do <strong>{c.nome}</strong> vence dia {c.diaVencimento} — {c.diffDays === 0 ? "hoje!" : `em ${c.diffDays} dia${c.diffDays === 1 ? "" : "s"}`}
         </div>
       ))}
 
@@ -590,7 +603,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards, userName }
           <div className="panel-head">
             <div className="panel-title">Últimos lançamentos</div>
           </div>
-          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} cards={cards} />
+          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>
       ) : (
         <div className="panel glass">
@@ -608,7 +621,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, cards, userName }
 /* ============================================================
    DASHBOARD
    ============================================================ */
-function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onAdd, budget, cards }) {
+function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onDeleteGroup, onAdd, budget, cards }) {
   const gastos = filtered.filter(e => e.kind !== "entrada");
   const entradas = filtered.filter(e => e.kind === "entrada");
   const count = gastos.length;
@@ -633,7 +646,7 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
             <div className="panel-title">Lançamentos recentes</div>
             <button className="btn btn-primary btn-desktop-only" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
           </div>
-          <ExpenseTable rows={filtered.slice(0, 8)} onEdit={onEdit} onDelete={onDelete} cards={cards} />
+          <ExpenseTable rows={filtered.slice(0, 8)} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>
 
         <div className="panel glass">
@@ -655,20 +668,34 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onA
 /* ============================================================
    GASTOS
    ============================================================ */
-function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
-  period, setPeriod, cat, setCat, search, setSearch, allCats,
-  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, cards }) {
+function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, onAdd, onImport,
+  period, setPeriod, cat, setCat, search, setSearch, allCats, cards }) {
   const [showImport, setShowImport] = useS(false);
   const [showFilterSheet, setShowFilterSheet] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
+  const [tipoFilter, setTipoFilter] = useS("all");
+  const [cardIdFilter, setCardIdFilter] = useS("all");
 
-  const gastosTotal = useM(() => filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0), [filtered]);
-  const entradasTotal = useM(() => filtered.filter(e => e.kind === "entrada").reduce((s, e) => s + e.valor, 0), [filtered]);
+  // Aplica filtros locais de tipo/cartão sobre o filtered global (período+cat+busca)
+  const localFiltered = useM(() => {
+    let arr = [...filtered];
+    if (tipoFilter !== "all") arr = arr.filter(e => e.tipo === tipoFilter);
+    if (cardIdFilter !== "all") arr = arr.filter(e => e.cardId === cardIdFilter);
+    return arr;
+  }, [filtered, tipoFilter, cardIdFilter]);
+
+  const gastosTotal = useM(() => localFiltered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0), [localFiltered]);
+  const entradasTotal = useM(() => localFiltered.filter(e => e.kind === "entrada").reduce((s, e) => s + e.valor, 0), [localFiltered]);
+
   const displayRows = useM(() => {
-    if (kindFilter === "gastos") return filtered.filter(e => e.kind !== "entrada");
-    if (kindFilter === "entradas") return filtered.filter(e => e.kind === "entrada");
-    return filtered;
-  }, [filtered, kindFilter]);
+    if (kindFilter === "gastos") return localFiltered.filter(e => e.kind !== "entrada");
+    if (kindFilter === "entradas") return localFiltered.filter(e => e.kind === "entrada");
+    return localFiltered;
+  }, [localFiltered, kindFilter]);
+
+  const emptyText = kindFilter === "entradas" ? "Nenhuma entrada encontrada"
+    : kindFilter === "gastos" ? "Nenhum gasto encontrado"
+    : "Nenhum lançamento encontrado";
 
   return (
     <>
@@ -722,7 +749,8 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
           )}
           <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
         </div>
-        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} cards={cards} />
+        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
+          cards={cards} emptyText={emptyText} />
       </div>
     </>
   );
@@ -733,6 +761,28 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onAdd, onImport,
    ============================================================ */
 function RelatoriosView({ expenses, byCat, total }) {
   const maxCat = byCat[0]?.valor || 1;
+
+  const monthlyData = useM(() => {
+    const now = new Date();
+    return Array.from({ length: 4 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (3 - i), 1);
+      const mStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const gastos = expenses
+        .filter(e => e.data.startsWith(mStr) && e.kind !== "entrada")
+        .reduce((s, e) => s + e.valor, 0);
+      const entradas = expenses
+        .filter(e => e.data.startsWith(mStr) && e.kind === "entrada")
+        .reduce((s, e) => s + e.valor, 0);
+      return { label: d.toLocaleString("pt-BR", { month: "short" }), gastos, entradas, mStr };
+    });
+  }, [expenses]);
+
+  const topExpenses = useM(() =>
+    [...expenses].filter(e => e.kind !== "entrada").sort((a, b) => b.valor - a.valor).slice(0, 5),
+    [expenses]);
+
+  const maxMonth = Math.max(...monthlyData.map(m => m.gastos), 1);
+
   return (
     <>
       <div className="grid-2">
@@ -753,6 +803,7 @@ function RelatoriosView({ expenses, byCat, total }) {
                 </div>
               </div>
             ))}
+            {byCat.length === 0 && <div className="empty" style={{ padding: "24px 0" }}>Sem dados no período</div>}
           </div>
         </div>
         <div className="panel glass">
@@ -760,6 +811,66 @@ function RelatoriosView({ expenses, byCat, total }) {
           {total > 0 ? <Donut data={byCat} total={total} /> : <div className="empty">Sem dados</div>}
         </div>
       </div>
+
+      <div className="grid-2" style={{ marginTop: 16 }}>
+        <div className="panel glass">
+          <div className="panel-head"><div className="panel-title">Comparativo mensal</div></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {monthlyData.map(m => (
+              <div key={m.mStr}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
+                  <span style={{ fontWeight: 600, textTransform: "capitalize", color: "var(--text-mid)" }}>{m.label}</span>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {m.entradas > 0 && (
+                      <span style={{ color: "var(--accent-mint)", fontWeight: 600, fontSize: 12 }}>+{fmtBRLshort(m.entradas)}</span>
+                    )}
+                    <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: m.gastos > 0 ? "#e08a7a" : "var(--text-lo)" }}>
+                      {m.gastos > 0 ? `−${fmtBRLshort(m.gastos)}` : "—"}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ height: 8, borderRadius: 20, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", borderRadius: 20,
+                    width: `${(m.gastos / maxMonth) * 100}%`,
+                    background: "linear-gradient(90deg, #e08a7a, #e05a5a)",
+                    transition: "width 0.7s ease",
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel glass">
+          <div className="panel-head"><div className="panel-title">Maiores gastos</div></div>
+          {topExpenses.length === 0 ? (
+            <div className="empty" style={{ padding: "24px 0" }}>Sem dados</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {topExpenses.map((e, i) => {
+                const c = CAT_MAP[e.categoria] || CAT_MAP["outros"];
+                return (
+                  <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0",
+                    borderBottom: i < topExpenses.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-lo)", minWidth: 18, textAlign: "center" }}>
+                      #{i + 1}
+                    </span>
+                    <span className="dot" style={{ background: c.hex, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: 13, color: "var(--text-mid)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {e.descricao}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13.5, color: "#e08a7a", flexShrink: 0 }}>
+                      {fmtBRL(e.valor)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid-2" style={{ gridTemplateColumns: "1fr", marginTop: 16 }}>
         <div className="panel glass">
           <div className="panel-head"><div className="panel-title">Evolução — últimos 7 dias</div></div>
@@ -911,5 +1022,5 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
 
 Object.assign(window, {
   HomeView, DashboardView, GastosView, RelatoriosView, ConfigView,
-  ExpenseTable, Filters, FilterBar, FilterSheet, CardManager, Stat, BudgetBar, BankImportModal,
+  ExpenseTable, FilterBar, FilterSheet, CardManager, Stat, BudgetBar, BankImportModal,
 });

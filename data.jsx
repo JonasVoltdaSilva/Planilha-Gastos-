@@ -151,19 +151,31 @@ const FORMAS = [
   { id: "parcelado", nome: "Parcelado" },
 ];
 
+/* ---- Fábrica de transações — garante schema completo em todos os caminhos ---- */
+function makeTransaction(fields) {
+  return {
+    id: uid(), data: todayISO(),
+    kind: "gasto", forma: "avista",
+    parcTotal: 1, parcNum: 1,
+    cardId: null, faturaRef: null,
+    categoria: "outros", tipo: "outros",
+    descricao: "", valor: 0,
+    ...fields,
+  };
+}
+
 /* ---- Categorização inteligente ---- */
 function detectCategory(text) {
   const t = text.toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "") // remove acentos para comparação
-    .replace(/[^a-z0-9\s]/g, " "); // simplifica caracteres especiais
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ");
 
-  // Score por categoria (quanto mais palavras batem, mais confiante)
   const scores = {};
   for (const [catId, kws] of Object.entries(KEYWORDS)) {
     let score = 0;
     for (const kw of kws) {
       const kwNorm = kw.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9\s]/g, " ");
-      if (t.includes(kwNorm)) score += kwNorm.length > 5 ? 2 : 1; // palavras longas valem mais
+      if (t.includes(kwNorm)) score += kwNorm.length > 5 ? 2 : 1;
     }
     if (score > 0) scores[catId] = score;
   }
@@ -190,6 +202,20 @@ function parseQuick(text) {
   const valor = parseFloat(numStr);
   if (isNaN(valor) || valor <= 0) return null;
 
+  const isEntrada = /\b(recebi|ganhei|recebei|recebimento|renda|salário|salario|freelance|dividendo|bônus|bonus)\b/i.test(raw);
+
+  if (isEntrada) {
+    let desc = raw
+      .replace(/recebi|ganhei|recebei|recebimento|renda|salário|salario|freelance|dividendo|bônus|bonus/gi, "")
+      .replace(/r\$\s*[\d.,]+/i, "")
+      .replace(/\b[\d.,]+\b/, "")
+      .replace(/^\s*(de|do|da|em)\s+/i, "")
+      .trim().replace(/\s{2,}/g, " ").trim();
+    if (!desc) desc = "Entrada";
+    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+    return makeTransaction({ valor, descricao: desc, kind: "entrada", tipo: "outros" });
+  }
+
   const categoria = detectCategory(raw);
   const tipo = detectTipo(raw);
 
@@ -204,7 +230,7 @@ function parseQuick(text) {
   if (!desc) desc = CAT_MAP[categoria]?.nome || "Gasto";
   desc = desc.charAt(0).toUpperCase() + desc.slice(1);
 
-  return { valor, categoria, descricao: desc, tipo, kind: "gasto", forma: "avista", parcTotal: 1, parcNum: 1 };
+  return makeTransaction({ valor, categoria, descricao: desc, tipo });
 }
 
 function parseStatement(text) {
@@ -244,18 +270,13 @@ function parseStatement(text) {
     if (!desc || desc.length < 2) desc = "Gasto importado";
     if (desc.length > 80) desc = desc.slice(0, 80);
 
-    results.push({
-      id: uid(),
+    results.push(makeTransaction({
       data: iso,
       descricao: desc,
       categoria: detectCategory(desc),
       valor,
       tipo: detectTipo(line),
-      kind: "gasto",
-      forma: "avista",
-      parcTotal: 1,
-      parcNum: 1,
-    });
+    }));
   }
 
   return results;
@@ -317,7 +338,7 @@ function seedData() {
 
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
-  FORMAS, addMonths, calcFaturaRef,
+  FORMAS, addMonths, calcFaturaRef, makeTransaction,
   parseQuick, parseStatement, detectCategory, detectTipo,
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,
