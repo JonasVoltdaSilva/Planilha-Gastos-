@@ -344,17 +344,8 @@ function App() {
               </div>
             )}
 
-            {(page === "dashboard" || page === "gastos") && (
-              <div className="quick glass">
-                <Ic.sparkle size={20} />
-                <input value={quick} onChange={(e) => setQuick(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submitQuick()}
-                  placeholder='Adição rápida — ex.: "Gastei R$50 com comida" ou "Recebi R$1500 salário"' />
-                <button className="btn btn-primary" onClick={submitQuick}><Ic.plus size={17} />Lançar</button>
-              </div>
-            )}
 
-            {page === "home" && (
+{page === "home" && (
               <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
                 faturaOverrides={faturaOverrides}
                 onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
