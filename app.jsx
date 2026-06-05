@@ -26,6 +26,9 @@ const LS_SET   = "planilha_gastos_settings_v1";
 const LS_CATS  = "planilha_gastos_cats_v1";
 const LS_CARDS = "planilha_gastos_cards_v1";
 const LS_FAT   = "planilha_gastos_faturas_v1";
+const LS_FIXAS       = "planilha_gastos_fixas_v1";
+const LS_CALOTEIROS  = "planilha_gastos_caloteiros_v1";
+const LS_EMPRESTIMOS = "planilha_gastos_emprestimos_v1";
 
 function App() {
   const [page, setPage] = useState("home");
@@ -139,6 +142,32 @@ function App() {
     try { localStorage.setItem(LS_FAT, JSON.stringify(updated)); } catch (e) {}
     showToast("Fatura reaberta");
   };
+
+  // Contas fixas
+  const [fixas, setFixas] = useState(() => {
+    try { const s = localStorage.getItem(LS_FIXAS); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+  });
+  const addFixa = (f) => { const u = [...fixas, { ...f, id: uid() }]; setFixas(u); try { localStorage.setItem(LS_FIXAS, JSON.stringify(u)); } catch(e) {} showToast("Conta fixa adicionada"); };
+  const deleteFixa = (id) => { const u = fixas.filter(f => f.id !== id); setFixas(u); try { localStorage.setItem(LS_FIXAS, JSON.stringify(u)); } catch(e) {} showToast("Removida", "trash"); };
+
+  // Caloteiros
+  const [caloteiros, setCaloteiros] = useState(() => {
+    try { const s = localStorage.getItem(LS_CALOTEIROS); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+  });
+  const addCaloteiro = (c) => { const u = [...caloteiros, { ...c, id: uid(), pago: false }]; setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Devedor adicionado"); };
+  const deleteCaloteiro = (id) => { const u = caloteiros.filter(c => c.id !== id); setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Removido", "trash"); };
+  const toggleCaloteiro = (id) => { const u = caloteiros.map(c => c.id === id ? { ...c, pago: !c.pago } : c); setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} };
+
+  // Empréstimos
+  const [emprestimos, setEmprestimos] = useState(() => {
+    try { const s = localStorage.getItem(LS_EMPRESTIMOS); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+  });
+  const addEmprestimo = (e) => { const u = [...emprestimos, { ...e, id: uid() }]; setEmprestimos(u); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(u)); } catch(e) {} showToast("Empréstimo adicionado"); };
+  const deleteEmprestimo = (id) => { const u = emprestimos.filter(e => e.id !== id); setEmprestimos(u); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(u)); } catch(e) {} showToast("Removido", "trash"); };
+  const updateEmprestimo = (id, changes) => { const u = emprestimos.map(e => e.id === id ? { ...e, ...changes } : e); setEmprestimos(u); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(u)); } catch(e) {} };
 
   const addCard = (card) => {
     const updated = [...cards, card];
@@ -350,7 +379,8 @@ function App() {
                 faturaOverrides={faturaOverrides}
                 onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
                 onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-                onGoToFaturas={() => setPage("faturas")} />
+                onGoToFaturas={() => setPage("faturas")}
+                fixas={fixas} caloteiros={caloteiros} onGoToConfig={() => setPage("config")} />
             )}
             {page === "dashboard" && (
               <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
@@ -366,6 +396,7 @@ function App() {
                 onOpenFilterSheet={() => setShowFilterSheet(true)}
                 expenses={expenses} faturaOverrides={faturaOverrides}
                 onMarkPaid={markFaturaPaid} onUnmarkPaid={unmarkFaturaPaid}
+                emprestimos={emprestimos} onAddEmprestimo={addEmprestimo} onDeleteEmprestimo={deleteEmprestimo} onUpdateEmprestimo={updateEmprestimo}
                 {...{ period, setPeriod, cat, setCat, search, setSearch }} />
             )}
             {page === "faturas" && (
@@ -389,7 +420,9 @@ function App() {
                 currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
                 onResetProfile={resetProfile}
                 expenses={expenses} customCats={customCats}
-                onRestoreBackup={restoreBackup} />
+                onRestoreBackup={restoreBackup}
+                fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
+                caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro} />
             )}
           </div>
         </div>

@@ -56,6 +56,20 @@
 /* ============================================================
    Themes — variable overrides per theme class on body
    ============================================================ */
+
+/* All non-default themes: amplify blobs + tint glass borders */
+body[class*="theme-"] .blob { opacity: 0.55 !important; }
+body[class*="theme-"] .blob.b2 { opacity: 0.50 !important; }
+body[class*="theme-"] .blob.b4 { opacity: 0.35 !important; }
+body[class*="theme-"] .glass {
+  border-color: color-mix(in srgb, var(--accent-mint) 22%, var(--glass-border));
+}
+body[class*="theme-"] .bottom-nav-fab {
+  box-shadow: 0 6px 24px -4px color-mix(in srgb, var(--accent-mint) 60%, transparent), 0 0 0 5px rgba(0,0,0,0.35);
+}
+body[class*="theme-"] .nav-item.active { color: var(--accent-mint); }
+body[class*="theme-"] .home-balance-value { text-shadow: 0 0 32px color-mix(in srgb, var(--accent-mint) 40%, transparent); }
+
 body.theme-rose {
   --accent-blue: oklch(0.72 0.15 10);
   --accent-mint: oklch(0.78 0.15 350);
@@ -375,7 +389,7 @@ tbody tr:last-child td { border-bottom: none; }
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; opacity: 0; transition: opacity 0.16s; }
 tbody tr:hover .row-actions { opacity: 1; }
 .icon-btn {
-  width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 3px;
   background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
   color: var(--text-mid); cursor: pointer; transition: all 0.16s;
 }
@@ -539,9 +553,10 @@ tbody tr:hover .row-actions { opacity: 1; }
   border-radius: 0;
 }
 .expense-main {
-  flex: 1; display: flex; align-items: center; justify-content: space-between;
+  flex: 1; display: flex; align-items: flex-start; justify-content: space-between;
   padding: 13px 16px; gap: 12px; min-width: 0;
 }
+.expense-right { padding-top: 1px; }
 .expense-info { flex: 1; min-width: 0; }
 .expense-desc { font-size: 14px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .expense-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
@@ -1464,3 +1479,6 @@ body.light-mode .expense-row { background: rgba(0,0,0,0.025); }
 body.light-mode .expense-row:hover { background: rgba(0,0,0,0.055); border-color: rgba(0,0,0,0.09); }
 body.light-mode .home-stat-card { background: rgba(0,0,0,0.035); border-color: rgba(0,0,0,0.09); }
 body.light-mode select.select option { background: #f0f6ff; }
+body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(--text-hi); }
+body.light-mode .fatura-home-chip { background: rgba(0,0,0,0.04); }
+body.light-mode .fatura-home-chip:active { background: rgba(0,0,0,0.08); }

@@ -586,7 +586,7 @@ function BankImportModal({ onImport, onClose }) {
 /* ============================================================
    HOME / INÍCIO
    ============================================================ */
-function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName, faturaOverrides, onGoToFaturas }) {
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName, faturaOverrides, onGoToFaturas, fixas, caloteiros, onGoToConfig }) {
   const now = new Date();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
@@ -600,7 +600,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
     : "var(--cat-saude)";
   const h = now.getHours();
   const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-  const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 5);
+  const recent = [...monthExp].sort((a, b) => b.data.localeCompare(a.data));
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
 
   // Projeção mensal: com base nos dias decorridos
@@ -615,6 +615,10 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
     return computeFaturas(cards, expenses, faturaOverrides || {})
       .filter(f => f.status !== "paga" && f.total > 0);
   }, [cards, expenses, faturaOverrides]);
+
+  const pendingCaloteiros = (caloteiros || []).filter(c => !c.pago);
+  const totalCaloteiros = pendingCaloteiros.reduce((s, c) => s + c.valor, 0);
+  const totalFixas = (fixas || []).reduce((s, f) => s + f.valor, 0);
 
   const dueAlerts = (cards || []).map(c => {
     const today = new Date();
@@ -693,6 +697,41 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         )}
       </div>
 
+      {pendingCaloteiros.length > 0 && (
+        <button className="fatura-home-chip" onClick={onGoToConfig}>
+          <div className="fatura-home-chip-left">
+            <div className="fatura-home-chip-icon" style={{ background: "oklch(0.32 0.08 60 / 0.45)", color: "#e0c85a" }}>
+              <Ic.coins size={18} />
+            </div>
+            <div>
+              <div className="fatura-home-chip-label">A receber</div>
+              <div className="fatura-home-chip-sub">{pendingCaloteiros.length} devedor{pendingCaloteiros.length !== 1 ? "es" : ""} pendente{pendingCaloteiros.length !== 1 ? "s" : ""}</div>
+            </div>
+          </div>
+          <div className="fatura-home-chip-right">
+            <div className="fatura-home-chip-total" style={{ color: "#e0c85a" }}>{fmtBRL(totalCaloteiros)}</div>
+            <Ic.chevron size={16} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
+          </div>
+        </button>
+      )}
+
+      {fixas && fixas.length > 0 && (
+        <button className="fatura-home-chip" onClick={onGoToConfig}>
+          <div className="fatura-home-chip-left">
+            <div className="fatura-home-chip-icon" style={{ background: "oklch(0.28 0.06 255 / 0.45)", color: "var(--accent-blue)" }}>
+              <Ic.receipt size={18} />
+            </div>
+            <div>
+              <div className="fatura-home-chip-label">Contas fixas</div>
+              <div className="fatura-home-chip-sub">{fixas.length} conta{fixas.length !== 1 ? "s" : ""} · {fmtBRL(totalFixas)}/mês</div>
+            </div>
+          </div>
+          <div className="fatura-home-chip-right">
+            <Ic.chevron size={16} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
+          </div>
+        </button>
+      )}
+
       {/* Faturas pendentes — chip compacto */}
       {pendingFaturas.length > 0 && onGoToFaturas && (
         <button className="fatura-home-chip" onClick={onGoToFaturas}>
@@ -717,7 +756,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
       {recent.length > 0 ? (
         <div className="panel glass">
           <div className="panel-head">
-            <div className="panel-title">Últimas transações</div>
+            <div className="panel-title">Transações do mês</div>
           </div>
           <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>
@@ -785,13 +824,225 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
   );
 }
 
+function EmprestimosSection({ emprestimos, onAdd, onDelete, onUpdate }) {
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", parcelas: "1", parcPaga: "0", tipo: "dado", obs: "" });
+
+  const pending = (emprestimos || []).filter(e => e.parcPaga < e.parcelas);
+  const done = (emprestimos || []).filter(e => e.parcPaga >= e.parcelas);
+
+  const totalDado = pending.filter(e => e.tipo === "dado").reduce((s, e) => s + e.valor, 0);
+  const totalRecebido = pending.filter(e => e.tipo === "recebido").reduce((s, e) => s + e.valor, 0);
+
+  const submit = () => {
+    const valor = parseFloat(form.valor.replace(",", "."));
+    if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
+    onAdd({ nome: form.nome.trim(), valor, parcelas: parseInt(form.parcelas) || 1, parcPaga: 0, tipo: form.tipo, obs: form.obs, data: todayISO() });
+    setForm({ show: false, nome: "", valor: "", parcelas: "1", parcPaga: "0", tipo: "dado", obs: "" });
+  };
+
+  return (
+    <div className="panel glass" style={{ marginTop: 16 }}>
+      <div className="panel-head">
+        <div className="panel-title"><Ic.coins size={17} />Empréstimos</div>
+        <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+          onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+          {form.show ? "Cancelar" : <><Ic.plus size={14} />Novo</>}
+        </button>
+      </div>
+
+      {(totalDado > 0 || totalRecebido > 0) && (
+        <div style={{ display: "flex", gap: 16, marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--glass-border)", flexWrap: "wrap" }}>
+          {totalDado > 0 && <div><div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Emprestado</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "#e08a7a" }}>{fmtBRL(totalDado)}</div></div>}
+          {totalRecebido > 0 && <div><div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Recebido</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--accent-mint)" }}>{fmtBRL(totalRecebido)}</div></div>}
+        </div>
+      )}
+
+      {form.show && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
+          <div className="tipo-picker">
+            {[["dado","Emprestei"],["recebido","Peguei emprestado"]].map(([v,l]) => (
+              <button key={v} type="button" className={"tipo-opt" + (form.tipo === v ? " on" : "")}
+                style={{ "--tipo-hex": v === "dado" ? "#e08a7a" : "var(--accent-mint)" }}
+                onClick={() => setForm(f => ({ ...f, tipo: v }))}>{l}</button>
+            ))}
+          </div>
+          <input className="form-input" placeholder="Nome da pessoa" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Parcelas" type="number" min="1" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} style={{ flex: 1 }} />
+          </div>
+          <input className="form-input" placeholder="Observação (opcional)" value={form.obs} onChange={e => setForm(f => ({ ...f, obs: e.target.value }))} />
+          <button className="btn btn-primary" onClick={submit}>Adicionar empréstimo</button>
+        </div>
+      )}
+
+      {pending.length === 0 && done.length === 0 && (
+        <div style={{ textAlign: "center", color: "var(--text-lo)", fontSize: 13, padding: "20px 0" }}>Nenhum empréstimo registrado</div>
+      )}
+
+      {[...pending, ...done].map(e => {
+        const pct = e.parcelas > 0 ? Math.min(e.parcPaga / e.parcelas, 1) : 0;
+        const quitado = e.parcPaga >= e.parcelas;
+        const color = e.tipo === "dado" ? "#e08a7a" : "var(--accent-mint)";
+        return (
+          <div key={e.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--glass-border)", opacity: quitado ? 0.55 : 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>
+                {e.nome}
+                <span style={{ fontSize: 11, color: "var(--text-lo)", fontWeight: 400, marginLeft: 6 }}>{e.tipo === "dado" ? "emprestei" : "peguei"}</span>
+              </div>
+              {e.obs && <div style={{ fontSize: 12, color: "var(--text-lo)", marginBottom: 5 }}>{e.obs}</div>}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct * 100}%`, background: color, borderRadius: 999, transition: "width 0.4s" }} />
+                </div>
+                <span style={{ fontSize: 11, color: "var(--text-lo)", flexShrink: 0 }}>{e.parcPaga}/{e.parcelas}</span>
+              </div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color, marginBottom: 6 }}>{fmtBRL(e.valor)}</div>
+              <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                {!quitado && <button className="icon-btn" title="Marcar parcela paga" style={{ width: 28, height: 28 }} onClick={() => onUpdate(e.id, { parcPaga: e.parcPaga + 1 })}><Ic.check size={13} /></button>}
+                <button className="icon-btn danger" style={{ width: 28, height: 28 }} onClick={() => onDelete(e.id)}><Ic.trash size={13} /></button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FixasSection({ fixas, onAdd, onDelete, allCats }) {
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", dia: "1", catId: "contas" });
+  const total = (fixas || []).reduce((s, f) => s + f.valor, 0);
+
+  const submit = () => {
+    const valor = parseFloat(form.valor.replace(",", "."));
+    if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
+    onAdd({ nome: form.nome.trim(), valor, dia: parseInt(form.dia) || 1, catId: form.catId });
+    setForm(f => ({ ...f, show: false, nome: "", valor: "", dia: "1" }));
+  };
+
+  return (
+    <div className="panel glass">
+      <div className="panel-head">
+        <div className="panel-title"><Ic.receipt size={17} />Contas fixas</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {total > 0 && <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--text-mid)" }}>{fmtBRL(total)}/mês</span>}
+          <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+            onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+            {form.show ? "Cancelar" : <><Ic.plus size={14} />Adicionar</>}
+          </button>
+        </div>
+      </div>
+
+      {form.show && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
+          <input className="form-input" placeholder="Nome (ex: Netflix, Aluguel)" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Dia" type="number" min="1" max="31" value={form.dia} onChange={e => setForm(f => ({ ...f, dia: e.target.value }))} style={{ flex: 1 }} title="Dia do mês de vencimento" />
+          </div>
+          <select className="select" value={form.catId} onChange={e => setForm(f => ({ ...f, catId: e.target.value }))}>
+            {(allCats || CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          <button className="btn btn-primary" onClick={submit}>Adicionar conta fixa</button>
+        </div>
+      )}
+
+      {(fixas || []).length === 0 && !form.show && (
+        <div style={{ textAlign: "center", color: "var(--text-lo)", fontSize: 13, padding: "16px 0" }}>Nenhuma conta fixa cadastrada</div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {(fixas || []).map(f => {
+          const cat = CAT_MAP[f.catId] || CAT_MAP["outros"];
+          return (
+            <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", borderBottom: "1px solid var(--glass-border)" }}>
+              <span className="exp-tag" style={{ background: cat.hex + "22", color: cat.hex, borderColor: cat.hex + "44", flexShrink: 0 }}>{cat.nome}</span>
+              <div style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{f.nome}</div>
+              <div style={{ flexShrink: 0, textAlign: "right" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{fmtBRL(f.valor)}</div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)" }}>todo dia {f.dia}</div>
+              </div>
+              <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(f.id)}><Ic.trash size={13} /></button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CaloteirosSection({ caloteiros, onAdd, onDelete, onToggle }) {
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", descricao: "" });
+  const pending = (caloteiros || []).filter(c => !c.pago);
+  const paid = (caloteiros || []).filter(c => c.pago);
+  const totalPending = pending.reduce((s, c) => s + c.valor, 0);
+
+  const submit = () => {
+    const valor = parseFloat(form.valor.replace(",", "."));
+    if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
+    onAdd({ nome: form.nome.trim(), valor, descricao: form.descricao, data: todayISO() });
+    setForm(f => ({ ...f, show: false, nome: "", valor: "", descricao: "" }));
+  };
+
+  return (
+    <div className="panel glass">
+      <div className="panel-head">
+        <div className="panel-title"><Ic.coins size={17} />A receber</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {totalPending > 0 && <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "#e0c85a" }}>{fmtBRL(totalPending)}</span>}
+          <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+            onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+            {form.show ? "Cancelar" : <><Ic.plus size={14} />Adicionar</>}
+          </button>
+        </div>
+      </div>
+
+      {form.show && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
+          <input className="form-input" placeholder="Nome do devedor" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+          <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} />
+          <input className="form-input" placeholder="Motivo (opcional)" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} />
+          <button className="btn btn-primary" onClick={submit}>Adicionar devedor</button>
+        </div>
+      )}
+
+      {(caloteiros || []).length === 0 && !form.show && (
+        <div style={{ textAlign: "center", color: "var(--text-lo)", fontSize: 13, padding: "16px 0" }}>Nenhum devedor registrado 🎉</div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {[...pending, ...paid].map(c => (
+          <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", borderBottom: "1px solid var(--glass-border)", opacity: c.pago ? 0.5 : 1 }}>
+            <button className={"icon-btn" + (c.pago ? " active" : "")} style={{ width: 28, height: 28, flexShrink: 0, borderColor: c.pago ? "var(--accent-mint)" : "var(--glass-border)", color: c.pago ? "var(--accent-mint)" : "var(--text-lo)" }}
+              title={c.pago ? "Marcar como pendente" : "Marcar como recebido"}
+              onClick={() => onToggle(c.id)}>
+              <Ic.check size={13} />
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, textDecoration: c.pago ? "line-through" : "none" }}>{c.nome}</div>
+              {c.descricao && <div style={{ fontSize: 12, color: "var(--text-lo)" }}>{c.descricao}</div>}
+            </div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: c.pago ? "var(--text-lo)" : "#e0c85a", flexShrink: 0 }}>{fmtBRL(c.valor)}</div>
+            <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(c.id)}><Ic.trash size={13} /></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================
    GASTOS
    ============================================================ */
 function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, onAdd, onImport,
   period, setPeriod, cat, setCat, search, setSearch, allCats, cards,
   tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet,
-  expenses, faturaOverrides, onMarkPaid, onUnmarkPaid }) {
+  expenses, faturaOverrides, onMarkPaid, onUnmarkPaid,
+  emprestimos, onAddEmprestimo, onDeleteEmprestimo, onUpdateEmprestimo }) {
   const [showImport, setShowImport] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
   const [tab, setTab] = useS("lancamentos");
@@ -886,12 +1137,20 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
       )}
 
       {tab === "faturas" && (
-        <FaturasView
-          cards={cards} expenses={expenses}
-          faturaOverrides={faturaOverrides}
-          onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
-          onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
-        />
+        <>
+          <FaturasView
+            cards={cards} expenses={expenses}
+            faturaOverrides={faturaOverrides}
+            onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
+            onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
+          />
+          <EmprestimosSection
+            emprestimos={emprestimos}
+            onAdd={onAddEmprestimo}
+            onDelete={onDeleteEmprestimo}
+            onUpdate={onUpdateEmprestimo}
+          />
+        </>
       )}
     </>
   );
@@ -1065,7 +1324,7 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -1160,6 +1419,12 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
           </div>
         </div>
       </div>
+
+      {/* Contas fixas */}
+      <FixasSection fixas={fixas} onAdd={onAddFixa} onDelete={onDeleteFixa} allCats={allCats} />
+
+      {/* Caloteiros */}
+      <CaloteirosSection caloteiros={caloteiros} onAdd={onAddCaloteiro} onDelete={onDeleteCaloteiro} onToggle={onToggleCaloteiro} />
 
       {/* Cartões de crédito */}
       <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
