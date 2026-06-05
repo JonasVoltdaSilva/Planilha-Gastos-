@@ -424,8 +424,8 @@ function App() {
 }
 
 function BottomNav({ page, setPage, onAdd }) {
-  const LEFT  = [{ id: "home",   icon: Ic.home }];
-  const RIGHT = [{ id: "gastos", icon: Ic.wallet }, { id: "config", icon: Ic.person }];
+  const LEFT  = [{ id: "home", icon: Ic.home }, { id: "gastos", icon: Ic.wallet }];
+  const RIGHT = [{ id: "dashboard", icon: Ic.dashboard }, { id: "config", icon: Ic.person }];
   return (
     <nav className="bottom-nav">
       {LEFT.map(n => {
