@@ -693,40 +693,25 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         )}
       </div>
 
-      {/* Faturas pendentes */}
-      {pendingFaturas.length > 0 && (
-        <div className="panel glass" style={{ marginBottom: 16 }}>
-          <div className="panel-head" style={{ marginBottom: 12 }}>
-            <div className="panel-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Ic.invoice size={17} />Faturas pendentes
+      {/* Faturas pendentes — chip compacto */}
+      {pendingFaturas.length > 0 && onGoToFaturas && (
+        <button className="fatura-home-chip" onClick={onGoToFaturas}>
+          <div className="fatura-home-chip-left">
+            <div className="fatura-home-chip-icon"><Ic.invoice size={18} /></div>
+            <div>
+              <div className="fatura-home-chip-label">Faturas pendentes</div>
+              <div className="fatura-home-chip-sub">
+                {pendingFaturas.length} {pendingFaturas.length === 1 ? "fatura" : "faturas"} em aberto
+              </div>
             </div>
-            {onGoToFaturas && (
-              <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
-                onClick={onGoToFaturas}>
-                Ver todas
-              </button>
-            )}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {pendingFaturas.map(f => {
-              const statusColor = f.status === "aberta" ? "var(--accent-mint)" : "#e0c85a";
-              const statusLabel = f.status === "aberta" ? "Em aberto" : "Fechada — pagar";
-              return (
-                <div key={f.id} className="fatura-alert-row">
-                  <span className="fatura-alert-dot" style={{ background: f.card.cor || "var(--accent-mint)" }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700 }}>{f.card.nome}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-lo)", textTransform: "capitalize" }}>{formatMes(f.mes)}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>{fmtBRL(f.total)}</div>
-                    <span style={{ fontSize: 11, color: statusColor, fontWeight: 700 }}>{statusLabel}</span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="fatura-home-chip-right">
+            <div className="fatura-home-chip-total">
+              {fmtBRL(pendingFaturas.reduce((s, f) => s + f.total, 0))}
+            </div>
+            <Ic.chevron size={16} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
           </div>
-        </div>
+        </button>
       )}
 
       {recent.length > 0 ? (

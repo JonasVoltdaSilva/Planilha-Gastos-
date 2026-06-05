@@ -1303,6 +1303,34 @@ tbody tr:hover .row-actions { opacity: 1; }
 }
 
 /* ============================================================
+   Home: faturas pendentes chip
+   ============================================================ */
+.fatura-home-chip {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-radius: var(--radius-md); margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  cursor: pointer; text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.fatura-home-chip:hover, .fatura-home-chip:active { background: rgba(255, 255, 255, 0.08); }
+.fatura-home-chip-left { display: flex; align-items: center; gap: 12px; }
+.fatura-home-chip-icon {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: oklch(0.28 0.06 165 / 0.45);
+  color: var(--accent-mint);
+}
+.fatura-home-chip-label { font-size: 13.5px; font-weight: 700; margin-bottom: 2px; }
+.fatura-home-chip-sub { font-size: 11.5px; color: var(--text-lo); }
+.fatura-home-chip-right { display: flex; align-items: center; gap: 6px; }
+.fatura-home-chip-total {
+  font-family: var(--font-display); font-weight: 700; font-size: 15px;
+  color: #e08a7a; font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
    Bottom nav: 3 anchors + centered FAB (mobile)
    ============================================================ */
 @media (max-width: 920px) {
