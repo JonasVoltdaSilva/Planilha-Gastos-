@@ -42,7 +42,7 @@
   --font-display: "Sora", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
 
-  --bottom-nav-h: calc(60px + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-h: calc(62px + env(safe-area-inset-bottom, 0px));
 
   /* Blobs (overridden per theme) */
   --blob1-color: oklch(0.6 0.13 235 / 0.55);
@@ -1310,13 +1310,13 @@ tbody tr:hover .row-actions { opacity: 1; }
     display: flex;
     align-items: center;
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
-    padding: 0 8px env(safe-area-inset-bottom, 0px);
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: rgba(4, 8, 16, 0.96);
     backdrop-filter: blur(24px) saturate(140%);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
     border-top: 1px solid var(--glass-border);
     box-shadow: 0 -8px 30px -10px rgba(0,0,0,0.5);
-    height: calc(62px + env(safe-area-inset-bottom, 0px));
   }
   .bottom-nav-item {
     flex: 1;
