@@ -3,6 +3,74 @@
    ============================================================ */
 const { useState: useS, useMemo: useM } = React;
 
+/* ---------- Agrupamento cronológico ---------- */
+function groupExpensesByDate(rows) {
+  const today = todayISO();
+  const yesterday = addDays(today, -1);
+  const weekStart = addDays(today, -6);
+  const prevWeekStart = addDays(today, -13);
+  const currYear = new Date().getFullYear();
+  const groupMap = new Map();
+  const order = [];
+  for (const e of rows) {
+    let label;
+    if (e.data === today) label = "Hoje";
+    else if (e.data === yesterday) label = "Ontem";
+    else if (e.data >= weekStart) label = "Esta semana";
+    else if (e.data >= prevWeekStart) label = "Semana passada";
+    else {
+      const d = new Date(e.data + "T12:00:00");
+      const m = d.toLocaleString("pt-BR", { month: "long" });
+      const y = d.getFullYear();
+      const cap = m.charAt(0).toUpperCase() + m.slice(1);
+      label = y === currYear ? cap : `${cap} de ${y}`;
+    }
+    if (!groupMap.has(label)) { groupMap.set(label, []); order.push(label); }
+    groupMap.get(label).push(e);
+  }
+  return order.map(label => ({ label, rows: groupMap.get(label) }));
+}
+
+/* ---------- Lista agrupada por período ---------- */
+function GroupedExpenseList({ rows, onEdit, onDelete, onDeleteGroup, cards }) {
+  if (!rows || rows.length === 0) return null;
+  const groups = groupExpensesByDate(rows);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      {groups.map(({ label, rows: gr }) => {
+        const total = gr.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
+        return (
+          <div key={label}>
+            <div className="group-header">
+              <span className="group-header-label">{label}</span>
+              {total > 0 && <span className="group-header-total">−{fmtBRLshort(total)}</span>}
+            </div>
+            <ExpenseTable rows={gr} onEdit={onEdit} onDelete={onDelete}
+              onDeleteGroup={onDeleteGroup} cards={cards} emptyText="" />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- Empty state acolhedor ---------- */
+function EmptyState({ title, text, onAdd, icon }) {
+  const I = icon || Ic.coins;
+  return (
+    <div className="empty-state">
+      <div className="empty-state-icon"><I size={46} /></div>
+      <div className="empty-state-title">{title || "Nada por aqui ainda"}</div>
+      <div className="empty-state-text">{text || "Adicione sua primeira transação tocando no botão abaixo."}</div>
+      {onAdd && (
+        <button className="btn btn-primary empty-state-btn" onClick={onAdd}>
+          <Ic.plus size={17} />Adicionar transação
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Barra de orçamento com semáforo ---------- */
 function BudgetBar({ total, budget }) {
   if (!budget || budget <= 0) return null;
@@ -670,11 +738,11 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         </div>
       ) : (
         <div className="panel glass">
-          <div className="empty" style={{ padding: "44px 20px" }}>
-            <Ic.coins size={40} />
-            <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Nenhum gasto registrado</div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>Toque em "Novo gasto" para começar.</div>
-          </div>
+          <EmptyState
+            title="Tudo em branco por aqui"
+            text="Toque no + para registrar seu primeiro gasto ou entrada."
+            icon={Ic.coins}
+          />
         </div>
       )}
     </>
@@ -811,8 +879,15 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
           )}
           <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
         </div>
-        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
-          cards={cards} emptyText={emptyText} />
+        {displayRows.length === 0 ? (
+          <EmptyState
+            title={kindFilter === "entradas" ? "Nenhuma entrada" : kindFilter === "gastos" ? "Nenhum gasto" : "Histórico vazio"}
+            text={search || cat !== "all" ? "Tente ajustar os filtros." : "Toque no + para registrar sua primeira transação."}
+          />
+        ) : (
+          <GroupedExpenseList rows={displayRows} onEdit={onEdit} onDelete={onDelete}
+            onDeleteGroup={onDeleteGroup} cards={cards} />
+        )}
       </div>
     </>
   );
@@ -1008,6 +1083,7 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
   };
 
   const rows = [
+    ["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."],
     ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."],
     ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."],
     ["animations", "Animações de fundo", "Movimento suave do gradiente ambiente."],
@@ -1344,5 +1420,6 @@ function FaturasView({ cards, expenses, faturaOverrides, onMarkPaid, onUnmarkPai
 
 Object.assign(window, {
   HomeView, DashboardView, GastosView, RelatoriosView, ConfigView, FaturasView, FaturaCard,
-  ExpenseTable, FilterBar, FilterSheet, CardManager, Stat, BudgetBar, BankImportModal,
+  ExpenseTable, GroupedExpenseList, FilterBar, FilterSheet, CardManager, Stat, BudgetBar,
+  BankImportModal, EmptyState,
 });

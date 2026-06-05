@@ -102,7 +102,7 @@ function App() {
         return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, ...parsed };
       }
     } catch (e) {}
-    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000 };
+    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, lightMode: false };
   });
 
   // ---------- Cartões ----------
@@ -156,7 +156,6 @@ function App() {
   };
 
   const [modal, setModal] = useState(null);
-  const [fabOpen, setFabOpen] = useState(false);
   const [toast, setToast] = useState({ msg: "", icon: "check" });
   const [quick, setQuick] = useState("");
 
@@ -176,7 +175,8 @@ function App() {
   useEffect(() => {
     document.body.classList.toggle("no-anim", !settings.animations);
     document.body.classList.toggle("no-glow", !settings.glow);
-  }, [settings.animations, settings.glow]);
+    document.body.classList.toggle("light-mode", !!settings.lightMode);
+  }, [settings.animations, settings.glow, settings.lightMode]);
 
   const showToast = (msg, icon = "check") => {
     setToast({ msg, icon });
@@ -402,7 +402,7 @@ function App() {
         </div>
       </main>
 
-      <BottomNav page={page} setPage={setPage} />
+      <BottomNav page={page} setPage={setPage} onAdd={() => setModal({})} />
 
       {showFilterSheet && (
         <FilterSheet
@@ -414,23 +414,6 @@ function App() {
         />
       )}
 
-      {fabOpen && <div className="fab-overlay" onClick={() => setFabOpen(false)} />}
-      {fabOpen && (
-        <div className="fab-sheet">
-          <div className="fab-action fab-action-entrada"
-            onClick={() => { setFabOpen(false); setModal({ kind: "entrada" }); }}>
-            <Ic.trendUp size={16} />Entrada
-          </div>
-          <div className="fab-action fab-action-gasto"
-            onClick={() => { setFabOpen(false); setModal({ kind: "gasto" }); }}>
-            <Ic.receipt size={16} />Gasto
-          </div>
-        </div>
-      )}
-      <button className={"fab" + (fabOpen ? " open" : "")} onClick={() => setFabOpen(v => !v)}>
-        <Ic.plus size={28} />
-      </button>
-
       {modal !== null && (
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
@@ -440,16 +423,29 @@ function App() {
   );
 }
 
-function BottomNav({ page, setPage }) {
+function BottomNav({ page, setPage, onAdd }) {
+  const LEFT  = [{ id: "home", icon: Ic.home }, { id: "gastos", icon: Ic.wallet }];
+  const RIGHT = [{ id: "config", icon: Ic.settings }];
   return (
     <nav className="bottom-nav">
-      {NAV.map(n => {
+      {LEFT.map(n => {
         const I = n.icon;
         return (
           <div key={n.id} className={"bottom-nav-item" + (page === n.id ? " active" : "")}
             onClick={() => setPage(n.id)}>
-            <I size={22} />
-            <span>{n.nome}</span>
+            <I size={24} />
+          </div>
+        );
+      })}
+      <button className="bottom-nav-fab" onClick={onAdd}>
+        <Ic.plus size={26} />
+      </button>
+      {RIGHT.map(n => {
+        const I = n.icon;
+        return (
+          <div key={n.id} className={"bottom-nav-item" + (page === n.id ? " active" : "")}
+            onClick={() => setPage(n.id)}>
+            <I size={24} />
           </div>
         );
       })}
