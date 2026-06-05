@@ -532,7 +532,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
     : "var(--cat-saude)";
   const h = now.getHours();
   const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-  const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 6);
+  const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 5);
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
 
   // Projeção mensal: com base nos dias decorridos
@@ -576,42 +576,51 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
           </button>
         </div>
 
-        <div className="home-stats-row">
-          <div className="home-stat-block">
-            <div className="home-stat-label">Gasto em {monthName}</div>
-            <div className="home-stat-value" style={{ color: "#e08a7a" }}>{fmtBRL(monthGastos)}</div>
-            <div className="home-stat-meta">{monthExp.filter(e => e.kind !== "entrada").length} lançamentos</div>
+        {/* Hero balance */}
+        <div className="home-balance">
+          <div className="home-balance-label">Saldo disponível</div>
+          <div className="home-balance-value" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>
+            {saldo < 0 && "−"}{fmtBRL(Math.abs(saldo))}
           </div>
-          <div className="home-stat-block">
-            <div className="home-stat-label">Saldo disponível</div>
-            <div className="home-stat-value" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>{fmtBRL(saldo)}</div>
-            <div className="home-stat-meta" style={{ color: budgetColor }}>
-              {budget > 0 ? `${Math.round(pct)}% do orçamento usado` : `${monthEntradas > 0 ? "+" + fmtBRL(monthEntradas) : "sem entradas"}`}
+        </div>
+
+        {/* 2×2 stat grid */}
+        <div className="home-stats-grid">
+          <div className="home-stat-card">
+            <div className="home-stat-card-label">Gastos em {monthName}</div>
+            <div className="home-stat-card-value" style={{ color: "#e08a7a" }}>{fmtBRL(monthGastos)}</div>
+            <div className="home-stat-card-meta">{monthExp.filter(e => e.kind !== "entrada").length} lançamentos</div>
+          </div>
+          <div className="home-stat-card">
+            <div className="home-stat-card-label">Entradas do mês</div>
+            <div className="home-stat-card-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthEntradas)}</div>
+            <div className="home-stat-card-meta">{monthExp.filter(e => e.kind === "entrada").length} entradas</div>
+          </div>
+          {budget > 0 && (
+            <div className="home-stat-card">
+              <div className="home-stat-card-label">Orçamento</div>
+              <div className="home-stat-card-value" style={{ color: budgetColor }}>{Math.round(pct)}%</div>
+              <div className="home-stat-card-meta">{fmtBRL(monthGastos)} / {fmtBRL(budget)}</div>
             </div>
-          </div>
-          <div className="home-stat-block">
-            <div className="home-stat-label">Entradas do mês</div>
-            <div className="home-stat-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthEntradas)}</div>
-            <div className="home-stat-meta">{monthExp.filter(e => e.kind === "entrada").length} entradas</div>
-          </div>
+          )}
+          {projection > 0 && (
+            <div className="home-stat-card">
+              <div className="home-stat-card-label">Projeção do mês</div>
+              <div className="home-stat-card-value" style={{ color: projectionOver ? "#e08a7a" : "var(--text-mid)" }}>
+                {fmtBRL(projection)}
+              </div>
+              <div className="home-stat-card-meta" style={{ color: projectionOver ? "#e08a7a" : undefined }}>
+                {projectionOver ? `+${fmtBRL(projection - budget)} acima` : "estimativa"}
+              </div>
+            </div>
+          )}
         </div>
 
         {budget > 0 && (
           <div style={{ marginTop: 18 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7, fontSize: 12, color: "var(--text-lo)" }}>
-              <span>Orçamento mensal</span>
-              <span style={{ color: budgetColor, fontWeight: 700 }}>{fmtBRL(monthGastos)} / {fmtBRL(budget)}</span>
-            </div>
             <div className="budget-bar-track">
               <div className="budget-bar-fill" style={{ width: `${pct}%`, background: budgetColor }} />
             </div>
-            {projection > 0 && (
-              <div style={{ marginTop: 7, fontSize: 11.5, color: projectionOver ? "#e08a7a" : "var(--text-lo)", display: "flex", alignItems: "center", gap: 5 }}>
-                {projectionOver ? <Ic.trendUp size={12} /> : <Ic.target size={12} />}
-                Projeção do mês: <strong style={{ color: projectionOver ? "#e08a7a" : "var(--text-mid)" }}>{fmtBRL(projection)}</strong>
-                {projectionOver && ` · ${fmtBRL(projection - budget)} acima do orçamento`}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -655,7 +664,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
       {recent.length > 0 ? (
         <div className="panel glass">
           <div className="panel-head">
-            <div className="panel-title">Últimos lançamentos</div>
+            <div className="panel-title">Últimas transações</div>
           </div>
           <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>

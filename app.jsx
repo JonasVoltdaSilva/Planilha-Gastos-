@@ -334,69 +334,71 @@ function App() {
 
       <main className="main glass">
         <div className="main-scroll">
-          {page !== "home" && (
-            <div className="page-head">
-              <div>
-                <h1 className="page-title">{meta.t}</h1>
-                {meta.s && <div className="page-sub">{meta.s}</div>}
+          <div key={page} className="page-enter">
+            {page !== "home" && (
+              <div className="page-head">
+                <div>
+                  <h1 className="page-title">{meta.t}</h1>
+                  {meta.s && <div className="page-sub">{meta.s}</div>}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {(page === "dashboard" || page === "gastos") && (
-            <div className="quick glass">
-              <Ic.sparkle size={20} />
-              <input value={quick} onChange={(e) => setQuick(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submitQuick()}
-                placeholder='Adição rápida — ex.: "Gastei R$50 com comida" ou "Recebi R$1500 salário"' />
-              <button className="btn btn-primary" onClick={submitQuick}><Ic.plus size={17} />Lançar</button>
-            </div>
-          )}
+            {(page === "dashboard" || page === "gastos") && (
+              <div className="quick glass">
+                <Ic.sparkle size={20} />
+                <input value={quick} onChange={(e) => setQuick(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && submitQuick()}
+                  placeholder='Adição rápida — ex.: "Gastei R$50 com comida" ou "Recebi R$1500 salário"' />
+                <button className="btn btn-primary" onClick={submitQuick}><Ic.plus size={17} />Lançar</button>
+              </div>
+            )}
 
-          {page === "home" && (
-            <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
-              faturaOverrides={faturaOverrides}
-              onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
-              onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-              onGoToFaturas={() => setPage("faturas")} />
-          )}
-          {page === "dashboard" && (
-            <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-              onAdd={() => setModal({})} budget={settings.budget} cards={cards} />
-          )}
-          {page === "gastos" && (
-            <GastosView filtered={filtered} total={total} byCat={byCat}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-              onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
-              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
-              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
-              onOpenFilterSheet={() => setShowFilterSheet(true)}
-              {...{ period, setPeriod, cat, setCat, search, setSearch }} />
-          )}
-          {page === "faturas" && (
-            <FaturasView
-              cards={cards} expenses={expenses}
-              faturaOverrides={faturaOverrides}
-              onMarkPaid={markFaturaPaid}
-              onUnmarkPaid={unmarkFaturaPaid}
-              onEdit={(e) => setModal(e)}
-              onDelete={deleteExpense}
-              onDeleteGroup={deleteExpenseGroup}
-            />
-          )}
-          {page === "relatorios" && (
-            <RelatoriosView expenses={expenses} byCat={byCat} total={total} />
-          )}
-          {page === "config" && (
-            <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
-              allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
-              cards={cards} onAddCard={addCard} onDeleteCard={deleteCard}
-              currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
-              onResetProfile={resetProfile}
-              expenses={expenses} customCats={customCats}
-              onRestoreBackup={restoreBackup} />
-          )}
+            {page === "home" && (
+              <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
+                faturaOverrides={faturaOverrides}
+                onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
+                onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onGoToFaturas={() => setPage("faturas")} />
+            )}
+            {page === "dashboard" && (
+              <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
+                onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onAdd={() => setModal({})} budget={settings.budget} cards={cards} />
+            )}
+            {page === "gastos" && (
+              <GastosView filtered={filtered} total={total} byCat={byCat}
+                onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
+                tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+                cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+                onOpenFilterSheet={() => setShowFilterSheet(true)}
+                {...{ period, setPeriod, cat, setCat, search, setSearch }} />
+            )}
+            {page === "faturas" && (
+              <FaturasView
+                cards={cards} expenses={expenses}
+                faturaOverrides={faturaOverrides}
+                onMarkPaid={markFaturaPaid}
+                onUnmarkPaid={unmarkFaturaPaid}
+                onEdit={(e) => setModal(e)}
+                onDelete={deleteExpense}
+                onDeleteGroup={deleteExpenseGroup}
+              />
+            )}
+            {page === "relatorios" && (
+              <RelatoriosView expenses={expenses} byCat={byCat} total={total} />
+            )}
+            {page === "config" && (
+              <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
+                allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
+                cards={cards} onAddCard={addCard} onDeleteCard={deleteCard}
+                currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
+                onResetProfile={resetProfile}
+                expenses={expenses} customCats={customCats}
+                onRestoreBackup={restoreBackup} />
+            )}
+          </div>
         </div>
       </main>
 
