@@ -32,6 +32,7 @@ const LS_EMPRESTIMOS = "planilha_gastos_emprestimos_v1";
 
 function App() {
   const [page, setPage] = useState("home");
+  const [gastosInitialTab, setGastosInitialTab] = useState("lancamentos");
 
   // ---------- Perfil do usuário ----------
   const [profile, setProfile] = useState(() => {
@@ -380,7 +381,8 @@ function App() {
                 onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
                 onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
                 onGoToFaturas={() => setPage("faturas")}
-                fixas={fixas} caloteiros={caloteiros} onGoToConfig={() => setPage("config")} />
+                fixas={fixas} caloteiros={caloteiros}
+                onGoToConfig={() => { setGastosInitialTab("fixas"); setPage("gastos"); }} />
             )}
             {page === "dashboard" && (
               <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
@@ -397,6 +399,9 @@ function App() {
                 expenses={expenses} faturaOverrides={faturaOverrides}
                 onMarkPaid={markFaturaPaid} onUnmarkPaid={unmarkFaturaPaid}
                 emprestimos={emprestimos} onAddEmprestimo={addEmprestimo} onDeleteEmprestimo={deleteEmprestimo} onUpdateEmprestimo={updateEmprestimo}
+                fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
+                caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro}
+                initialTab={gastosInitialTab}
                 {...{ period, setPeriod, cat, setCat, search, setSearch }} />
             )}
             {page === "faturas" && (
@@ -428,7 +433,7 @@ function App() {
         </div>
       </main>
 
-      <BottomNav page={page} setPage={setPage} onAdd={() => setModal({})} />
+      <BottomNav page={page} setPage={(p) => { if (p === "gastos") setGastosInitialTab("lancamentos"); setPage(p); }} onAdd={() => setModal({})} />
 
       {showFilterSheet && (
         <FilterSheet

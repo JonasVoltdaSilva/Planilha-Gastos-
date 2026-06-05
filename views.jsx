@@ -1042,10 +1042,12 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
   period, setPeriod, cat, setCat, search, setSearch, allCats, cards,
   tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet,
   expenses, faturaOverrides, onMarkPaid, onUnmarkPaid,
-  emprestimos, onAddEmprestimo, onDeleteEmprestimo, onUpdateEmprestimo }) {
+  emprestimos, onAddEmprestimo, onDeleteEmprestimo, onUpdateEmprestimo,
+  fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro,
+  initialTab }) {
   const [showImport, setShowImport] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
-  const [tab, setTab] = useS("lancamentos");
+  const [tab, setTab] = useS(initialTab || "lancamentos");
 
   const localFiltered = useM(() => {
     let arr = [...filtered];
@@ -1077,6 +1079,9 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
         </button>
         <button className={"gastos-tab" + (tab === "faturas" ? " on" : "")} onClick={() => setTab("faturas")}>
           <Ic.card size={15} />Faturas
+        </button>
+        <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
+          <Ic.receipt size={15} />Fixas
         </button>
       </div>
 
@@ -1150,6 +1155,15 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
             onDelete={onDeleteEmprestimo}
             onUpdate={onUpdateEmprestimo}
           />
+        </>
+      )}
+
+      {tab === "fixas" && (
+        <>
+          <FixasSection fixas={fixas} onAdd={onAddFixa} onDelete={onDeleteFixa} allCats={allCats} />
+          <div style={{ marginTop: 16 }}>
+            <CaloteirosSection caloteiros={caloteiros} onAdd={onAddCaloteiro} onDelete={onDeleteCaloteiro} onToggle={onToggleCaloteiro} />
+          </div>
         </>
       )}
     </>
@@ -1419,12 +1433,6 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
           </div>
         </div>
       </div>
-
-      {/* Contas fixas */}
-      <FixasSection fixas={fixas} onAdd={onAddFixa} onDelete={onDeleteFixa} allCats={allCats} />
-
-      {/* Caloteiros */}
-      <CaloteirosSection caloteiros={caloteiros} onAdd={onAddCaloteiro} onDelete={onDeleteCaloteiro} onToggle={onToggleCaloteiro} />
 
       {/* Cartões de crédito */}
       <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
