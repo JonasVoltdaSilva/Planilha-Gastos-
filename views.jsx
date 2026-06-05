@@ -1084,6 +1084,9 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
         <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
           <Ic.receipt size={15} />Fixas
         </button>
+        <button className={"gastos-tab" + (tab === "emprestimos" ? " on" : "")} onClick={() => setTab("emprestimos")}>
+          <Ic.coins size={15} />Empréstimos
+        </button>
       </div>
 
       {tab === "lancamentos" && (
@@ -1162,15 +1165,16 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
           <div style={{ marginTop: 16 }}>
             <CaloteirosSection caloteiros={caloteiros} onAdd={onAddCaloteiro} onDelete={onDeleteCaloteiro} onToggle={onToggleCaloteiro} />
           </div>
-          <div style={{ marginTop: 16 }}>
-            <EmprestimosSection
-              emprestimos={emprestimos}
-              onAdd={onAddEmprestimo}
-              onDelete={onDeleteEmprestimo}
-              onUpdate={onUpdateEmprestimo}
-            />
-          </div>
         </>
+      )}
+
+      {tab === "emprestimos" && (
+        <EmprestimosSection
+          emprestimos={emprestimos}
+          onAdd={onAddEmprestimo}
+          onDelete={onDeleteEmprestimo}
+          onUpdate={onUpdateEmprestimo}
+        />
       )}
     </>
   );
