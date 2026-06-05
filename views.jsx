@@ -1153,12 +1153,6 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
               onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
             />
           </div>
-          <EmprestimosSection
-            emprestimos={emprestimos}
-            onAdd={onAddEmprestimo}
-            onDelete={onDeleteEmprestimo}
-            onUpdate={onUpdateEmprestimo}
-          />
         </>
       )}
 
@@ -1167,6 +1161,14 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
           <FixasSection fixas={fixas} onAdd={onAddFixa} onDelete={onDeleteFixa} allCats={allCats} />
           <div style={{ marginTop: 16 }}>
             <CaloteirosSection caloteiros={caloteiros} onAdd={onAddCaloteiro} onDelete={onDeleteCaloteiro} onToggle={onToggleCaloteiro} />
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <EmprestimosSection
+              emprestimos={emprestimos}
+              onAdd={onAddEmprestimo}
+              onDelete={onDeleteEmprestimo}
+              onUpdate={onUpdateEmprestimo}
+            />
           </div>
         </>
       )}
