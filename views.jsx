@@ -1044,6 +1044,7 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
   expenses, faturaOverrides, onMarkPaid, onUnmarkPaid,
   emprestimos, onAddEmprestimo, onDeleteEmprestimo, onUpdateEmprestimo,
   fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro,
+  onAddCard, onDeleteCard,
   initialTab }) {
   const [showImport, setShowImport] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
@@ -1143,12 +1144,15 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
 
       {tab === "faturas" && (
         <>
-          <FaturasView
-            cards={cards} expenses={expenses}
-            faturaOverrides={faturaOverrides}
-            onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
-            onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
-          />
+          <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
+          <div style={{ marginTop: 16 }}>
+            <FaturasView
+              cards={cards} expenses={expenses}
+              faturaOverrides={faturaOverrides}
+              onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
+              onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
+            />
+          </div>
           <EmprestimosSection
             emprestimos={emprestimos}
             onAdd={onAddEmprestimo}
@@ -1434,9 +1438,6 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
         </div>
       </div>
 
-      {/* Cartões de crédito */}
-      <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
-
       {/* Backup & Exportação */}
       <div className="panel glass">
         <div className="panel-head"><div className="panel-title">Backup & Exportação</div></div>
@@ -1623,7 +1624,7 @@ function FaturasView({ cards, expenses, faturaOverrides, onMarkPaid, onUnmarkPai
           <Ic.card size={40} />
           <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Nenhum cartão cadastrado</div>
           <div style={{ fontSize: 13, marginTop: 6 }}>
-            Adicione um cartão em Configurações para ver as faturas.
+            Adicione um cartão acima para começar a registrar faturas.
           </div>
         </div>
       </div>

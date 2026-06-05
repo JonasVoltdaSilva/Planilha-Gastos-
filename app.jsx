@@ -401,6 +401,7 @@ function App() {
                 emprestimos={emprestimos} onAddEmprestimo={addEmprestimo} onDeleteEmprestimo={deleteEmprestimo} onUpdateEmprestimo={updateEmprestimo}
                 fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
                 caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro}
+                onAddCard={addCard} onDeleteCard={deleteCard}
                 initialTab={gastosInitialTab}
                 {...{ period, setPeriod, cat, setCat, search, setSearch }} />
             )}
