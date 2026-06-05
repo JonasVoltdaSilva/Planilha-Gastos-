@@ -364,6 +364,8 @@ function App() {
                 tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
                 cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
                 onOpenFilterSheet={() => setShowFilterSheet(true)}
+                expenses={expenses} faturaOverrides={faturaOverrides}
+                onMarkPaid={markFaturaPaid} onUnmarkPaid={unmarkFaturaPaid}
                 {...{ period, setPeriod, cat, setCat, search, setSearch }} />
             )}
             {page === "faturas" && (

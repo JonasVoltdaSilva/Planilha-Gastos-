@@ -1303,6 +1303,33 @@ tbody tr:hover .row-actions { opacity: 1; }
 }
 
 /* ============================================================
+   Gastos: tab switcher (Lançamentos / Faturas)
+   ============================================================ */
+.gastos-tabs {
+  display: flex; gap: 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.gastos-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 11px 14px; border-radius: calc(var(--radius-md) - 3px);
+  font-size: 13.5px; font-weight: 700; font-family: var(--font-body);
+  color: var(--text-lo); background: transparent; border: none; cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  -webkit-tap-highlight-color: transparent;
+}
+.gastos-tab.on {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-hi);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+body.light-mode .gastos-tabs { background: rgba(0,0,0,0.04); }
+body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(--text-hi); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+/* ============================================================
    Home: faturas pendentes chip
    ============================================================ */
 .fatura-home-chip {
@@ -1340,11 +1367,11 @@ tbody tr:hover .row-actions { opacity: 1; }
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
     padding: 0 8px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(4, 8, 16, 0.96);
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border-top: 1px solid var(--glass-border);
-    box-shadow: 0 -8px 30px -10px rgba(0,0,0,0.5);
+    background: rgba(4, 8, 16, 0.65);
+    backdrop-filter: blur(32px) saturate(180%) brightness(0.9);
+    -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(0.9);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 -1px 0 rgba(255,255,255,0.04);
   }
   .bottom-nav-item {
     flex: 1;
@@ -1416,8 +1443,10 @@ body.light-mode .modal {
   background: rgba(248, 252, 255, 0.97);
 }
 body.light-mode .bottom-nav {
-  background: rgba(240, 248, 255, 0.97);
-  border-top-color: rgba(0, 0, 0, 0.07);
+  background: rgba(220, 235, 255, 0.72);
+  backdrop-filter: blur(32px) saturate(160%) brightness(1.04);
+  -webkit-backdrop-filter: blur(32px) saturate(160%) brightness(1.04);
+  border-top-color: rgba(0, 0, 0, 0.06);
 }
 body.light-mode .bottom-nav-item { color: rgba(10, 18, 36, 0.35); }
 body.light-mode .bottom-nav-item.active { color: var(--accent-blue); }

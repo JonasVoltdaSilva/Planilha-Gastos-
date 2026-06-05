@@ -790,11 +790,12 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
    ============================================================ */
 function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, onAdd, onImport,
   period, setPeriod, cat, setCat, search, setSearch, allCats, cards,
-  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet }) {
+  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet,
+  expenses, faturaOverrides, onMarkPaid, onUnmarkPaid }) {
   const [showImport, setShowImport] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
+  const [tab, setTab] = useS("lancamentos");
 
-  // Aplica filtros locais de tipo/cartão sobre o filtered global (período+cat+busca)
   const localFiltered = useM(() => {
     let arr = [...filtered];
     if (tipoFilter !== "all") arr = arr.filter(e => e.tipo === tipoFilter);
@@ -811,69 +812,87 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
     return localFiltered;
   }, [localFiltered, kindFilter]);
 
-  const emptyText = kindFilter === "entradas" ? "Nenhuma entrada encontrada"
-    : kindFilter === "gastos" ? "Nenhum gasto encontrado"
-    : "Nenhum lançamento encontrado";
-
   return (
     <>
       {showImport && ReactDOM.createPortal(
         <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />,
         document.body
       )}
-      <div className="panel glass" style={{ marginBottom: 16 }}>
-        <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
-          <FilterBar
-            period={period} setPeriod={setPeriod}
-            cat={cat} setCat={setCat}
-            search={search} setSearch={setSearch}
-            tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
-            cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
-            allCats={allCats} cards={cards}
-            onOpenSheet={onOpenFilterSheet}
-          />
-          <div className="gastos-actions">
-            <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
-              <Ic.download size={17} />Extrato
-            </button>
-            <button className="btn btn-ghost" title="Exportar CSV" onClick={() => exportToCSV(displayRows)}>
-              <Ic.upload size={17} />CSV
-            </button>
-            <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-          {[["all", "Todos"], ["gastos", "Gastos"], ["entradas", "Entradas"]].map(([k, l]) => (
-            <button key={k} type="button"
-              className={"tipo-opt" + (kindFilter === k ? " on" : "")}
-              style={{ "--tipo-hex": k === "entradas" ? "var(--accent-mint)" : k === "gastos" ? "#e08a7a" : "var(--text-mid)" }}
-              onClick={() => setKindFilter(k)}>
-              {l}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
-          <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Gastos</span>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#e08a7a", fontVariantNumeric: "tabular-nums" }}>−{fmtBRL(gastosTotal)}</span>
-          {entradasTotal > 0 && (
-            <>
-              <span style={{ color: "var(--text-lo)", fontSize: 13 }}>·</span>
-              <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Entradas</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>+{fmtBRL(entradasTotal)}</span>
-            </>
-          )}
-          <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
-        </div>
-        {displayRows.length === 0 ? (
-          <EmptyState
-            title={kindFilter === "entradas" ? "Nenhuma entrada" : kindFilter === "gastos" ? "Nenhum gasto" : "Histórico vazio"}
-            text={search || cat !== "all" ? "Tente ajustar os filtros." : "Toque no + para registrar sua primeira transação."}
-          />
-        ) : (
-          <GroupedExpenseList rows={displayRows} onEdit={onEdit} onDelete={onDelete}
-            onDeleteGroup={onDeleteGroup} cards={cards} />
-        )}
+
+      {/* Tab switcher */}
+      <div className="gastos-tabs">
+        <button className={"gastos-tab" + (tab === "lancamentos" ? " on" : "")} onClick={() => setTab("lancamentos")}>
+          <Ic.wallet size={15} />Lançamentos
+        </button>
+        <button className={"gastos-tab" + (tab === "faturas" ? " on" : "")} onClick={() => setTab("faturas")}>
+          <Ic.card size={15} />Faturas
+        </button>
       </div>
+
+      {tab === "lancamentos" && (
+        <div className="panel glass" style={{ marginBottom: 16 }}>
+          <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
+            <FilterBar
+              period={period} setPeriod={setPeriod}
+              cat={cat} setCat={setCat}
+              search={search} setSearch={setSearch}
+              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+              allCats={allCats} cards={cards}
+              onOpenSheet={onOpenFilterSheet}
+            />
+            <div className="gastos-actions">
+              <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
+                <Ic.download size={17} />Extrato
+              </button>
+              <button className="btn btn-ghost" title="Exportar CSV" onClick={() => exportToCSV(displayRows)}>
+                <Ic.upload size={17} />CSV
+              </button>
+              <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+            {[["all", "Todos"], ["gastos", "Gastos"], ["entradas", "Entradas"]].map(([k, l]) => (
+              <button key={k} type="button"
+                className={"tipo-opt" + (kindFilter === k ? " on" : "")}
+                style={{ "--tipo-hex": k === "entradas" ? "var(--accent-mint)" : k === "gastos" ? "#e08a7a" : "var(--text-mid)" }}
+                onClick={() => setKindFilter(k)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
+            <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Gastos</span>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#e08a7a", fontVariantNumeric: "tabular-nums" }}>−{fmtBRL(gastosTotal)}</span>
+            {entradasTotal > 0 && (
+              <>
+                <span style={{ color: "var(--text-lo)", fontSize: 13 }}>·</span>
+                <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Entradas</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>+{fmtBRL(entradasTotal)}</span>
+              </>
+            )}
+            <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
+          </div>
+          {displayRows.length === 0 ? (
+            <EmptyState
+              title={kindFilter === "entradas" ? "Nenhuma entrada" : kindFilter === "gastos" ? "Nenhum gasto" : "Histórico vazio"}
+              text={search || cat !== "all" ? "Tente ajustar os filtros." : "Toque no + para registrar sua primeira transação."}
+            />
+          ) : (
+            <GroupedExpenseList rows={displayRows} onEdit={onEdit} onDelete={onDelete}
+              onDeleteGroup={onDeleteGroup} cards={cards} />
+          )}
+        </div>
+      )}
+
+      {tab === "faturas" && (
+        <FaturasView
+          cards={cards} expenses={expenses}
+          faturaOverrides={faturaOverrides}
+          onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
+          onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
+        />
+      )}
     </>
   );
 }
