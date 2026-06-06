@@ -622,12 +622,12 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
     // Faturas próximas do vencimento — agrupadas em uma única notificação
     const fatVencendo = [];
     (cards || []).forEach(c => {
-      const key = `${c.id}:${monthStr}`;
-      if (faturaOverrides?.[key]?.status === "paga") return;
-      const fatura = computeFaturas([c], expenses, faturaOverrides || {}).find(f => f.total > 0);
+      // computeFaturas already applies faturaOverrides → status "paga" is already reflected
+      const fatura = computeFaturas([c], expenses, faturaOverrides || {})
+        .find(f => f.total > 0 && f.status !== "paga");
       if (!fatura) return;
-      const dueDate = new Date(now.getFullYear(), now.getMonth(), c.diaVencimento);
-      if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
+      const [fy, fm] = fatura.mes.split("-").map(Number);
+      const dueDate = new Date(fy, fm, c.diaVencimento); // month after billing month
       const diff = Math.ceil((dueDate - now) / 86400000);
       if (diff >= 0 && diff <= 7) fatVencendo.push({ diff, total: fatura.total });
     });
