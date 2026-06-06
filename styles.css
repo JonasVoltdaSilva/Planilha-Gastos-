@@ -500,6 +500,248 @@ body.theme-chrome .hero-balance {
   100% { opacity: 0; transform: scale(0.3); }
 }
 
+/* ============================================================
+   SHORT N' SWEET — Sabrina Carpenter · vintage Hollywood glamour
+   Butter yellow · Blush pink · Champagne gold · Cream white
+   coquette · editorial luxury · soft femininity
+   ============================================================ */
+body.theme-sweet {
+  --accent-blue:      #C8963A;
+  --accent-mint:      #E8849A;
+  --accent-blue-soft: rgba(200, 150,  58, 0.16);
+  --accent-mint-soft: rgba(232, 132, 154, 0.14);
+  --blob1-color:      rgba(248, 214, 221, 0.70);
+  --blob2-color:      rgba(255, 242, 184, 0.58);
+  --blob3-color:      rgba(220, 235, 255, 0.48);
+  --btn-primary-fg:   #5C2E1A;
+  --text-hi:          rgba(50, 24, 16, 0.95);
+  --text-mid:         rgba(108, 62, 48, 0.72);
+  --text-lo:          rgba(158, 112, 96, 0.50);
+}
+
+/* Cream-to-blush gradient backdrop */
+body.theme-sweet .backdrop {
+  background: linear-gradient(148deg, #FFFDF8 0%, #FFF0F4 52%, #FFFAEE 100%);
+}
+
+/* Gold dot lace texture */
+body.theme-sweet .backdrop::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(230,201,141,0.16) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+  pointer-events: none;
+}
+
+/* Warm rose vignette */
+body.theme-sweet .backdrop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 88% 80% at 50% 45%,
+    transparent 46%, rgba(248,180,195,0.14) 70%, rgba(238,165,178,0.30) 100%);
+  pointer-events: none;
+}
+
+/* Blobs — pastel, softly saturated */
+body.theme-sweet .blob { filter: blur(72px) saturate(62%) brightness(1.06) !important; }
+
+/* Glass cards — cream with champagne gold rim */
+body.theme-sweet .glass {
+  background: rgba(255, 251, 247, 0.84) !important;
+  border-color: rgba(230, 201, 141, 0.28) !important;
+  box-shadow:
+    0 4px 32px rgba(175, 112, 88, 0.10),
+    0 1px 6px  rgba(230, 201, 141, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80) !important;
+  backdrop-filter: blur(20px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
+}
+
+/* Champagne shimmer sweep */
+body.theme-sweet .glass::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(108deg,
+    transparent 26%, rgba(255, 242, 184, 0.28) 50%, transparent 74%);
+  background-size: 260% 100%;
+  border-radius: inherit;
+  animation: sweetShimmer 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes sweetShimmer {
+  0%   { background-position: 230% 0; opacity: 0; }
+  12%  { opacity: 1; }
+  58%  { background-position: -45% 0; opacity: 1; }
+  72%  { opacity: 0; }
+  100% { background-position: -45% 0; opacity: 0; }
+}
+
+/* Bottom nav — cream, gold hairline top */
+body.theme-sweet .bottom-nav {
+  background: rgba(255, 251, 245, 0.93) !important;
+  border-top: 1px solid rgba(230, 201, 141, 0.30) !important;
+  box-shadow: 0 -4px 20px rgba(175, 112, 88, 0.07) !important;
+}
+body.theme-sweet .bottom-nav-item { color: rgba(110, 62, 48, 0.52) !important; }
+body.theme-sweet .bottom-nav-item.active { color: #C8963A !important; }
+
+/* FAB — gold-to-blush gradient */
+body.theme-sweet .bottom-nav-fab {
+  background: linear-gradient(138deg, #E6C98D 0%, #F09AB0 100%) !important;
+  box-shadow:
+    0 4px 22px rgba(224, 170, 128, 0.55),
+    0 0 0 3px rgba(255, 242, 200, 0.36) !important;
+  animation: sweetFabPulse 3.4s ease-in-out infinite !important;
+}
+body.theme-sweet .bottom-nav-fab svg { color: #5C2E1A !important; }
+@keyframes sweetFabPulse {
+  0%, 100% { box-shadow: 0 4px 22px rgba(224,170,128,0.55), 0 0 0 3px rgba(255,242,200,0.36); }
+  50%       { box-shadow: 0 6px 30px rgba(240,154,176,0.62), 0 0 0 6px rgba(255,242,200,0.20); }
+}
+
+/* Balance value — editorial champagne italic */
+body.theme-sweet .home-balance-value {
+  background: linear-gradient(135deg, #A87228 0%, #E6C98D 42%, #F09AB0 88%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  filter: none !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  font-style: italic !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Balance label, hero subtitle */
+body.theme-sweet .hero-balance-label,
+body.theme-sweet .home-balance-label { color: var(--text-mid) !important; }
+
+/* Headlines — editorial Cormorant serif */
+body.theme-sweet h1,
+body.theme-sweet h2,
+body.theme-sweet h3,
+body.theme-sweet .page-title,
+body.theme-sweet .brand-name,
+body.theme-sweet .onb-app-name,
+body.theme-sweet .panel-title,
+body.theme-sweet .stat-value {
+  font-family: 'Cormorant Garamond', serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* Sidebar nav items */
+body.theme-sweet .nav-item { color: rgba(108, 62, 48, 0.62) !important; }
+body.theme-sweet .nav-item.active {
+  background: rgba(230, 201, 141, 0.18) !important;
+  color: #A87228 !important;
+}
+body.theme-sweet .nav-label { color: rgba(158, 112, 96, 0.55) !important; }
+
+/* Brand mark */
+body.theme-sweet .brand-mark {
+  background: linear-gradient(135deg, #E6C98D 0%, #F09AB0 100%) !important;
+}
+body.theme-sweet .brand-mark svg { color: #5C2E1A !important; }
+
+/* Avatar */
+body.theme-sweet .avatar {
+  background: linear-gradient(135deg, #E6C98D, #F09AB0) !important;
+  color: #5C2E1A !important;
+}
+
+/* Progress bars — gold-to-blush gradient */
+body.theme-sweet [class*="progress"],
+body.theme-sweet [class*="prog-bar"] { background: rgba(230,201,141,0.18) !important; }
+body.theme-sweet [class*="progress-fill"],
+body.theme-sweet [class*="prog-fill"],
+body.theme-sweet [class*="bar-fill"] {
+  background: linear-gradient(90deg, #E6C98D 0%, #F09AB0 100%) !important;
+}
+
+/* Form inputs */
+body.theme-sweet .form-input,
+body.theme-sweet .input,
+body.theme-sweet .form-select,
+body.theme-sweet .select {
+  background: rgba(255, 252, 248, 0.90) !important;
+  border-color: rgba(230, 201, 141, 0.38) !important;
+  color: rgba(50, 24, 16, 0.94) !important;
+}
+body.theme-sweet .form-input::placeholder,
+body.theme-sweet .input::placeholder { color: rgba(158, 112, 96, 0.52) !important; }
+body.theme-sweet .form-input:focus,
+body.theme-sweet .input:focus,
+body.theme-sweet .select:focus {
+  border-color: rgba(230, 201, 141, 0.80) !important;
+  box-shadow: 0 0 0 3px rgba(230, 201, 141, 0.18) !important;
+}
+body.theme-sweet select.select option { background: #FFF8F0; color: #321810; }
+
+/* Table rows */
+body.theme-sweet tbody td { border-bottom-color: rgba(230,201,141,0.12) !important; }
+body.theme-sweet tbody tr:nth-child(even) { background: rgba(255,242,220,0.08) !important; }
+body.theme-sweet tbody tr:hover { background: rgba(230,201,141,0.10) !important; }
+body.theme-sweet thead th {
+  background: rgba(255,248,235,0.60) !important;
+  border-bottom-color: rgba(230,201,141,0.18) !important;
+  color: var(--text-lo) !important;
+}
+
+/* Tags */
+body.theme-sweet .tag, body.theme-sweet .chip {
+  background: rgba(230, 201, 141, 0.18) !important;
+  border-color: rgba(230, 201, 141, 0.30) !important;
+}
+
+/* Btn primary */
+body.theme-sweet .btn-primary {
+  background: linear-gradient(135deg, #E6C98D 0%, #F09AB0 100%) !important;
+  box-shadow: 0 3px 14px rgba(224,170,128,0.45) !important;
+}
+
+/* Scrollbar */
+body.theme-sweet ::-webkit-scrollbar-thumb { background: rgba(230,201,141,0.40) !important; }
+body.theme-sweet ::-webkit-scrollbar-track { background: rgba(255,248,235,0.60) !important; }
+
+/* Onboarding card for sweet */
+body.theme-sweet .onb-card {
+  background: rgba(255, 251, 246, 0.90) !important;
+  border-color: rgba(230, 201, 141, 0.30) !important;
+}
+
+/* ---- SweetDecor: sparkle stars ---- */
+.sweet-sparkle {
+  position: fixed;
+  clip-path: polygon(50% 0%, 53% 47%, 100% 50%, 53% 53%, 50% 100%, 47% 53%, 0% 50%, 47% 47%);
+  background: linear-gradient(135deg, #FFF2B8 0%, #E6C98D 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: sweetSparkle linear infinite;
+}
+@keyframes sweetSparkle {
+  0%   { transform: scale(0)   rotate(0deg);   opacity: 0; }
+  18%  { transform: scale(1)   rotate(55deg);  opacity: 0.82; }
+  55%  { transform: scale(1.1) rotate(145deg); opacity: 0.60; }
+  88%  { transform: scale(0.8) rotate(300deg); opacity: 0.30; }
+  100% { transform: scale(0)   rotate(360deg); opacity: 0; }
+}
+
+/* ---- SweetDecor: lip kiss prints ---- */
+.sweet-kiss-wrap {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+.sweet-kiss {
+  animation: sweetKiss ease-in-out infinite;
+}
+@keyframes sweetKiss {
+  0%   { opacity: 0;    transform: scale(0.65); }
+  22%  { opacity: 0.22; transform: scale(1.00); }
+  72%  { opacity: 0.15; transform: scale(1.00); }
+  100% { opacity: 0;    transform: scale(0.75); }
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {

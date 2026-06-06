@@ -137,6 +137,64 @@ function AcidDecor({ theme }) {
   );
 }
 
+/* Sparkle stars + lip prints — tema Short n' Sweet (Sabrina Carpenter) */
+function SweetDecor({ theme }) {
+  if (theme !== "sweet") return null;
+
+  const sparkles = [
+    { id: 0,  top: "7%",  left: "8%",  size: 10, dur: "3.4s", delay: "0s"   },
+    { id: 1,  top: "19%", left: "85%", size: 7,  dur: "4.8s", delay: "1.3s" },
+    { id: 2,  top: "43%", left: "13%", size: 12, dur: "3.9s", delay: "2.5s" },
+    { id: 3,  top: "64%", left: "71%", size: 8,  dur: "5.2s", delay: "0.6s" },
+    { id: 4,  top: "82%", left: "37%", size: 9,  dur: "4.2s", delay: "3.4s" },
+    { id: 5,  top: "30%", left: "52%", size: 7,  dur: "3.7s", delay: "1.9s" },
+    { id: 6,  top: "52%", left: "90%", size: 9,  dur: "4.9s", delay: "0.8s" },
+    { id: 7,  top: "14%", left: "39%", size: 6,  dur: "3.1s", delay: "4.2s" },
+    { id: 8,  top: "75%", left: "19%", size: 8,  dur: "4.4s", delay: "2.9s" },
+    { id: 9,  top: "91%", left: "61%", size: 7,  dur: "3.8s", delay: "1.6s" },
+    { id: 10, top: "24%", left: "25%", size: 9,  dur: "5.4s", delay: "0.3s" },
+    { id: 11, top: "69%", left: "54%", size: 6,  dur: "3.3s", delay: "3.8s" },
+  ];
+
+  const kisses = [
+    { id: 0, top: "10%", left: "74%", dur: "7.5s", delay: "0s",   rot: -10 },
+    { id: 1, top: "51%", left: "4%",  dur: "9.2s", delay: "2.9s", rot: 9   },
+    { id: 2, top: "81%", left: "85%", dur: "8.1s", delay: "4.6s", rot: -6  },
+    { id: 3, top: "35%", left: "92%", dur: "10s",  delay: "1.6s", rot: 14  },
+    { id: 4, top: "67%", left: "46%", dur: "6.5s", delay: "5.7s", rot: -4  },
+  ];
+
+  return (
+    <>
+      {sparkles.map(s => (
+        <div key={s.id} className="sweet-sparkle" style={{
+          top: s.top, left: s.left,
+          width: s.size, height: s.size,
+          animationDuration: s.dur,
+          animationDelay: s.delay,
+        }} />
+      ))}
+      {kisses.map(k => (
+        <div key={k.id} className="sweet-kiss-wrap" style={{
+          top: k.top, left: k.left,
+          transform: `rotate(${k.rot}deg)`,
+        }}>
+          <div className="sweet-kiss" style={{
+            animationDuration: k.dur,
+            animationDelay: k.delay,
+          }}>
+            <svg width="34" height="24" viewBox="0 0 34 24" fill="none">
+              <path d="M2 11 Q3 4, 10 3 Q14 0, 17 4 Q20 0, 24 3 Q31 4, 32 11 Q30 20, 24 23 Q20 25, 17 22 Q14 25, 10 23 Q4 20, 2 11Z" fill="rgba(232,100,118,0.28)"/>
+              <path d="M8 11 Q12 7, 17 11 Q22 7, 26 11 Q22 16, 17 16 Q12 16, 8 11Z" fill="rgba(195,65,85,0.20)"/>
+              <ellipse cx="12" cy="7.5" rx="3" ry="1.6" fill="rgba(255,220,225,0.22)"/>
+            </svg>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 /* Raios de luz + faíscas metálicas — tema Chrome (cyberpunk/mangá) */
 function ChromeDecor({ theme }) {
   if (theme !== "chrome") return null;
@@ -642,6 +700,7 @@ function App() {
       <PetalDecor  theme={profile?.theme} />
       <AcidDecor   theme={profile?.theme} />
       <ChromeDecor theme={profile?.theme} />
+      <SweetDecor  theme={profile?.theme} />
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );

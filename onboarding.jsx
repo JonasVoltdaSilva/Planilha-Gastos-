@@ -13,6 +13,7 @@ const THEMES = [
   { id: "petal",   nome: "Petal",          colors: ["#d8d4ce", "#1a1a1a"] },
   { id: "acid",    nome: "Acid Neon",      colors: ["#39FF14", "#CCFF00"] },
   { id: "chrome",  nome: "Chrome",         colors: ["#D0DCF0", "#040408"] },
+  { id: "sweet",   nome: "Short n' Sweet", colors: ["#F8D6DD", "#E6C98D"] },
 ];
 
 const LS_PROFILE = "planilha_gastos_profile_v1";
