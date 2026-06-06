@@ -139,39 +139,45 @@ function AcidDecor({ theme }) {
 
 /* Sparkle stars + lip prints — tema Short n' Sweet (Sabrina Carpenter) */
 function SweetDecor({ theme }) {
-  if (theme !== "sweet") return null;
+  const [items, setItems] = useState(null);
 
-  const sparkles = [
-    { id: 0,  top: "7%",  left: "8%",  size: 10, dur: "3.4s", delay: "0s"   },
-    { id: 1,  top: "19%", left: "85%", size: 7,  dur: "4.8s", delay: "1.3s" },
-    { id: 2,  top: "43%", left: "13%", size: 12, dur: "3.9s", delay: "2.5s" },
-    { id: 3,  top: "64%", left: "71%", size: 8,  dur: "5.2s", delay: "0.6s" },
-    { id: 4,  top: "82%", left: "37%", size: 9,  dur: "4.2s", delay: "3.4s" },
-    { id: 5,  top: "30%", left: "52%", size: 7,  dur: "3.7s", delay: "1.9s" },
-    { id: 6,  top: "52%", left: "90%", size: 9,  dur: "4.9s", delay: "0.8s" },
-    { id: 7,  top: "14%", left: "39%", size: 6,  dur: "3.1s", delay: "4.2s" },
-    { id: 8,  top: "75%", left: "19%", size: 8,  dur: "4.4s", delay: "2.9s" },
-    { id: 9,  top: "91%", left: "61%", size: 7,  dur: "3.8s", delay: "1.6s" },
-    { id: 10, top: "24%", left: "25%", size: 9,  dur: "5.4s", delay: "0.3s" },
-    { id: 11, top: "69%", left: "54%", size: 6,  dur: "3.3s", delay: "3.8s" },
-  ];
+  useEffect(() => {
+    if (theme !== "sweet") { setItems(null); return; }
+    const r  = (a, b) => Math.random() * (b - a) + a;
+    const ri = (a, b) => Math.floor(r(a, b + 1));
+    const fmt = n => n.toFixed(1) + "s";
 
-  const kisses = [
-    { id: 0, top: "10%", left: "74%", dur: "7.5s", delay: "0s",   rot: -10 },
-    { id: 1, top: "51%", left: "4%",  dur: "9.2s", delay: "2.9s", rot: 9   },
-    { id: 2, top: "81%", left: "85%", dur: "8.1s", delay: "4.6s", rot: -6  },
-    { id: 3, top: "35%", left: "92%", dur: "10s",  delay: "1.6s", rot: 14  },
-    { id: 4, top: "67%", left: "46%", dur: "6.5s", delay: "5.7s", rot: -4  },
-  ];
+    setItems({
+      sparkles: Array.from({ length: 14 }, (_, i) => ({
+        id: i,
+        top:   r(4,  93).toFixed(1) + "%",
+        left:  r(3,  93).toFixed(1) + "%",
+        size:  ri(8, 18),
+        dur:   fmt(r(3.5, 6.5)),
+        delay: fmt(r(1.5, 14)),
+      })),
+      kisses: Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        top:   r(8,  85).toFixed(1) + "%",
+        left:  r(4,  88).toFixed(1) + "%",
+        rot:   ri(-22, 22),
+        dur:   fmt(r(7, 13)),
+        delay: fmt(r(2, 16)),
+      })),
+    });
+  }, [theme]);
+
+  if (!items) return null;
 
   return (
     <>
-      {sparkles.map(s => (
+      {items.sparkles.map(s => (
         <div key={s.id} className="sweet-sparkle" style={{
           position: "fixed",
           top: s.top, left: s.left,
           animationDuration: s.dur,
           animationDelay: s.delay,
+          animationFillMode: "backwards",
         }}>
           <svg width={s.size * 2} height={s.size * 2} viewBox="0 0 24 24" fill="none">
             <path d="M12 0 L13.2 10.8 L24 12 L13.2 13.2 L12 24 L10.8 13.2 L0 12 L10.8 10.8 Z" fill="#E6C98D"/>
@@ -179,7 +185,7 @@ function SweetDecor({ theme }) {
           </svg>
         </div>
       ))}
-      {kisses.map(k => (
+      {items.kisses.map(k => (
         <div key={k.id} className="sweet-kiss-wrap" style={{
           top: k.top, left: k.left,
           transform: `rotate(${k.rot}deg)`,
@@ -187,6 +193,7 @@ function SweetDecor({ theme }) {
           <div className="sweet-kiss" style={{
             animationDuration: k.dur,
             animationDelay: k.delay,
+            animationFillMode: "backwards",
           }}>
             <svg width="40" height="28" viewBox="0 0 40 28" fill="none">
               <path d="M2 13 Q3 4, 12 3 Q16 0, 20 5 Q24 0, 28 3 Q37 4, 38 13 Q36 23, 28 27 Q24 30, 20 27 Q16 30, 12 27 Q4 23, 2 13Z" fill="rgba(218,72,98,0.85)"/>
