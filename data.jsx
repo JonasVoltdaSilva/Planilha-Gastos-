@@ -142,7 +142,11 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 const addMonths = (iso, n) => {
   const d = new Date(iso + "T12:00:00");
+  const origDay = d.getDate();
+  d.setDate(1);
   d.setMonth(d.getMonth() + n);
+  const maxDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(origDay, maxDay));
   return d.toISOString().slice(0, 10);
 };
 
@@ -233,40 +237,55 @@ function parseQuick(text) {
   return makeTransaction({ valor, categoria, descricao: desc, tipo });
 }
 
+const MONTH_PT = { jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12 };
+
 function parseStatement(text) {
   if (!text || !text.trim()) return [];
   const results = [];
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const currYear = new Date().getFullYear();
 
   for (const line of lines) {
-    if (/saldo|extrato|período|periodo|limite|agência|agencia|cpf|cnpj|data\s+desc/i.test(line)) continue;
+    // Skip metadata/header lines
+    if (/^\s*$|saldo anterior|saldo final|saldo disponível|extrato|período|limite disponível|agência|agencia|cpf|cnpj|conta corrente|data\s+desc|valor\s+saldo|histórico/i.test(line)) continue;
 
-    const amtMatch = line.match(/R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})/i);
-    if (!amtMatch) continue;
+    // Find all monetary amounts in the line (Brazilian format: 1.234,56 or 234,56)
+    const allAmts = [...line.matchAll(/(?<![,\d])(\d{1,3}(?:\.\d{3})*,\d{2})(?![,\d])/g)];
+    if (!allAmts.length) continue;
 
-    const numStr = amtMatch[1].replace(/\./g, "").replace(",", ".");
-    const valor = parseFloat(numStr);
-    if (isNaN(valor) || valor <= 0 || valor > 100000) continue;
+    // Take the first amount that's not obviously a balance (prefer leftmost)
+    let chosenAmt = null;
+    for (const m of allAmts) {
+      const v = parseFloat(m[1].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(v) && v > 0 && v <= 100000) { chosenAmt = { match: m[0], valor: v }; break; }
+    }
+    if (!chosenAmt) continue;
 
-    if (/\bcr\b|crédito recebido|recebimento pix|pix recebido|transferência recebida|ted recebida/i.test(line)) continue;
+    // Skip clear income/credit lines
+    if (/\bcr\b|\bcrédito\b|\bcredito\b|recebimento pix|pix recebido|transferência recebida|ted recebida|salário recebido|crédito em conta/i.test(line)) continue;
 
-    const dateMatch = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
-    let iso;
-    if (dateMatch) {
-      const d = dateMatch[1].padStart(2, "0");
-      const mo = dateMatch[2].padStart(2, "0");
-      const y = dateMatch[3]
-        ? (dateMatch[3].length === 2 ? "20" + dateMatch[3] : dateMatch[3])
-        : new Date().getFullYear().toString();
-      iso = `${y}-${mo}-${d}`;
-    } else {
-      iso = todayISO();
+    // Parse date — supports DD/MM, DD/MM/YY, DD/MM/YYYY, DD-MM, "DD JAN", "04 JUN"
+    let iso = todayISO();
+    const ddmm = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+    const ddmon = line.match(/\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i);
+    if (ddmm) {
+      const day = ddmm[1].padStart(2, "0");
+      const mon = ddmm[2].padStart(2, "0");
+      const yr = ddmm[3] ? (ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3]) : String(currYear);
+      iso = `${yr}-${mon}-${day}`;
+    } else if (ddmon) {
+      const day = ddmon[1].padStart(2, "0");
+      const mon = String(MONTH_PT[ddmon[2].toLowerCase()]).padStart(2, "0");
+      iso = `${currYear}-${mon}-${day}`;
     }
 
+    // Clean description
     let desc = line
-      .replace(amtMatch[0], "")
+      .replace(chosenAmt.match, "")
       .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/, "")
-      .replace(/\s+/g, " ").trim();
+      .replace(/\b\d{1,2}\s+(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i, "")
+      .replace(/\bR\$\s*/gi, "")
+      .replace(/\s{2,}/g, " ").trim();
     if (!desc || desc.length < 2) desc = "Gasto importado";
     if (desc.length > 80) desc = desc.slice(0, 80);
 
@@ -274,7 +293,7 @@ function parseStatement(text) {
       data: iso,
       descricao: desc,
       categoria: detectCategory(desc),
-      valor,
+      valor: chosenAmt.valor,
       tipo: detectTipo(line),
     }));
   }
@@ -336,10 +355,88 @@ function seedData() {
   })).sort((a, b) => b.data.localeCompare(a.data));
 }
 
+const LS_FATURAS = "planilha_gastos_faturas_v1";
+
+function formatMes(mesISO) {
+  const [y, m] = mesISO.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleString("pt-BR", { month: "long", year: "numeric" });
+}
+
+function computeFaturas(cards, expenses, faturaOverrides) {
+  const today = new Date();
+  const results = [];
+  for (const card of cards) {
+    const cardExps = expenses.filter(e => e.cardId === card.id && e.tipo === "credito" && e.kind !== "entrada");
+    const byMes = {};
+    for (const exp of cardExps) {
+      const ref = exp.faturaRef || calcFaturaRef(exp.data, card);
+      if (!ref) continue;
+      if (!byMes[ref]) byMes[ref] = [];
+      byMes[ref].push(exp);
+    }
+    const currMes = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    const nd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMes = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}`;
+    if (!byMes[currMes]) byMes[currMes] = [];
+    if (!byMes[nextMes]) byMes[nextMes] = [];
+    for (const [mes, transacoes] of Object.entries(byMes)) {
+      const [y, m] = mes.split("-").map(Number);
+      const closingDay = card.diaFechamento || 20;
+      const dataFechamento = `${mes}-${String(closingDay).padStart(2, "0")}`;
+      const vencDate = new Date(y, m, card.diaVencimento || 5);
+      const dataVencimento = vencDate.toISOString().slice(0, 10);
+      const key = `${card.id}:${mes}`;
+      const override = faturaOverrides?.[key];
+      const status = override?.status === "paga" ? "paga"
+        : today > new Date(dataFechamento + "T23:59:59") ? "fechada"
+        : "aberta";
+      results.push({
+        id: key, cardId: card.id, card, mes,
+        dataFechamento, dataVencimento, status,
+        total: transacoes.reduce((s, e) => s + e.valor, 0),
+        transacoes: [...transacoes].sort((a, b) => b.data.localeCompare(a.data)),
+        paidAt: override?.paidAt || null,
+      });
+    }
+  }
+  return results.sort((a, b) => b.mes.localeCompare(a.mes) || a.cardId.localeCompare(b.cardId));
+}
+
+function exportToCSV(expenses) {
+  const headers = ["Data","Descrição","Categoria","Tipo Pagamento","Valor","Forma","Parcela","Lançamento"];
+  const rows = expenses.map(e => [
+    e.data,
+    `"${(e.descricao || "").replace(/"/g, '""')}"`,
+    e.kind === "entrada" ? "Entrada" : (CAT_MAP[e.categoria]?.nome || e.categoria),
+    TIPO_MAP[e.tipo]?.nome || e.tipo || "Outros",
+    e.valor.toFixed(2).replace(".", ","),
+    e.forma === "parcelado" ? "Parcelado" : "À vista",
+    e.parcTotal > 1 ? `${e.parcNum}/${e.parcTotal}` : "—",
+    e.kind === "entrada" ? "Entrada" : "Gasto",
+  ]);
+  const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `cofrinho_${todayISO()}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportToJSON(expenses, cards, settings, customCats, fixas, caloteiros, emprestimos) {
+  const data = { version: 1, exportedAt: new Date().toISOString(), expenses, cards, settings, customCats, fixas, caloteiros, emprestimos };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `backup_cofrinho_${todayISO()}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
   FORMAS, addMonths, calcFaturaRef, makeTransaction,
   parseQuick, parseStatement, detectCategory, detectTipo,
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,
+  LS_FATURAS, formatMes, computeFaturas,
+  exportToCSV, exportToJSON,
 });

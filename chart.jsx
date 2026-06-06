@@ -72,7 +72,7 @@ function WeekBars({ expenses }) {
     for (let i = 6; i >= 0; i--) {
       const iso = addDays(t, -i);
       const total = expenses
-        .filter(e => e.data === iso)
+        .filter(e => e.data === iso && e.kind !== "entrada")
         .reduce((s, e) => s + e.valor, 0);
       const d = new Date(iso + "T12:00:00");
       arr.push({ iso, total, lab: d.toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3) });

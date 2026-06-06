@@ -3,6 +3,74 @@
    ============================================================ */
 const { useState: useS, useMemo: useM } = React;
 
+/* ---------- Agrupamento cronológico ---------- */
+function groupExpensesByDate(rows) {
+  const today = todayISO();
+  const yesterday = addDays(today, -1);
+  const weekStart = addDays(today, -6);
+  const prevWeekStart = addDays(today, -13);
+  const currYear = new Date().getFullYear();
+  const groupMap = new Map();
+  const order = [];
+  for (const e of rows) {
+    let label;
+    if (e.data === today) label = "Hoje";
+    else if (e.data === yesterday) label = "Ontem";
+    else if (e.data >= weekStart) label = "Esta semana";
+    else if (e.data >= prevWeekStart) label = "Semana passada";
+    else {
+      const d = new Date(e.data + "T12:00:00");
+      const m = d.toLocaleString("pt-BR", { month: "long" });
+      const y = d.getFullYear();
+      const cap = m.charAt(0).toUpperCase() + m.slice(1);
+      label = y === currYear ? cap : `${cap} de ${y}`;
+    }
+    if (!groupMap.has(label)) { groupMap.set(label, []); order.push(label); }
+    groupMap.get(label).push(e);
+  }
+  return order.map(label => ({ label, rows: groupMap.get(label) }));
+}
+
+/* ---------- Lista agrupada por período ---------- */
+function GroupedExpenseList({ rows, onEdit, onDelete, onDeleteGroup, cards }) {
+  if (!rows || rows.length === 0) return null;
+  const groups = groupExpensesByDate(rows);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      {groups.map(({ label, rows: gr }) => {
+        const total = gr.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
+        return (
+          <div key={label}>
+            <div className="group-header">
+              <span className="group-header-label">{label}</span>
+              {total > 0 && <span className="group-header-total">−{fmtBRLshort(total)}</span>}
+            </div>
+            <ExpenseTable rows={gr} onEdit={onEdit} onDelete={onDelete}
+              onDeleteGroup={onDeleteGroup} cards={cards} emptyText="" />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- Empty state acolhedor ---------- */
+function EmptyState({ title, text, onAdd, icon }) {
+  const I = icon || Ic.coins;
+  return (
+    <div className="empty-state">
+      <div className="empty-state-icon"><I size={46} /></div>
+      <div className="empty-state-title">{title || "Nada por aqui ainda"}</div>
+      <div className="empty-state-text">{text || "Adicione sua primeira transação tocando no botão abaixo."}</div>
+      {onAdd && (
+        <button className="btn btn-primary empty-state-btn" onClick={onAdd}>
+          <Ic.plus size={17} />Adicionar transação
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Barra de orçamento com semáforo ---------- */
 function BudgetBar({ total, budget }) {
   if (!budget || budget <= 0) return null;
@@ -219,9 +287,11 @@ function FilterBar({ period, setPeriod, cat, setCat, search, setSearch, tipoFilt
         </div>
         <div className="field sel">
           <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="mes-atual">Este mês</option>
+            <option value="mes-anterior">Mês passado</option>
             <option value="7">7 dias</option>
+            <option value="14">14 dias</option>
             <option value="30">30 dias</option>
-            <option value="90">90 dias</option>
             <option value="all">Todo período</option>
           </select>
         </div>
@@ -422,11 +492,11 @@ function BankImportModal({ onImport, onClose }) {
             {tab === "text" ? (
               <>
                 <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
-                  Cole o texto do seu extrato. O app detecta e categoriza as transações automaticamente.
+                  Cole o texto do extrato (Bradesco, Itaú, Santander, Nubank, Inter…). O app detecta datas, valores e categoriza automaticamente.
                 </p>
                 <textarea className="import-textarea"
                   value={text} onChange={e => setText(e.target.value)}
-                  placeholder={"02/06 PIX MERCADO LIVRE R$150,00\n02/06 DÉBITO UBER R$22,90\n03/06 AMAZON R$89,99\n..."} />
+                  placeholder={"Formatos aceitos:\n02/06 PIX MERCADO LIVRE 150,00\n04/06/2025 DÉBITO UBER 22,90\n04 JUN RESTAURANTE XPTO 45,00\nAMAZON 89,99\n..."} />
                 <div className="modal-actions">
                   <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
                   <button className="btn btn-primary" onClick={() => runAnalysis(text)} disabled={!text.trim()}>
@@ -518,9 +588,9 @@ function BankImportModal({ onImport, onClose }) {
 /* ============================================================
    HOME / INÍCIO
    ============================================================ */
-function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName }) {
+function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName, faturaOverrides, onGoToFaturas, fixas, caloteiros, onGoToConfig }) {
+  const [showNotifs, setShowNotifs] = useS(false);
   const now = new Date();
-  const todayDay = now.getDate();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
   const monthGastos = monthExp.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
@@ -533,26 +603,86 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
     : "var(--cat-saude)";
   const h = now.getHours();
   const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-  const recent = [...expenses].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 6);
+  const recent = [...monthExp].filter(e => e.kind !== "entrada").sort((a, b) => b.data.localeCompare(a.data));
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
+  const todayDay = now.getDate();
 
-  const dueAlerts = (cards || []).map(c => {
-    const today = new Date();
-    const vencDay = c.diaVencimento;
-    const dueDate = new Date(today.getFullYear(), today.getMonth(), vencDay);
-    if (dueDate < today) dueDate.setMonth(dueDate.getMonth() + 1);
-    const diffDays = Math.ceil((dueDate - today) / 86400000);
-    return { ...c, diffDays };
-  }).filter(c => c.diffDays >= 0 && c.diffDays <= 7);
+  const pendingFaturas = useM(() => {
+    if (!cards || cards.length === 0) return [];
+    return computeFaturas(cards, expenses, faturaOverrides || {})
+      .filter(f => f.status !== "paga" && f.total > 0);
+  }, [cards, expenses, faturaOverrides]);
+
+  const pendingCaloteiros = (caloteiros || []).filter(c => !c.pago);
+  const totalCaloteiros = pendingCaloteiros.reduce((s, c) => s + c.valor, 0);
+  const totalFixas = (fixas || []).reduce((s, f) => s + f.valor, 0);
+
+  const notifications = useM(() => {
+    const list = [];
+    // Faturas próximas do vencimento — agrupadas em uma única notificação
+    const fatVencendo = [];
+    (cards || []).forEach(c => {
+      // computeFaturas already applies faturaOverrides → status "paga" is already reflected
+      const fatura = computeFaturas([c], expenses, faturaOverrides || {})
+        .find(f => f.total > 0 && f.status !== "paga");
+      if (!fatura) return;
+      const [fy, fm] = fatura.mes.split("-").map(Number);
+      const dueDate = new Date(fy, fm, c.diaVencimento); // month after billing month
+      const diff = Math.ceil((dueDate - now) / 86400000);
+      if (diff >= 0 && diff <= 7) fatVencendo.push({ diff, total: fatura.total });
+    });
+    if (fatVencendo.length > 0) {
+      const totalFat = fatVencendo.reduce((s, f) => s + f.total, 0);
+      const minDiff = Math.min(...fatVencendo.map(f => f.diff));
+      const urgente = minDiff <= 1;
+      const detalhe = minDiff === 0 ? "vence hoje!" : `vence em ${minDiff} dia${minDiff === 1 ? "" : "s"}`;
+      list.push({ id: "fat-all", urgente,
+        texto: `${fatVencendo.length} fatura${fatVencendo.length !== 1 ? "s" : ""} pendente${fatVencendo.length !== 1 ? "s" : ""} · ${fmtBRL(totalFat)}`,
+        detalhe });
+    }
+    // Devedores com alerta no dia
+    (caloteiros || []).filter(c => !c.pago && c.alertaDia).forEach(c => {
+      const diff = c.alertaDia - todayDay;
+      if (diff >= -1 && diff <= 3) {
+        const detalhe = diff === 0 ? "cobrar hoje!" : diff === 1 ? "cobrar amanhã" : diff === -1 ? "era ontem" : `cobrar em ${diff} dias`;
+        list.push({ id: `cal-${c.id}`, urgente: diff <= 0,
+          texto: `Cobrar ${c.nome}`,
+          detalhe: `${detalhe} · ${fmtBRL(c.valor)}` });
+      }
+    });
+    return list;
+  }, [cards, expenses, faturaOverrides, caloteiros, monthStr, todayDay]);
 
   return (
     <>
-      {dueAlerts.map(c => (
-        <div key={c.id} className="due-alert">
-          <Ic.bell size={16} />
-          Fatura do <strong>{c.nome}</strong> vence dia {c.diaVencimento} — {c.diffDays === 0 ? "hoje!" : `em ${c.diffDays} dia${c.diffDays === 1 ? "" : "s"}`}
-        </div>
-      ))}
+      {showNotifs && notifications.length > 0 && ReactDOM.createPortal(
+        <>
+          <div className="notif-overlay" onClick={() => setShowNotifs(false)} />
+          <div className="notif-panel glass">
+            <div className="notif-panel-head">
+              <div className="notif-panel-title-row">
+                <div className="notif-panel-icon"><Ic.bell size={15} /></div>
+                <span>Alertas</span>
+              </div>
+              <button className="icon-btn" style={{ width: 32, height: 32 }} onClick={() => setShowNotifs(false)}>
+                <Ic.close size={14} />
+              </button>
+            </div>
+            <div className="notif-list">
+              {notifications.map(n => (
+                <div key={n.id} className={"notif-item" + (n.urgente ? " urgente" : "")}>
+                  <div className={"notif-item-dot" + (n.urgente ? " urgente" : "")} />
+                  <div className="notif-item-body">
+                    <div className="notif-item-text">{n.texto}</div>
+                    <div className="notif-item-sub">{n.detalhe}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
 
       <div className="home-hero glass">
         <div className="home-hero-top">
@@ -560,37 +690,50 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
             <div className="home-greeting">{greeting}, <strong>{userName || "Luiz Ricardo"}</strong>!</div>
             <div className="home-date">{fmtDateLong(todayISO())}</div>
           </div>
-          <button className="btn btn-primary btn-desktop-only" onClick={onAdd}>
-            <Ic.plus size={18} />Novo lançamento
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {notifications.length > 0 && (
+              <button className="notif-bell-btn" onClick={() => setShowNotifs(s => !s)} title="Alertas">
+                <Ic.bell size={17} />
+                <span className="notif-badge">{notifications.length}</span>
+              </button>
+            )}
+            <button className="btn btn-primary btn-desktop-only" onClick={onAdd}>
+              <Ic.plus size={18} />Novo lançamento
+            </button>
+          </div>
         </div>
 
-        <div className="home-stats-row">
-          <div className="home-stat-block">
-            <div className="home-stat-label">Gasto em {monthName}</div>
-            <div className="home-stat-value" style={{ color: "#e08a7a" }}>{fmtBRL(monthGastos)}</div>
-            <div className="home-stat-meta">{monthExp.filter(e => e.kind !== "entrada").length} lançamentos</div>
+        {/* Hero balance */}
+        <div className="home-balance">
+          <div className="home-balance-label">Saldo disponível</div>
+          <div className="home-balance-value" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>
+            {saldo < 0 && "−"}{fmtBRL(Math.abs(saldo))}
           </div>
-          <div className="home-stat-block">
-            <div className="home-stat-label">Saldo disponível</div>
-            <div className="home-stat-value" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>{fmtBRL(saldo)}</div>
-            <div className="home-stat-meta" style={{ color: budgetColor }}>
-              {budget > 0 ? `${Math.round(pct)}% do orçamento usado` : `${monthEntradas > 0 ? "+" + fmtBRL(monthEntradas) : "sem entradas"}`}
+        </div>
+
+        {/* 2×2 stat grid */}
+        <div className="home-stats-grid">
+          <div className="home-stat-card">
+            <div className="home-stat-card-label">Gastos em {monthName}</div>
+            <div className="home-stat-card-value" style={{ color: "#e08a7a" }}>{fmtBRL(monthGastos)}</div>
+            <div className="home-stat-card-meta">{monthExp.filter(e => e.kind !== "entrada").length} lançamentos</div>
+          </div>
+          <div className="home-stat-card">
+            <div className="home-stat-card-label">Entradas do mês</div>
+            <div className="home-stat-card-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthEntradas)}</div>
+            <div className="home-stat-card-meta">{monthExp.filter(e => e.kind === "entrada").length} entradas</div>
+          </div>
+          {budget > 0 && (
+            <div className="home-stat-card home-stat-card-wide">
+              <div className="home-stat-card-label">Orçamento</div>
+              <div className="home-stat-card-value" style={{ color: budgetColor }}>{Math.round(pct)}%</div>
+              <div className="home-stat-card-meta">{fmtBRL(monthGastos)} / {fmtBRL(budget)}</div>
             </div>
-          </div>
-          <div className="home-stat-block">
-            <div className="home-stat-label">Entradas do mês</div>
-            <div className="home-stat-value" style={{ color: "var(--accent-mint)" }}>{fmtBRL(monthEntradas)}</div>
-            <div className="home-stat-meta">{monthExp.filter(e => e.kind === "entrada").length} entradas</div>
-          </div>
+          )}
         </div>
 
         {budget > 0 && (
           <div style={{ marginTop: 18 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7, fontSize: 12, color: "var(--text-lo)" }}>
-              <span>Orçamento mensal</span>
-              <span style={{ color: budgetColor, fontWeight: 700 }}>{fmtBRL(monthGastos)} / {fmtBRL(budget)}</span>
-            </div>
             <div className="budget-bar-track">
               <div className="budget-bar-fill" style={{ width: `${pct}%`, background: budgetColor }} />
             </div>
@@ -598,20 +741,13 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         )}
       </div>
 
-      {recent.length > 0 ? (
+      {/* Últimas compras */}
+      {recent.length > 0 && (
         <div className="panel glass">
           <div className="panel-head">
-            <div className="panel-title">Últimos lançamentos</div>
+            <div className="panel-title">Últimas compras</div>
           </div>
-          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
-        </div>
-      ) : (
-        <div className="panel glass">
-          <div className="empty" style={{ padding: "44px 20px" }}>
-            <Ic.coins size={40} />
-            <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Nenhum gasto registrado</div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>Toque em "Novo gasto" para começar.</div>
-          </div>
+          <ExpenseTable rows={recent.slice(0, 5)} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>
       )}
     </>
@@ -628,6 +764,8 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
   const media = count ? total / count : 0;
   const topCat = byCat[0];
   const entradasTotal = entradas.reduce((s, e) => s + e.valor, 0);
+  const saldo = entradasTotal - total;
+  const savingsRate = entradasTotal > 0 ? Math.round((saldo / entradasTotal) * 100) : null;
 
   return (
     <>
@@ -636,8 +774,10 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
         <Stat icon={Ic.trendUp} label="Entradas no período" value={fmtBRL(entradasTotal)}
           meta={`${entradas.length} entr${entradas.length === 1 ? "ada" : "adas"}`} />
         <Stat icon={Ic.receipt} label="Ticket médio" value={fmtBRL(media)} meta="por gasto" />
-        <Stat icon={Ic.target} label="Maior categoria"
-          value={topCat ? topCat.nome : "—"} meta={topCat ? fmtBRL(topCat.valor) : ""} />
+        <Stat icon={Ic.target} label="Saldo do período"
+          value={fmtBRL(Math.abs(saldo))}
+          meta={savingsRate !== null ? `${savingsRate >= 0 ? "+" : ""}${savingsRate}% da renda` : (saldo >= 0 ? "positivo" : "negativo")}
+          metaDir={saldo >= 0 ? "down" : "up"} />
       </div>
 
       <div className="grid-2">
@@ -665,16 +805,299 @@ function DashboardView({ expenses, filtered, byCat, total, onEdit, onDelete, onD
   );
 }
 
+function EmprestimosSection({ emprestimos, onAdd, onDelete, onUpdate }) {
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", parcelas: "1", parcPaga: "0", tipo: "dado", obs: "" });
+
+  const pending = (emprestimos || []).filter(e => e.parcPaga < e.parcelas);
+  const done = (emprestimos || []).filter(e => e.parcPaga >= e.parcelas);
+
+  const totalDado = pending.filter(e => e.tipo === "dado").reduce((s, e) => s + e.valor, 0);
+  const totalRecebido = pending.filter(e => e.tipo === "recebido").reduce((s, e) => s + e.valor, 0);
+
+  const submit = () => {
+    const valor = parseFloat(form.valor.replace(",", "."));
+    if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
+    onAdd({ nome: form.nome.trim(), valor, parcelas: parseInt(form.parcelas) || 1, parcPaga: 0, tipo: form.tipo, obs: form.obs, data: todayISO() });
+    setForm({ show: false, nome: "", valor: "", parcelas: "1", parcPaga: "0", tipo: "dado", obs: "" });
+  };
+
+  return (
+    <div className="panel glass" style={{ marginTop: 16 }}>
+      <div className="panel-head">
+        <div className="panel-title"><Ic.coins size={17} />Empréstimos</div>
+        <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+          onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+          {form.show ? "Cancelar" : <><Ic.plus size={14} />Novo</>}
+        </button>
+      </div>
+
+      {(totalDado > 0 || totalRecebido > 0) && (
+        <div style={{ display: "flex", gap: 16, marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--glass-border)", flexWrap: "wrap" }}>
+          {totalDado > 0 && <div><div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Emprestado</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "#e08a7a" }}>{fmtBRL(totalDado)}</div></div>}
+          {totalRecebido > 0 && <div><div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Recebido</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--accent-mint)" }}>{fmtBRL(totalRecebido)}</div></div>}
+        </div>
+      )}
+
+      {form.show && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
+          <div className="tipo-picker">
+            {[["dado","Emprestei"],["recebido","Peguei emprestado"]].map(([v,l]) => (
+              <button key={v} type="button" className={"tipo-opt" + (form.tipo === v ? " on" : "")}
+                style={{ "--tipo-hex": v === "dado" ? "#e08a7a" : "var(--accent-mint)" }}
+                onClick={() => setForm(f => ({ ...f, tipo: v }))}>{l}</button>
+            ))}
+          </div>
+          <input className="form-input" placeholder="Nome da pessoa" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Parcelas" type="number" min="1" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} style={{ flex: 1 }} />
+          </div>
+          <input className="form-input" placeholder="Observação (opcional)" value={form.obs} onChange={e => setForm(f => ({ ...f, obs: e.target.value }))} />
+          <button className="btn btn-primary" onClick={submit}>Adicionar empréstimo</button>
+        </div>
+      )}
+
+      {pending.length === 0 && done.length === 0 && (
+        <div style={{ textAlign: "center", color: "var(--text-lo)", fontSize: 13, padding: "20px 0" }}>Nenhum empréstimo registrado</div>
+      )}
+
+      {[...pending, ...done].map(e => {
+        const pct = e.parcelas > 0 ? Math.min(e.parcPaga / e.parcelas, 1) : 0;
+        const quitado = e.parcPaga >= e.parcelas;
+        const color = e.tipo === "dado" ? "#e08a7a" : "var(--accent-mint)";
+        return (
+          <div key={e.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--glass-border)", opacity: quitado ? 0.55 : 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>
+                {e.nome}
+                <span style={{ fontSize: 11, color: "var(--text-lo)", fontWeight: 400, marginLeft: 6 }}>{e.tipo === "dado" ? "emprestei" : "peguei"}</span>
+              </div>
+              {e.obs && <div style={{ fontSize: 12, color: "var(--text-lo)", marginBottom: 5 }}>{e.obs}</div>}
+              {e.parcelas > 1 && (
+                <div style={{ fontSize: 12, color: "var(--text-mid)", fontWeight: 600, marginBottom: 5 }}>
+                  {fmtBRL(Math.round((e.valor / e.parcelas) * 100) / 100)}<span style={{ fontWeight: 400, color: "var(--text-lo)" }}>/parcela</span>
+                </div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct * 100}%`, background: color, borderRadius: 999, transition: "width 0.4s" }} />
+                </div>
+                <span style={{ fontSize: 11, color: "var(--text-lo)", flexShrink: 0 }}>{e.parcPaga}/{e.parcelas}</span>
+              </div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color, marginBottom: 6 }}>{fmtBRL(e.valor)}</div>
+              <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                {!quitado && <button className="icon-btn" title="Marcar parcela paga" style={{ width: 28, height: 28 }} onClick={() => onUpdate(e.id, { parcPaga: e.parcPaga + 1 })}><Ic.check size={13} /></button>}
+                <button className="icon-btn danger" style={{ width: 28, height: 28 }} onClick={() => onDelete(e.id)}><Ic.trash size={13} /></button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FixasSection({ fixas, onAdd, onDelete, allCats }) {
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", dia: "1", catId: "contas" });
+  const total = (fixas || []).reduce((s, f) => s + f.valor, 0);
+
+  const submit = () => {
+    const valor = parseFloat(form.valor.replace(",", "."));
+    if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
+    onAdd({ nome: form.nome.trim(), valor, dia: parseInt(form.dia) || 1, catId: form.catId });
+    setForm(f => ({ ...f, show: false, nome: "", valor: "", dia: "1" }));
+  };
+
+  return (
+    <div className="panel glass">
+      <div className="panel-head">
+        <div className="panel-title"><Ic.receipt size={17} />Contas fixas</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {total > 0 && <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--text-mid)" }}>{fmtBRL(total)}/mês</span>}
+          <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+            onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+            {form.show ? "Cancelar" : <><Ic.plus size={14} />Adicionar</>}
+          </button>
+        </div>
+      </div>
+
+      {form.show && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
+          <input className="form-input" placeholder="Nome (ex: Netflix, Aluguel)" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Dia" type="number" min="1" max="31" value={form.dia} onChange={e => setForm(f => ({ ...f, dia: e.target.value }))} style={{ flex: 1 }} title="Dia do mês de vencimento" />
+          </div>
+          <select className="select" value={form.catId} onChange={e => setForm(f => ({ ...f, catId: e.target.value }))}>
+            {(allCats || CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          <button className="btn btn-primary" onClick={submit}>Adicionar conta fixa</button>
+        </div>
+      )}
+
+      {(fixas || []).length === 0 && !form.show && (
+        <div style={{ textAlign: "center", color: "var(--text-lo)", fontSize: 13, padding: "16px 0" }}>Nenhuma conta fixa cadastrada</div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {(fixas || []).map(f => {
+          const cat = CAT_MAP[f.catId] || CAT_MAP["outros"];
+          return (
+            <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", borderBottom: "1px solid var(--glass-border)" }}>
+              <span className="exp-tag" style={{ background: cat.hex + "22", color: cat.hex, borderColor: cat.hex + "44", flexShrink: 0 }}>{cat.nome}</span>
+              <div style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{f.nome}</div>
+              <div style={{ flexShrink: 0, textAlign: "right" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{fmtBRL(f.valor)}</div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)" }}>todo dia {f.dia}</div>
+              </div>
+              <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(f.id)}><Ic.trash size={13} /></button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CaloteirosSection({ caloteiros, onAdd, onDelete, onToggle }) {
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", descricao: "", parcelas: "1", alertaDia: "" });
+  const pending = (caloteiros || []).filter(c => !c.pago);
+  const paid = (caloteiros || []).filter(c => c.pago);
+  const totalPending = pending.reduce((s, c) => s + c.valor, 0);
+  const today = new Date().getDate();
+
+  const formValor = parseFloat(form.valor.replace(",", "."));
+  const formParc = parseInt(form.parcelas) || 1;
+  const formValorParc = formParc > 1 && !isNaN(formValor) && formValor > 0
+    ? Math.round((formValor / formParc) * 100) / 100 : null;
+
+  const submit = () => {
+    if (!form.nome.trim() || isNaN(formValor) || formValor <= 0) return;
+    onAdd({
+      nome: form.nome.trim(), valor: formValor, descricao: form.descricao,
+      parcelas: formParc, alertaDia: form.alertaDia ? parseInt(form.alertaDia) : null,
+      data: todayISO()
+    });
+    setForm({ show: false, nome: "", valor: "", descricao: "", parcelas: "1", alertaDia: "" });
+  };
+
+  return (
+    <div className="panel glass">
+      <div className="panel-head">
+        <div className="panel-title"><Ic.coins size={17} />A receber</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {totalPending > 0 && <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "#e0c85a" }}>{fmtBRL(totalPending)}</span>}
+          <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
+            onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+            {form.show ? "Cancelar" : <><Ic.plus size={14} />Adicionar</>}
+          </button>
+        </div>
+      </div>
+
+      {form.show && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
+          <input className="form-input" placeholder="Nome do devedor" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Valor total (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Parcelas" type="number" min="1" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} style={{ flex: 1 }} title="Nº de parcelas (1 = à vista)" />
+          </div>
+          {formValorParc && (
+            <div style={{ fontSize: 12, color: "var(--accent-mint)", fontWeight: 600, padding: "2px 0" }}>
+              Parcela: {fmtBRL(formValorParc)} × {formParc}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Motivo (opcional)" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Dia alerta" type="number" min="1" max="31" value={form.alertaDia} onChange={e => setForm(f => ({ ...f, alertaDia: e.target.value }))} style={{ flex: 1 }} title="Dia do mês para lembrar de cobrar" />
+          </div>
+          {form.alertaDia && <div style={{ fontSize: 11, color: "var(--text-lo)" }}>🔔 Alerta todo dia {form.alertaDia} do mês</div>}
+          <button className="btn btn-primary" onClick={submit}>Adicionar devedor</button>
+        </div>
+      )}
+
+      {(caloteiros || []).length === 0 && !form.show && (
+        <div style={{ textAlign: "center", color: "var(--text-lo)", fontSize: 13, padding: "16px 0" }}>Nenhum devedor registrado 🎉</div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {[...pending, ...paid].map(c => {
+          const parcelas = c.parcelas || 1;
+          const parcPaga = c.parcPaga || 0;
+          const parcelado = parcelas > 1;
+          const pct = parcelado ? parcPaga / parcelas : (c.pago ? 1 : 0);
+          const valorParc = parcelado ? Math.round((c.valor / parcelas) * 100) / 100 : null;
+          const diff = c.alertaDia ? c.alertaDia - today : null;
+          const alertaLabel = !c.pago && diff !== null
+            ? diff === 0 ? "hoje" : diff === 1 ? "amanhã" : diff === -1 ? "ontem" : diff > 1 && diff <= 3 ? `em ${diff} dias` : null
+            : null;
+          return (
+            <div key={c.id} style={{ padding: "11px 4px", borderBottom: "1px solid var(--glass-border)", opacity: c.pago ? 0.5 : 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button className={"icon-btn" + (c.pago ? " active" : "")}
+                  style={{ width: 28, height: 28, flexShrink: 0, borderColor: c.pago ? "var(--accent-mint)" : "var(--glass-border)", color: c.pago ? "var(--accent-mint)" : "var(--text-lo)" }}
+                  title={c.pago ? "Reabrir" : parcelado ? `Marcar parcela ${parcPaga + 1}/${parcelas}` : "Marcar como recebido"}
+                  onClick={() => onToggle(c.id)}>
+                  <Ic.check size={13} />
+                </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, textDecoration: c.pago ? "line-through" : "none", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    {c.nome}
+                    {alertaLabel && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: alertaLabel === "hoje" ? "#e0c85a22" : "rgba(255,255,255,0.06)", color: alertaLabel === "hoje" ? "#e0c85a" : "var(--text-mid)", border: `1px solid ${alertaLabel === "hoje" ? "#e0c85a44" : "var(--glass-border)"}` }}>
+                        🔔 {alertaLabel}
+                      </span>
+                    )}
+                  </div>
+                  {c.descricao && <div style={{ fontSize: 12, color: "var(--text-lo)", marginTop: 1 }}>{c.descricao}</div>}
+                  {parcelado && (
+                    <div style={{ fontSize: 12, color: "var(--text-mid)", fontWeight: 600, marginTop: 2 }}>
+                      {fmtBRL(valorParc)}<span style={{ fontWeight: 400, color: "var(--text-lo)" }}>/parcela · {parcPaga}/{parcelas} pagas</span>
+                    </div>
+                  )}
+                  {c.alertaDia && !alertaLabel && !c.pago && (
+                    <div style={{ fontSize: 11, color: "var(--text-lo)", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
+                      <Ic.bell size={10} /> cobrar todo dia {c.alertaDia}
+                    </div>
+                  )}
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: c.pago ? "var(--text-lo)" : "#e0c85a" }}>{fmtBRL(c.valor)}</div>
+                  {parcelado && !c.pago && <div style={{ fontSize: 11, color: "var(--text-lo)", marginTop: 1 }}>{parcelas - parcPaga} restantes</div>}
+                </div>
+                <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(c.id)}><Ic.trash size={13} /></button>
+              </div>
+              {parcelado && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, paddingLeft: 38 }}>
+                  <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct * 100}%`, background: "#e0c85a", borderRadius: 999, transition: "width 0.4s" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================
    GASTOS
    ============================================================ */
 function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, onAdd, onImport,
   period, setPeriod, cat, setCat, search, setSearch, allCats, cards,
-  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet }) {
+  tipoFilter, setTipoFilter, cardIdFilter, setCardIdFilter, onOpenFilterSheet,
+  expenses, faturaOverrides, onMarkPaid, onUnmarkPaid,
+  emprestimos, onAddEmprestimo, onDeleteEmprestimo, onUpdateEmprestimo,
+  fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro,
+  onAddCard, onDeleteCard,
+  initialTab }) {
   const [showImport, setShowImport] = useS(false);
   const [kindFilter, setKindFilter] = useS("all");
+  const [tab, setTab] = useS(initialTab || "lancamentos");
 
-  // Aplica filtros locais de tipo/cartão sobre o filtered global (período+cat+busca)
   const localFiltered = useM(() => {
     let arr = [...filtered];
     if (tipoFilter !== "all") arr = arr.filter(e => e.tipo === tipoFilter);
@@ -691,59 +1114,117 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
     return localFiltered;
   }, [localFiltered, kindFilter]);
 
-  const emptyText = kindFilter === "entradas" ? "Nenhuma entrada encontrada"
-    : kindFilter === "gastos" ? "Nenhum gasto encontrado"
-    : "Nenhum lançamento encontrado";
-
   return (
     <>
       {showImport && ReactDOM.createPortal(
         <BankImportModal onImport={onImport} onClose={() => setShowImport(false)} />,
         document.body
       )}
-      <div className="panel glass" style={{ marginBottom: 16 }}>
-        <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
-          <FilterBar
-            period={period} setPeriod={setPeriod}
-            cat={cat} setCat={setCat}
-            search={search} setSearch={setSearch}
-            tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
-            cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
-            allCats={allCats} cards={cards}
-            onOpenSheet={onOpenFilterSheet}
-          />
-          <div className="gastos-actions">
-            <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
-              <Ic.download size={17} />Extrato
-            </button>
-            <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-          {[["all", "Todos"], ["gastos", "Gastos"], ["entradas", "Entradas"]].map(([k, l]) => (
-            <button key={k} type="button"
-              className={"tipo-opt" + (kindFilter === k ? " on" : "")}
-              style={{ "--tipo-hex": k === "entradas" ? "var(--accent-mint)" : k === "gastos" ? "#e08a7a" : "var(--text-mid)" }}
-              onClick={() => setKindFilter(k)}>
-              {l}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
-          <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Gastos</span>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#e08a7a", fontVariantNumeric: "tabular-nums" }}>−{fmtBRL(gastosTotal)}</span>
-          {entradasTotal > 0 && (
-            <>
-              <span style={{ color: "var(--text-lo)", fontSize: 13 }}>·</span>
-              <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Entradas</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>+{fmtBRL(entradasTotal)}</span>
-            </>
-          )}
-          <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
-        </div>
-        <ExpenseTable rows={displayRows} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
-          cards={cards} emptyText={emptyText} />
+
+      {/* Tab switcher */}
+      <div className="gastos-tabs">
+        <button className={"gastos-tab" + (tab === "lancamentos" ? " on" : "")} onClick={() => setTab("lancamentos")}>
+          <Ic.wallet size={14} />Gastos
+        </button>
+        <button className={"gastos-tab" + (tab === "cartoes" ? " on" : "")} onClick={() => setTab("cartoes")}>
+          <Ic.card size={14} />Cartões
+        </button>
+        <button className={"gastos-tab" + (tab === "faturas" ? " on" : "")} onClick={() => setTab("faturas")}>
+          <Ic.invoice size={14} />Faturas
+        </button>
+        <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
+          <Ic.receipt size={14} />Fixas
+        </button>
+        <button className={"gastos-tab" + (tab === "emprestimos" ? " on" : "")} onClick={() => setTab("emprestimos")}>
+          <Ic.coins size={14} />Emprést.
+        </button>
       </div>
+
+      {tab === "lancamentos" && (
+        <div className="panel glass" style={{ marginBottom: 16 }}>
+          <div className="panel-head" style={{ gap: 10, flexDirection: "column", alignItems: "stretch" }}>
+            <FilterBar
+              period={period} setPeriod={setPeriod}
+              cat={cat} setCat={setCat}
+              search={search} setSearch={setSearch}
+              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+              allCats={allCats} cards={cards}
+              onOpenSheet={onOpenFilterSheet}
+            />
+            <div className="gastos-actions">
+              <button className="btn btn-ghost" onClick={() => setShowImport(true)}>
+                <Ic.download size={17} />Extrato
+              </button>
+              <button className="btn btn-ghost" title="Exportar CSV" onClick={() => exportToCSV(displayRows)}>
+                <Ic.upload size={17} />CSV
+              </button>
+              <button className="btn btn-primary" onClick={onAdd}><Ic.plus size={17} />Adicionar</button>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+            {[["all", "Todos"], ["gastos", "Gastos"], ["entradas", "Entradas"]].map(([k, l]) => (
+              <button key={k} type="button"
+                className={"tipo-opt" + (kindFilter === k ? " on" : "")}
+                style={{ "--tipo-hex": k === "entradas" ? "var(--accent-mint)" : k === "gastos" ? "#e08a7a" : "var(--text-mid)" }}
+                onClick={() => setKindFilter(k)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, padding: "0 2px", flexWrap: "wrap" }}>
+            <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Gastos</span>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#e08a7a", fontVariantNumeric: "tabular-nums" }}>−{fmtBRL(gastosTotal)}</span>
+            {entradasTotal > 0 && (
+              <>
+                <span style={{ color: "var(--text-lo)", fontSize: 13 }}>·</span>
+                <span style={{ color: "var(--text-mid)", fontSize: 13.5, fontWeight: 600 }}>Entradas</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--accent-mint)", fontVariantNumeric: "tabular-nums" }}>+{fmtBRL(entradasTotal)}</span>
+              </>
+            )}
+            <span style={{ color: "var(--text-lo)", fontSize: 13 }}>· {displayRows.length} lançamentos</span>
+          </div>
+          {displayRows.length === 0 ? (
+            <EmptyState
+              title={kindFilter === "entradas" ? "Nenhuma entrada" : kindFilter === "gastos" ? "Nenhum gasto" : "Histórico vazio"}
+              text={search || cat !== "all" ? "Tente ajustar os filtros." : "Toque no + para registrar sua primeira transação."}
+            />
+          ) : (
+            <GroupedExpenseList rows={displayRows} onEdit={onEdit} onDelete={onDelete}
+              onDeleteGroup={onDeleteGroup} cards={cards} />
+          )}
+        </div>
+      )}
+
+      {tab === "cartoes" && (
+        <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
+      )}
+
+      {tab === "faturas" && (
+        <FaturasView
+          cards={cards} expenses={expenses}
+          faturaOverrides={faturaOverrides}
+          onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
+          onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
+        />
+      )}
+
+      {tab === "fixas" && (
+        <>
+          <FixasSection fixas={fixas} onAdd={onAddFixa} onDelete={onDeleteFixa} allCats={allCats} />
+          <div style={{ marginTop: 16 }}>
+            <CaloteirosSection caloteiros={caloteiros} onAdd={onAddCaloteiro} onDelete={onDeleteCaloteiro} onToggle={onToggleCaloteiro} />
+          </div>
+        </>
+      )}
+      {tab === "emprestimos" && (
+        <EmprestimosSection
+          emprestimos={emprestimos}
+          onAdd={onAddEmprestimo}
+          onDelete={onDeleteEmprestimo}
+          onUpdate={onUpdateEmprestimo}
+        />
+      )}
     </>
   );
 }
@@ -869,6 +1350,46 @@ function RelatoriosView({ expenses, byCat, total }) {
           <WeekBars expenses={expenses} />
         </div>
       </div>
+
+      {/* Resumo financeiro mensal */}
+      <div className="panel glass" style={{ marginTop: 16 }}>
+        <div className="panel-head"><div className="panel-title">Resumo mensal — últimos 4 meses</div></div>
+        <div style={{ display: "grid", gap: 12 }}>
+          {monthlyData.map(m => {
+            const net = m.entradas - m.gastos;
+            const rate = m.entradas > 0 ? Math.round((net / m.entradas) * 100) : null;
+            const rateColor = rate === null ? "var(--text-lo)" : rate >= 20 ? "var(--accent-mint)" : rate >= 0 ? "#e0c85a" : "var(--cat-saude)";
+            return (
+              <div key={m.mStr} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ minWidth: 38, fontSize: 13, fontWeight: 600, color: "var(--text-lo)", textTransform: "capitalize" }}>{m.label}</div>
+                <div style={{ flex: 1, display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  {m.entradas > 0 && (
+                    <span style={{ fontSize: 13, color: "var(--accent-mint)", fontWeight: 600 }}>+{fmtBRL(m.entradas)}</span>
+                  )}
+                  {m.gastos > 0 && (
+                    <span style={{ fontSize: 13, color: "#e08a7a", fontWeight: 600 }}>−{fmtBRL(m.gastos)}</span>
+                  )}
+                  {m.gastos === 0 && m.entradas === 0 && (
+                    <span style={{ fontSize: 13, color: "var(--text-lo)" }}>Sem dados</span>
+                  )}
+                </div>
+                {rate !== null && (
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: rateColor }}>{rate >= 0 ? "+" : ""}{rate}%</div>
+                    <div style={{ fontSize: 10.5, color: "var(--text-lo)" }}>poupança</div>
+                  </div>
+                )}
+                {rate === null && m.gastos > 0 && (
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#e08a7a" }}>−{fmtBRL(m.gastos)}</div>
+                    <div style={{ fontSize: 10.5, color: "var(--text-lo)" }}>só gastos</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }
@@ -876,7 +1397,7 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro, emprestimos }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -898,6 +1419,7 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
   };
 
   const rows = [
+    ["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."],
     ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."],
     ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."],
     ["animations", "Animações de fundo", "Movimento suave do gradiente ambiente."],
@@ -971,8 +1493,58 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
         </div>
       </div>
 
-      {/* Cartões de crédito */}
-      <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
+      {/* Backup & Exportação */}
+      <div className="panel glass">
+        <div className="panel-head"><div className="panel-title">Backup & Exportação</div></div>
+        <div className="set-list">
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Exportar CSV</div>
+              <div className="d">Baixa todos os lançamentos em formato de planilha</div>
+            </div>
+            <button className="btn btn-ghost" style={{ padding: "10px 14px", whiteSpace: "nowrap" }}
+              onClick={() => exportToCSV(expenses || [])}>
+              <Ic.upload size={15} />Exportar
+            </button>
+          </div>
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Backup completo (JSON)</div>
+              <div className="d">Salva lançamentos e cartões para restauração futura</div>
+            </div>
+            <button className="btn btn-ghost" style={{ padding: "10px 14px", whiteSpace: "nowrap" }}
+              onClick={() => exportToJSON(expenses || [], cards || [], settings, customCats || [], fixas || [], caloteiros || [], emprestimos || [])}>
+              <Ic.download size={15} />Baixar
+            </button>
+          </div>
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Restaurar backup</div>
+              <div className="d">Importa um arquivo de backup .json gerado por este app</div>
+            </div>
+            <label className="btn btn-ghost" style={{ padding: "10px 14px", cursor: "pointer", whiteSpace: "nowrap" }}>
+              <Ic.upload size={15} />Importar
+              <input type="file" accept="application/json,.json" style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    try {
+                      const data = JSON.parse(ev.target.result);
+                      if (!Array.isArray(data.expenses)) throw new Error("Formato inválido");
+                      if (window.confirm(`Restaurar ${data.expenses.length} lançamentos? Isso substituirá todos os dados atuais.`)) {
+                        onRestoreBackup(data);
+                      }
+                    } catch { alert("Arquivo inválido ou corrompido."); }
+                  };
+                  reader.readAsText(file);
+                  e.target.value = "";
+                }} />
+            </label>
+          </div>
+        </div>
+      </div>
 
       {/* Categorias */}
       <div className="panel glass">
@@ -1012,7 +1584,175 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
   );
 }
 
+/* ============================================================
+   FATURAS
+   ============================================================ */
+function FaturaCard({ fatura, onMarkPaid, onUnmarkPaid, onEdit, onDelete, onDeleteGroup }) {
+  const [expanded, setExpanded] = useS(fatura.status === "aberta");
+
+  const statusColor = fatura.status === "aberta" ? "var(--accent-mint)"
+    : fatura.status === "fechada" ? "#e0c85a"
+    : "var(--text-lo)";
+  const statusLabel = fatura.status === "aberta" ? "Em aberto"
+    : fatura.status === "fechada" ? "Fechada"
+    : "Paga";
+
+  return (
+    <div className={"panel glass fatura-card" + (fatura.status === "aberta" ? " fatura-destaque" : "")}>
+      <div className="fatura-header" onClick={() => setExpanded(v => !v)}>
+        <div style={{ flex: 1 }}>
+          <div className="fatura-mes">{formatMes(fatura.mes)}</div>
+          <div className="fatura-dates">
+            <Ic.calendar size={11} />
+            Fecha {fmtDate(fatura.dataFechamento)} · Vence {fmtDate(fatura.dataVencimento)}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div className="fatura-total" style={fatura.status === "paga" ? { color: "var(--text-lo)" } : {}}>
+            {fmtBRL(fatura.total)}
+          </div>
+          <span className="exp-tag"
+            style={{ color: statusColor, borderColor: statusColor + "44", background: statusColor + "18" }}>
+            {statusLabel}
+          </span>
+        </div>
+        <div className={"fatura-chevron" + (expanded ? " expanded" : "")}>
+          <Ic.chevron size={18} />
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--glass-border)" }}>
+          {fatura.status !== "paga" ? (
+            <div style={{ marginBottom: 14 }}>
+              <button className="btn btn-ghost" style={{ fontSize: 13, padding: "8px 14px", minHeight: 38 }}
+                onClick={(e) => { e.stopPropagation(); onMarkPaid(); }}>
+                <Ic.check size={15} />Marcar como paga
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, color: "var(--text-lo)", display: "flex", alignItems: "center", gap: 5 }}>
+                <Ic.check size={13} />Paga em {fmtDate(fatura.paidAt)}
+              </span>
+              <button className="btn btn-ghost" style={{ fontSize: 12, padding: "6px 12px", minHeight: 34 }}
+                onClick={(e) => { e.stopPropagation(); onUnmarkPaid(); }}>
+                Reabrir
+              </button>
+            </div>
+          )}
+          {fatura.transacoes.length > 0 ? (
+            <ExpenseTable rows={fatura.transacoes} onEdit={onEdit} onDelete={onDelete}
+              onDeleteGroup={onDeleteGroup} cards={[fatura.card]} />
+          ) : (
+            <div style={{ color: "var(--text-lo)", fontSize: 13, textAlign: "center", padding: "16px 0" }}>
+              Sem transações nesta fatura
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FaturasView({ cards, expenses, faturaOverrides, onMarkPaid, onUnmarkPaid, onEdit, onDelete, onDeleteGroup }) {
+  const [selectedCardId, setSelectedCardId] = useS(cards?.[0]?.id || null);
+
+  const selectedCard = useM(() => cards?.find(c => c.id === selectedCardId), [cards, selectedCardId]);
+
+  const faturas = useM(() => {
+    if (!cards || cards.length === 0) return [];
+    const all = computeFaturas(cards, expenses, faturaOverrides);
+    return selectedCardId ? all.filter(f => f.cardId === selectedCardId) : all;
+  }, [cards, expenses, faturaOverrides, selectedCardId]);
+
+  const totalAberto = useM(() =>
+    faturas.filter(f => f.status === "aberta").reduce((s, f) => s + f.total, 0), [faturas]);
+
+  const totalFechado = useM(() =>
+    faturas.filter(f => f.status === "fechada").reduce((s, f) => s + f.total, 0), [faturas]);
+
+  if (!cards || cards.length === 0) {
+    return (
+      <div className="panel glass">
+        <div className="empty" style={{ padding: "44px 20px" }}>
+          <Ic.card size={40} />
+          <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Nenhum cartão cadastrado</div>
+          <div style={{ fontSize: 13, marginTop: 6 }}>
+            Adicione um cartão acima para começar a registrar faturas.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Seletor de cartão + resumo */}
+      <div className="panel glass" style={{ marginBottom: 16 }}>
+        <div className="tipo-picker">
+          {cards.map(c => (
+            <button key={c.id} type="button"
+              className={"tipo-opt" + (selectedCardId === c.id ? " on" : "")}
+              style={{ "--tipo-hex": c.cor || "var(--accent-mint)" }}
+              onClick={() => setSelectedCardId(c.id)}>
+              <Ic.card size={14} />{c.nome}
+            </button>
+          ))}
+        </div>
+        {selectedCard && (
+          <div style={{ display: "flex", gap: 24, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--glass-border)", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Dia fechamento</div>
+              <div style={{ fontWeight: 700, fontSize: 17 }}>{selectedCard.diaFechamento}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Dia vencimento</div>
+              <div style={{ fontWeight: 700, fontSize: 17 }}>{selectedCard.diaVencimento}</div>
+            </div>
+            {totalAberto > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Em aberto</div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: "var(--accent-mint)" }}>{fmtBRL(totalAberto)}</div>
+              </div>
+            )}
+            {totalFechado > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>A pagar</div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: "#e0c85a" }}>{fmtBRL(totalFechado)}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Lista de faturas */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {faturas.map(f => (
+          <FaturaCard key={f.id} fatura={f}
+            onMarkPaid={() => onMarkPaid(f.cardId, f.mes)}
+            onUnmarkPaid={() => onUnmarkPaid(f.cardId, f.mes)}
+            onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} />
+        ))}
+      </div>
+
+      {faturas.length === 0 && (
+        <div className="panel glass" style={{ marginTop: 0 }}>
+          <div className="empty" style={{ padding: "44px 20px" }}>
+            <Ic.receipt size={40} />
+            <div style={{ fontWeight: 600, color: "var(--text-mid)", marginTop: 14 }}>Sem transações no crédito</div>
+            <div style={{ fontSize: 13, marginTop: 6 }}>
+              Adicione gastos com Crédito vinculados a "{selectedCard?.nome}" para ver as faturas.
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 Object.assign(window, {
-  HomeView, DashboardView, GastosView, RelatoriosView, ConfigView,
-  ExpenseTable, FilterBar, FilterSheet, CardManager, Stat, BudgetBar, BankImportModal,
+  HomeView, DashboardView, GastosView, RelatoriosView, ConfigView, FaturasView, FaturaCard,
+  ExpenseTable, GroupedExpenseList, FilterBar, FilterSheet, CardManager, Stat, BudgetBar,
+  BankImportModal, EmptyState,
 });

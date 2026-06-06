@@ -7,6 +7,7 @@ const NAV = [
   { id: "home",      nome: "Início",    icon: Ic.home },
   { id: "dashboard", nome: "Dashboard", icon: Ic.dashboard },
   { id: "gastos",    nome: "Gastos",    icon: Ic.wallet },
+  { id: "faturas",   nome: "Faturas",   icon: Ic.invoice },
   { id: "relatorios",nome: "Relatórios",icon: Ic.chart },
   { id: "config",    nome: "Config.",   icon: Ic.settings },
 ];
@@ -15,6 +16,7 @@ const PAGE_META = {
   home:        { t: "Início",        s: "" },
   dashboard:   { t: "Dashboard",     s: "Visão geral das suas finanças pessoais" },
   gastos:      { t: "Gastos",        s: "Sua planilha completa de lançamentos" },
+  faturas:     { t: "Faturas",       s: "Gestão de faturas dos seus cartões de crédito" },
   relatorios:  { t: "Relatórios",    s: "Análise da distribuição dos seus gastos" },
   config:      { t: "Configurações", s: "Personalize sua experiência" },
 };
@@ -23,9 +25,14 @@ const LS_KEY   = "planilha_gastos_v1";
 const LS_SET   = "planilha_gastos_settings_v1";
 const LS_CATS  = "planilha_gastos_cats_v1";
 const LS_CARDS = "planilha_gastos_cards_v1";
+const LS_FAT   = "planilha_gastos_faturas_v1";
+const LS_FIXAS       = "planilha_gastos_fixas_v1";
+const LS_CALOTEIROS  = "planilha_gastos_caloteiros_v1";
+const LS_EMPRESTIMOS = "planilha_gastos_emprestimos_v1";
 
 function App() {
   const [page, setPage] = useState("home");
+  const [gastosInitialTab, setGastosInitialTab] = useState("lancamentos");
 
   // ---------- Perfil do usuário ----------
   const [profile, setProfile] = useState(() => {
@@ -99,7 +106,7 @@ function App() {
         return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, ...parsed };
       }
     } catch (e) {}
-    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000 };
+    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, lightMode: false };
   });
 
   // ---------- Cartões ----------
@@ -111,6 +118,70 @@ function App() {
     return [];
   });
 
+  // ---------- Fatura overrides (mark as paid) ----------
+  const [faturaOverrides, setFaturaOverrides] = useState(() => {
+    try {
+      const s = localStorage.getItem(LS_FAT);
+      if (s) return JSON.parse(s);
+    } catch (e) {}
+    return {};
+  });
+
+  const markFaturaPaid = (cardId, mes) => {
+    const key = `${cardId}:${mes}`;
+    const updated = { ...faturaOverrides, [key]: { status: "paga", paidAt: todayISO() } };
+    setFaturaOverrides(updated);
+    try { localStorage.setItem(LS_FAT, JSON.stringify(updated)); } catch (e) {}
+    showToast("Fatura marcada como paga");
+  };
+
+  const unmarkFaturaPaid = (cardId, mes) => {
+    const key = `${cardId}:${mes}`;
+    const updated = { ...faturaOverrides };
+    delete updated[key];
+    setFaturaOverrides(updated);
+    try { localStorage.setItem(LS_FAT, JSON.stringify(updated)); } catch (e) {}
+    showToast("Fatura reaberta");
+  };
+
+  // Contas fixas
+  const [fixas, setFixas] = useState(() => {
+    try { const s = localStorage.getItem(LS_FIXAS); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+  });
+  const addFixa = (f) => { const u = [...fixas, { ...f, id: uid() }]; setFixas(u); try { localStorage.setItem(LS_FIXAS, JSON.stringify(u)); } catch(e) {} showToast("Conta fixa adicionada"); };
+  const deleteFixa = (id) => { const u = fixas.filter(f => f.id !== id); setFixas(u); try { localStorage.setItem(LS_FIXAS, JSON.stringify(u)); } catch(e) {} showToast("Removida", "trash"); };
+
+  // Caloteiros
+  const [caloteiros, setCaloteiros] = useState(() => {
+    try { const s = localStorage.getItem(LS_CALOTEIROS); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+  });
+  const addCaloteiro = (c) => { const u = [...caloteiros, { ...c, id: uid(), pago: false, parcPaga: 0 }]; setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Devedor adicionado"); };
+  const deleteCaloteiro = (id) => { const u = caloteiros.filter(c => c.id !== id); setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Removido", "trash"); };
+  const toggleCaloteiro = (id) => {
+    const u = caloteiros.map(c => {
+      if (c.id !== id) return c;
+      const parcelas = c.parcelas || 1;
+      if (c.pago) return { ...c, pago: false, parcPaga: 0 };
+      if (parcelas > 1) {
+        const newParcPaga = (c.parcPaga || 0) + 1;
+        return { ...c, parcPaga: newParcPaga, pago: newParcPaga >= parcelas };
+      }
+      return { ...c, pago: true };
+    });
+    setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {}
+  };
+
+  // Empréstimos
+  const [emprestimos, setEmprestimos] = useState(() => {
+    try { const s = localStorage.getItem(LS_EMPRESTIMOS); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+  });
+  const addEmprestimo = (e) => { const u = [...emprestimos, { ...e, id: uid() }]; setEmprestimos(u); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(u)); } catch(e) {} showToast("Empréstimo adicionado"); };
+  const deleteEmprestimo = (id) => { const u = emprestimos.filter(e => e.id !== id); setEmprestimos(u); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(u)); } catch(e) {} showToast("Removido", "trash"); };
+  const updateEmprestimo = (id, changes) => { const u = emprestimos.map(e => e.id === id ? { ...e, ...changes } : e); setEmprestimos(u); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(u)); } catch(e) {} };
+
   const addCard = (card) => {
     const updated = [...cards, card];
     setCards(updated);
@@ -118,18 +189,20 @@ function App() {
   };
 
   const deleteCard = (id) => {
+    const linked = expenses.filter(e => e.cardId === id).length;
+    if (linked > 0 && !window.confirm(`Este cartão tem ${linked} lançamento${linked > 1 ? "s" : ""} vinculado${linked > 1 ? "s" : ""}. Excluí-lo não remove os lançamentos, mas eles perderão o vínculo. Continuar?`)) return;
     const updated = cards.filter(c => c.id !== id);
     setCards(updated);
     try { localStorage.setItem(LS_CARDS, JSON.stringify(updated)); } catch (e) {}
+    showToast("Cartão excluído", "trash");
   };
 
   const [modal, setModal] = useState(null);
-  const [fabOpen, setFabOpen] = useState(false);
   const [toast, setToast] = useState({ msg: "", icon: "check" });
   const [quick, setQuick] = useState("");
 
   // filtros globais (período, categoria, busca)
-  const [period, setPeriod] = useState("30");
+  const [period, setPeriod] = useState("mes-atual");
   const [cat, setCat]       = useState("all");
   const [search, setSearch] = useState("");
 
@@ -144,7 +217,8 @@ function App() {
   useEffect(() => {
     document.body.classList.toggle("no-anim", !settings.animations);
     document.body.classList.toggle("no-glow", !settings.glow);
-  }, [settings.animations, settings.glow]);
+    document.body.classList.toggle("light-mode", !!settings.lightMode);
+  }, [settings.animations, settings.glow, settings.lightMode]);
 
   const showToast = (msg, icon = "check") => {
     setToast({ msg, icon });
@@ -154,7 +228,17 @@ function App() {
   // ---------- Filtragem global (sem tipo/cartão — esses ficam em GastosView) ----------
   const filtered = useMemo(() => {
     let arr = [...expenses];
-    if (period !== "all") {
+    if (period === "mes-atual") {
+      const now = new Date();
+      const first = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      arr = arr.filter(e => e.data >= first);
+    } else if (period === "mes-anterior") {
+      const now = new Date();
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const firstPrev = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}-01`;
+      const firstCurr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      arr = arr.filter(e => e.data >= firstPrev && e.data < firstCurr);
+    } else if (period !== "all") {
       const min = addDays(todayISO(), -parseInt(period));
       arr = arr.filter(e => e.data >= min);
     }
@@ -184,18 +268,26 @@ function App() {
   // ---------- Ações ----------
   const saveTransaction = (exp) => {
     const isEditing = !!modal?.id;
-    if (exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
-      const parcelVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
+    if (!isEditing && exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
+      // Fix rounding: base value for N-1 parcels, last absorbs remainder
+      const baseVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
+      const lastVal = Math.round((exp.valor - baseVal * (exp.parcTotal - 1)) * 100) / 100;
       const grupo = uid();
-      const parcList = Array.from({ length: exp.parcTotal }, (_, i) => ({
-        ...exp, id: uid(), data: addMonths(exp.data, i),
-        valor: parcelVal,
-        descricao: `${exp.descricao} (${i + 1}/${exp.parcTotal})`,
-        parcNum: i + 1, parcGrupo: grupo,
-      }));
+      const linkedCard = exp.cardId ? cards.find(c => c.id === exp.cardId) : null;
+      const parcList = Array.from({ length: exp.parcTotal }, (_, i) => {
+        const parcelData = addMonths(exp.data, i);
+        const parcelVal = i === exp.parcTotal - 1 ? lastVal : baseVal;
+        return {
+          ...exp, id: uid(), data: parcelData,
+          valor: parcelVal,
+          descricao: `${exp.descricao} (${i + 1}/${exp.parcTotal})`,
+          parcNum: i + 1, parcGrupo: grupo,
+          faturaRef: linkedCard ? calcFaturaRef(parcelData, linkedCard) : (exp.faturaRef || null),
+        };
+      });
       setExpenses(prev => [...parcList, ...prev]);
       setModal(null);
-      showToast(`${exp.parcTotal}× de ${fmtBRL(parcelVal)} adicionadas`);
+      showToast(`${exp.parcTotal}× de ${fmtBRL(baseVal)} adicionadas`);
     } else {
       setExpenses(prev => {
         const exists = prev.some(e => e.id === exp.id);
@@ -247,6 +339,15 @@ function App() {
 
   const resetData = () => { setExpenses(seedData()); showToast("Dados de exemplo restaurados"); };
 
+  const restoreBackup = (data) => {
+    if (data.expenses) setExpenses(data.expenses);
+    if (data.cards) { setCards(data.cards); try { localStorage.setItem(LS_CARDS, JSON.stringify(data.cards)); } catch (e) {} }
+    if (data.fixas) { setFixas(data.fixas); try { localStorage.setItem(LS_FIXAS, JSON.stringify(data.fixas)); } catch (e) {} }
+    if (data.caloteiros) { setCaloteiros(data.caloteiros); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(data.caloteiros)); } catch (e) {} }
+    if (data.emprestimos) { setEmprestimos(data.emprestimos); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(data.emprestimos)); } catch (e) {} }
+    showToast(`${(data.expenses || []).length} lançamentos restaurados`);
+  };
+
   const meta = PAGE_META[page];
   const userName = profile?.name || "Luiz Ricardo";
 
@@ -260,7 +361,7 @@ function App() {
         <div className="brand">
           <div className="brand-mark"><Ic.coins size={22} color="#06251a" /></div>
           <div>
-            <div className="brand-name">Cofrinho do Luiz</div>
+            <div className="brand-name">Cofrinho</div>
             <div className="brand-sub">Controle de gastos</div>
           </div>
         </div>
@@ -288,58 +389,78 @@ function App() {
 
       <main className="main glass">
         <div className="main-scroll">
-          {page !== "home" && (
-            <div className="page-head">
-              <div>
-                <h1 className="page-title">{meta.t}</h1>
-                {meta.s && <div className="page-sub">{meta.s}</div>}
+          <div key={page} className="page-enter">
+            {page !== "home" && (
+              <div className="page-head">
+                <div>
+                  <h1 className="page-title">{meta.t}</h1>
+                  {meta.s && <div className="page-sub">{meta.s}</div>}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {(page === "dashboard" || page === "gastos") && (
-            <div className="quick glass">
-              <Ic.sparkle size={20} />
-              <input value={quick} onChange={(e) => setQuick(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submitQuick()}
-                placeholder='Adição rápida — ex.: "Gastei R$50 com comida" ou "Recebi R$1500 salário"' />
-              <button className="btn btn-primary" onClick={submitQuick}><Ic.plus size={17} />Lançar</button>
-            </div>
-          )}
 
-          {page === "home" && (
-            <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
-              onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
-              onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup} />
-          )}
-          {page === "dashboard" && (
-            <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-              onAdd={() => setModal({})} budget={settings.budget} cards={cards} />
-          )}
-          {page === "gastos" && (
-            <GastosView filtered={filtered} total={total} byCat={byCat}
-              onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-              onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
-              tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
-              cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
-              onOpenFilterSheet={() => setShowFilterSheet(true)}
-              {...{ period, setPeriod, cat, setCat, search, setSearch }} />
-          )}
-          {page === "relatorios" && (
-            <RelatoriosView expenses={expenses} byCat={byCat} total={total} />
-          )}
-          {page === "config" && (
-            <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
-              allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
-              cards={cards} onAddCard={addCard} onDeleteCard={deleteCard}
-              currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
-              onResetProfile={resetProfile} />
-          )}
+{page === "home" && (
+              <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
+                faturaOverrides={faturaOverrides}
+                onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
+                onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onGoToFaturas={() => setPage("faturas")}
+                fixas={fixas} caloteiros={caloteiros}
+                onGoToConfig={() => { setGastosInitialTab("fixas"); setPage("gastos"); }} />
+            )}
+            {page === "dashboard" && (
+              <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
+                onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onAdd={() => setModal({})} budget={settings.budget} cards={cards} />
+            )}
+            {page === "gastos" && (
+              <GastosView filtered={filtered} total={total} byCat={byCat}
+                onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
+                tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
+                cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
+                onOpenFilterSheet={() => setShowFilterSheet(true)}
+                expenses={expenses} faturaOverrides={faturaOverrides}
+                onMarkPaid={markFaturaPaid} onUnmarkPaid={unmarkFaturaPaid}
+                emprestimos={emprestimos} onAddEmprestimo={addEmprestimo} onDeleteEmprestimo={deleteEmprestimo} onUpdateEmprestimo={updateEmprestimo}
+                fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
+                caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro}
+                onAddCard={addCard} onDeleteCard={deleteCard}
+                initialTab={gastosInitialTab}
+                {...{ period, setPeriod, cat, setCat, search, setSearch }} />
+            )}
+            {page === "faturas" && (
+              <FaturasView
+                cards={cards} expenses={expenses}
+                faturaOverrides={faturaOverrides}
+                onMarkPaid={markFaturaPaid}
+                onUnmarkPaid={unmarkFaturaPaid}
+                onEdit={(e) => setModal(e)}
+                onDelete={deleteExpense}
+                onDeleteGroup={deleteExpenseGroup}
+              />
+            )}
+            {page === "relatorios" && (
+              <RelatoriosView expenses={expenses} byCat={byCat} total={total} />
+            )}
+            {page === "config" && (
+              <ConfigView settings={settings} setSettings={setSettings} onReset={resetData}
+                allCats={allCats} onAddCat={addCustomCat} onDeleteCat={deleteCustomCat}
+                cards={cards} onAddCard={addCard} onDeleteCard={deleteCard}
+                currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
+                onResetProfile={resetProfile}
+                expenses={expenses} customCats={customCats}
+                onRestoreBackup={restoreBackup}
+                fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
+                caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro}
+                emprestimos={emprestimos} />
+            )}
+          </div>
         </div>
       </main>
 
-      <BottomNav page={page} setPage={setPage} />
+      <BottomNav page={page} setPage={(p) => { if (p === "gastos") setGastosInitialTab("lancamentos"); setPage(p); }} onAdd={() => setModal({})} />
 
       {showFilterSheet && (
         <FilterSheet
@@ -351,23 +472,6 @@ function App() {
         />
       )}
 
-      {fabOpen && <div className="fab-overlay" onClick={() => setFabOpen(false)} />}
-      {fabOpen && (
-        <div className="fab-sheet">
-          <div className="fab-action fab-action-entrada"
-            onClick={() => { setFabOpen(false); setModal({ kind: "entrada" }); }}>
-            <Ic.trendUp size={16} />Entrada
-          </div>
-          <div className="fab-action fab-action-gasto"
-            onClick={() => { setFabOpen(false); setModal({ kind: "gasto" }); }}>
-            <Ic.receipt size={16} />Gasto
-          </div>
-        </div>
-      )}
-      <button className={"fab" + (fabOpen ? " open" : "")} onClick={() => setFabOpen(v => !v)}>
-        <Ic.plus size={28} />
-      </button>
-
       {modal !== null && (
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
@@ -377,16 +481,29 @@ function App() {
   );
 }
 
-function BottomNav({ page, setPage }) {
+function BottomNav({ page, setPage, onAdd }) {
+  const LEFT  = [{ id: "home", icon: Ic.home }, { id: "gastos", icon: Ic.wallet }];
+  const RIGHT = [{ id: "dashboard", icon: Ic.dashboard }, { id: "config", icon: Ic.person }];
   return (
     <nav className="bottom-nav">
-      {NAV.map(n => {
+      {LEFT.map(n => {
         const I = n.icon;
         return (
           <div key={n.id} className={"bottom-nav-item" + (page === n.id ? " active" : "")}
             onClick={() => setPage(n.id)}>
-            <I size={22} />
-            <span>{n.nome}</span>
+            <I size={24} />
+          </div>
+        );
+      })}
+      <button className="bottom-nav-fab" onClick={onAdd}>
+        <Ic.plus size={26} />
+      </button>
+      {RIGHT.map(n => {
+        const I = n.icon;
+        return (
+          <div key={n.id} className={"bottom-nav-item" + (page === n.id ? " active" : "")}
+            onClick={() => setPage(n.id)}>
+            <I size={24} />
           </div>
         );
       })}
