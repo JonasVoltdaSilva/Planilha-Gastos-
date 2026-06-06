@@ -104,6 +104,39 @@ function PetalDecor({ theme }) {
   );
 }
 
+/* Slime drips + scan line neon — tema Acid Neon (aespa Lemonade) */
+function AcidDecor({ theme }) {
+  if (theme !== "acid") return null;
+
+  const drips = [
+    { id: 0, left: "5%",  dur: "3.4s", delay: "0s",   w: 5, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
+    { id: 1, left: "16%", dur: "4.9s", delay: "1.1s", w: 3, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
+    { id: 2, left: "28%", dur: "3.1s", delay: "2.3s", w: 7, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
+    { id: 3, left: "43%", dur: "5.3s", delay: "0.4s", w: 4, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
+    { id: 4, left: "58%", dur: "3.8s", delay: "1.7s", w: 6, c: "#FF2D95", glow: "rgba(255,45,149,0.88)" },
+    { id: 5, left: "72%", dur: "4.5s", delay: "3.2s", w: 4, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
+    { id: 6, left: "84%", dur: "2.9s", delay: "0.8s", w: 5, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
+    { id: 7, left: "93%", dur: "4.1s", delay: "2.0s", w: 3, c: "#FF2D95", glow: "rgba(255,45,149,0.88)" },
+  ];
+
+  return (
+    <>
+      <div className="acid-scan" />
+      {drips.map(d => (
+        <div key={d.id} className="acid-drip" style={{
+          left: d.left,
+          width: d.w,
+          "--drip-c":    d.c,
+          "--drip-glow": d.glow,
+          "--drip-w":    d.w + "px",
+          animationDuration: d.dur,
+          animationDelay:    d.delay,
+        }} />
+      ))}
+    </>
+  );
+}
+
 function App() {
   const [page, setPage] = useState("home");
   const [gastosInitialTab, setGastosInitialTab] = useState("lancamentos");
@@ -555,6 +588,7 @@ function App() {
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
       )}
       <PetalDecor theme={profile?.theme} />
+      <AcidDecor  theme={profile?.theme} />
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );
