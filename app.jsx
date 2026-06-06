@@ -62,38 +62,40 @@ function PetalDecor({ theme }) {
           animation: `petalFall ${p.dur} ${p.delay} linear infinite`,
         }}>
           {p.type === 0 ? (
-            /* Margarida branca — 12 pétalas finas (como nas capas do álbum Petal) */
+            /* Margarida — 12 pétalas finas alongadas, miolo pequeno */
             <svg viewBox="0 0 50 50" width={p.size} height={p.size} fill="none">
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(30 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(60 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(90 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(120 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(150 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(180 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(210 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(240 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(270 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(300 25 25)"/>
-              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(330 25 25)"/>
-              <circle  cx="25" cy="25" r="5.5"           fill="#e8e0d0" opacity="0.85"/>
-              <circle  cx="25" cy="25" r="3"             fill="#f8f2e8" opacity="0.70"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(30 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(60 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(90 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(120 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(150 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(180 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(210 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(240 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(270 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(300 25 25)"/>
+              <ellipse cx="25" cy="7" rx="2.2" ry="11" fill="white" opacity="0.75" transform="rotate(330 25 25)"/>
+              <ellipse cx="25" cy="25" rx="4" ry="4" fill="white" opacity="0.90"/>
             </svg>
           ) : p.type === 1 ? (
-            /* Pétala solta caindo — oval simples */
-            <svg viewBox="0 0 30 50" width={p.size * 0.6} height={p.size} fill="none">
-              <ellipse cx="15" cy="25" rx="10" ry="20" fill="white" opacity="0.55"/>
-              <ellipse cx="15" cy="25" rx="6"  ry="16" fill="white" opacity="0.30"/>
+            /* Pétala solta de margarida — forma de lágrima com nervura central */
+            <svg viewBox="0 0 24 52" width={Math.round(p.size * 0.5)} height={p.size} fill="none">
+              <path d="M12 2 C18 10,20 26,12 50 C4 26,6 10,12 2Z" fill="white" opacity="0.65"/>
+              <line x1="12" y1="4" x2="12" y2="48" stroke="rgba(255,255,255,0.28)" strokeWidth="0.7"/>
             </svg>
           ) : (
-            /* Florzinha silvestre — 5 pétalas redondas */
+            /* Flor silvestre — 8 pétalas ovais médias */
             <svg viewBox="0 0 50 50" width={p.size} height={p.size} fill="none">
-              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65"/>
-              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(72 25 25)"/>
-              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(144 25 25)"/>
-              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(216 25 25)"/>
-              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(288 25 25)"/>
-              <circle cx="25" cy="25" r="5"  fill="#e8e0d0" opacity="0.80"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(0 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(45 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(90 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(135 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(180 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(225 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(270 25 25)"/>
+              <ellipse cx="25" cy="9" rx="3.5" ry="12" fill="white" opacity="0.68" transform="rotate(315 25 25)"/>
+              <ellipse cx="25" cy="25" rx="4.5" ry="4.5" fill="white" opacity="0.90"/>
             </svg>
           )}
         </div>

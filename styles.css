@@ -121,51 +121,60 @@ body.theme-orange {
   --btn-primary-fg: #1a0e00;
 }
 
-/* Petal — Ariana Grande · álbum 31/07 · preto e branco · flores silvestres · script */
+/* Petal — Ariana Grande · álbum 31/07 · preto e branco puro · flores silvestres */
 body.theme-petal {
   --accent-blue: oklch(0.88 0.00 0);
   --accent-mint: oklch(0.72 0.00 0);
   --accent-blue-soft: oklch(0.88 0.00 0 / 0.12);
   --accent-mint-soft: oklch(0.72 0.00 0 / 0.10);
-  --blob1-color: oklch(0.75 0.00 0 / 0.20);
-  --blob2-color: oklch(0.60 0.00 0 / 0.16);
-  --blob3-color: oklch(0.50 0.00 0 / 0.10);
+  --blob1-color: oklch(0.75 0.00 0 / 0.22);
+  --blob2-color: oklch(0.60 0.00 0 / 0.18);
+  --blob3-color: oklch(0.50 0.00 0 / 0.12);
   --btn-primary-fg: #0a0a0a;
   --text-hi: rgba(248, 244, 240, 0.96);
   --text-mid: rgba(200, 196, 192, 0.65);
   --text-lo: rgba(148, 144, 140, 0.40);
   --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body:    "Cormorant Garamond", Georgia, serif;
 }
-body.theme-petal .backdrop {
-  background: #050505;
+/* Overlay preto em mix-blend-mode: color → remove toda saturação do app
+   Funciona como grayscale total sem quebrar position:fixed no iOS */
+body.theme-petal::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9980;
+  pointer-events: none;
+  background: #1a1a1a;
+  mix-blend-mode: color;
 }
+body.theme-petal .backdrop { background: #060606; }
 /* Vinheta dramática — fotografia P&B com bordas muito escurecidas */
 body.theme-petal .backdrop::after {
   content: '';
   position: absolute; inset: 0;
   background: radial-gradient(ellipse 80% 80% at center,
-    transparent 20%, rgba(0,0,0,0.62) 56%, rgba(0,0,0,0.97) 100%);
+    transparent 20%, rgba(0,0,0,0.65) 56%, rgba(0,0,0,0.98) 100%);
   pointer-events: none;
 }
-/* Blobs sem saturação = escala de cinza */
+/* Blobs sem saturação */
 body.theme-petal .blob { filter: blur(140px) saturate(0) !important; }
-body.theme-petal .blob.b1 { opacity: 0.30 !important; }
-body.theme-petal .blob.b2 { opacity: 0.22 !important; }
-body.theme-petal .blob.b3 { opacity: 0.14 !important; }
-body.theme-petal .blob.b4 { opacity: 0.08 !important; }
+body.theme-petal .blob.b1 { opacity: 0.32 !important; }
+body.theme-petal .blob.b2 { opacity: 0.24 !important; }
+body.theme-petal .blob.b3 { opacity: 0.15 !important; }
+body.theme-petal .blob.b4 { opacity: 0.09 !important; }
 
-/* Fonte script nos headings (como o logotipo "petal") */
+/* Fonte Pinyon Script para logo / nome do app */
+body.theme-petal .brand-name,
+body.theme-petal .onb-app-name { font-family: "Pinyon Script", cursive; font-style: normal; font-size: 1.9em; letter-spacing: 0.03em; }
+/* Cormorant Garamond para todo o resto */
 body.theme-petal h1,
 body.theme-petal h2,
 body.theme-petal .page-title,
 body.theme-petal .hero-balance,
-body.theme-petal .onb-app-name,
 body.theme-petal .section-title { font-family: "Cormorant Garamond", Georgia, serif; }
 body.theme-petal .hero-balance  { font-style: italic; letter-spacing: -0.01em; }
 body.theme-petal .page-title    { font-style: italic; letter-spacing: 0.03em; }
-body.theme-petal .onb-app-name  { font-style: italic; font-size: 1.5em; letter-spacing: 0.05em; }
 
-/* Cards P&B — borda branca muito sutil */
+/* Cards P&B */
 body.theme-petal .glass {
   border-color: rgba(255, 255, 255, 0.09) !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.20) !important;
@@ -174,11 +183,11 @@ body.theme-petal .bottom-nav-fab {
   box-shadow: 0 6px 24px -4px rgba(255,255,255,0.22), 0 0 0 5px rgba(0,0,0,0.45) !important;
 }
 
-/* === Film grain === */
+/* === Film grain (mais visível) === */
 .ariana-grain {
   position: fixed; inset: 0; z-index: 195;
   pointer-events: none;
-  opacity: 0.06;
+  opacity: 0.12;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
   animation: grainShift 0.14s steps(1) infinite;
