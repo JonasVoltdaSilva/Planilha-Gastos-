@@ -671,21 +671,10 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
             <div className="home-stat-card-meta">{monthExp.filter(e => e.kind === "entrada").length} entradas</div>
           </div>
           {budget > 0 && (
-            <div className="home-stat-card">
+            <div className="home-stat-card home-stat-card-wide">
               <div className="home-stat-card-label">Orçamento</div>
               <div className="home-stat-card-value" style={{ color: budgetColor }}>{Math.round(pct)}%</div>
               <div className="home-stat-card-meta">{fmtBRL(monthGastos)} / {fmtBRL(budget)}</div>
-            </div>
-          )}
-          {projection > 0 && (
-            <div className="home-stat-card">
-              <div className="home-stat-card-label">Projeção do mês</div>
-              <div className="home-stat-card-value" style={{ color: projectionOver ? "#e08a7a" : "var(--text-mid)" }}>
-                {fmtBRL(projection)}
-              </div>
-              <div className="home-stat-card-meta" style={{ color: projectionOver ? "#e08a7a" : undefined }}>
-                {projectionOver ? `+${fmtBRL(projection - budget)} acima` : "estimativa"}
-              </div>
             </div>
           )}
         </div>

@@ -659,6 +659,7 @@ tbody tr:hover .row-actions { opacity: 1; }
   transition: background 0.2s;
 }
 .home-stat-card:hover { background: rgba(255,255,255,0.06); }
+.home-stat-card-wide { grid-column: 1 / -1; }
 .home-stat-card-label {
   font-size: 10.5px; color: var(--text-lo);
   font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px;
