@@ -192,14 +192,14 @@ body.no-glow .bar, body.no-glow .donut circle { filter: none !important; }
 
 /* ---- Glass ---- */
 .glass {
-  background: rgba(255, 255, 255, 0.042);
-  backdrop-filter: blur(32px) saturate(160%) brightness(1.06);
-  -webkit-backdrop-filter: blur(32px) saturate(160%) brightness(1.06);
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.018);
+  backdrop-filter: blur(32px) saturate(140%) brightness(0.98);
+  -webkit-backdrop-filter: blur(32px) saturate(140%) brightness(0.98);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
-    0 32px 80px -20px rgba(0, 0, 0, 0.82),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    0 32px 80px -20px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
 }
 
 /* ---- App layout (desktop) ---- */
@@ -661,10 +661,10 @@ tbody tr:hover .row-actions { opacity: 1; }
 }
 .home-stat-card {
   padding: 15px 16px; border-radius: var(--radius-md);
-  background: rgba(255,255,255,0.035); border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.018); border: 1px solid rgba(255,255,255,0.06);
   transition: background 0.2s;
 }
-.home-stat-card:hover { background: rgba(255,255,255,0.06); }
+.home-stat-card:hover { background: rgba(255,255,255,0.035); }
 .home-stat-card-wide { grid-column: 1 / -1; }
 .home-stat-card-label {
   font-size: 10.5px; color: var(--text-lo);
@@ -1385,6 +1385,22 @@ body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(
   font-variant-numeric: tabular-nums;
 }
 .fatura-home-chip { display: none; }
+
+/* Solid fill below nav — covers safe area regardless of env() support */
+.bottom-safe-fill {
+  display: none;
+}
+@media (max-width: 920px) {
+  .bottom-safe-fill {
+    display: block;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 160px;
+    background: #050b14;
+    z-index: 38;
+    pointer-events: none;
+  }
+}
 
 /* ============================================================
    Bottom nav: 3 anchors + centered FAB (mobile)
