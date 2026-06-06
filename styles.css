@@ -1353,32 +1353,36 @@ body.light-mode .gastos-tabs { background: rgba(0,0,0,0.04); }
 body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(--text-hi); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
 /* ============================================================
-   Home: faturas pendentes chip
+   Home: quick-access group card
    ============================================================ */
-.fatura-home-chip {
+.home-quick-group {
+  width: 100%; border-radius: var(--radius-md);
+  overflow: hidden; margin-bottom: 16px;
+}
+.home-quick-row {
   width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-radius: var(--radius-md); margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
+  padding: 13px 16px; background: transparent;
+  border: none; border-bottom: 1px solid var(--glass-border);
   cursor: pointer; text-align: left;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s;
 }
-.fatura-home-chip:hover, .fatura-home-chip:active { background: rgba(255, 255, 255, 0.08); }
-.fatura-home-chip-left { display: flex; align-items: center; gap: 12px; }
-.fatura-home-chip-icon {
-  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+.home-quick-row:last-child { border-bottom: none; }
+.home-quick-row:active { background: rgba(255,255,255,0.06); }
+.home-quick-row-left { display: flex; align-items: center; gap: 12px; }
+.home-quick-icon {
+  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
   display: grid; place-items: center;
-  background: oklch(0.28 0.06 165 / 0.45);
-  color: var(--accent-mint);
 }
-.fatura-home-chip-label { font-size: 13.5px; font-weight: 700; margin-bottom: 2px; }
-.fatura-home-chip-sub { font-size: 11.5px; color: var(--text-lo); }
-.fatura-home-chip-right { display: flex; align-items: center; gap: 6px; }
-.fatura-home-chip-total {
-  font-family: var(--font-display); font-weight: 700; font-size: 15px;
-  color: #e08a7a; font-variant-numeric: tabular-nums;
+.home-quick-label { font-size: 13.5px; font-weight: 700; color: var(--text-hi); margin-bottom: 1px; }
+.home-quick-sub { font-size: 11.5px; color: var(--text-lo); }
+.home-quick-right { display: flex; align-items: center; gap: 6px; }
+.home-quick-value {
+  font-family: var(--font-display); font-weight: 700; font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
 }
+/* keep old chip classes for backward compat (light-mode refs) */
+.fatura-home-chip { display: none; }
 
 /* ============================================================
    Bottom nav: 3 anchors + centered FAB (mobile)
@@ -1488,8 +1492,7 @@ body.light-mode .expense-row:hover { background: rgba(0,0,0,0.055); border-color
 body.light-mode .home-stat-card { background: rgba(0,0,0,0.035); border-color: rgba(0,0,0,0.09); }
 body.light-mode select.select option { background: #f0f6ff; }
 body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(--text-hi); }
-body.light-mode .fatura-home-chip { background: rgba(0,0,0,0.04); }
-body.light-mode .fatura-home-chip:active { background: rgba(0,0,0,0.08); }
+body.light-mode .home-quick-row:active { background: rgba(0,0,0,0.05); }
 
 /* ============================================================
    Notification Bell

@@ -728,60 +728,60 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         )}
       </div>
 
-      {pendingCaloteiros.length > 0 && (
-        <button className="fatura-home-chip" onClick={onGoToConfig}>
-          <div className="fatura-home-chip-left">
-            <div className="fatura-home-chip-icon" style={{ background: "oklch(0.32 0.08 60 / 0.45)", color: "#e0c85a" }}>
-              <Ic.coins size={18} />
-            </div>
-            <div>
-              <div className="fatura-home-chip-label">A receber</div>
-              <div className="fatura-home-chip-sub">{pendingCaloteiros.length} devedor{pendingCaloteiros.length !== 1 ? "es" : ""} pendente{pendingCaloteiros.length !== 1 ? "s" : ""}</div>
-            </div>
-          </div>
-          <div className="fatura-home-chip-right">
-            <div className="fatura-home-chip-total" style={{ color: "#e0c85a" }}>{fmtBRL(totalCaloteiros)}</div>
-            <Ic.chevron size={16} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
-          </div>
-        </button>
-      )}
-
-      {fixas && fixas.length > 0 && (
-        <button className="fatura-home-chip" onClick={onGoToConfig}>
-          <div className="fatura-home-chip-left">
-            <div className="fatura-home-chip-icon" style={{ background: "oklch(0.28 0.06 255 / 0.45)", color: "var(--accent-blue)" }}>
-              <Ic.receipt size={18} />
-            </div>
-            <div>
-              <div className="fatura-home-chip-label">Contas fixas</div>
-              <div className="fatura-home-chip-sub">{fixas.length} conta{fixas.length !== 1 ? "s" : ""} · {fmtBRL(totalFixas)}/mês</div>
-            </div>
-          </div>
-          <div className="fatura-home-chip-right">
-            <Ic.chevron size={16} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
-          </div>
-        </button>
-      )}
-
-      {/* Faturas pendentes — chip compacto */}
-      {pendingFaturas.length > 0 && onGoToFaturas && (
-        <button className="fatura-home-chip" onClick={onGoToFaturas}>
-          <div className="fatura-home-chip-left">
-            <div className="fatura-home-chip-icon"><Ic.invoice size={18} /></div>
-            <div>
-              <div className="fatura-home-chip-label">Faturas pendentes</div>
-              <div className="fatura-home-chip-sub">
-                {pendingFaturas.length} {pendingFaturas.length === 1 ? "fatura" : "faturas"} em aberto
+      {/* Quick-access group card */}
+      {(pendingCaloteiros.length > 0 || (fixas && fixas.length > 0) || (pendingFaturas.length > 0 && onGoToFaturas)) && (
+        <div className="home-quick-group glass">
+          {pendingCaloteiros.length > 0 && (
+            <button className="home-quick-row" onClick={onGoToConfig}>
+              <div className="home-quick-row-left">
+                <div className="home-quick-icon" style={{ background: "oklch(0.32 0.08 60 / 0.4)", color: "#e0c85a" }}>
+                  <Ic.coins size={16} />
+                </div>
+                <div>
+                  <div className="home-quick-label">A receber</div>
+                  <div className="home-quick-sub">{pendingCaloteiros.length} devedor{pendingCaloteiros.length !== 1 ? "es" : ""} pendente{pendingCaloteiros.length !== 1 ? "s" : ""}</div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="fatura-home-chip-right">
-            <div className="fatura-home-chip-total">
-              {fmtBRL(pendingFaturas.reduce((s, f) => s + f.total, 0))}
-            </div>
-            <Ic.chevron size={16} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
-          </div>
-        </button>
+              <div className="home-quick-right">
+                <span className="home-quick-value" style={{ color: "#e0c85a" }}>{fmtBRL(totalCaloteiros)}</span>
+                <Ic.chevron size={14} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
+              </div>
+            </button>
+          )}
+          {fixas && fixas.length > 0 && (
+            <button className="home-quick-row" onClick={onGoToConfig}>
+              <div className="home-quick-row-left">
+                <div className="home-quick-icon" style={{ background: "oklch(0.28 0.06 255 / 0.4)", color: "var(--accent-blue)" }}>
+                  <Ic.receipt size={16} />
+                </div>
+                <div>
+                  <div className="home-quick-label">Contas fixas</div>
+                  <div className="home-quick-sub">{fixas.length} conta{fixas.length !== 1 ? "s" : ""} · {fmtBRL(totalFixas)}/mês</div>
+                </div>
+              </div>
+              <div className="home-quick-right">
+                <Ic.chevron size={14} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
+              </div>
+            </button>
+          )}
+          {pendingFaturas.length > 0 && onGoToFaturas && (
+            <button className="home-quick-row" onClick={onGoToFaturas}>
+              <div className="home-quick-row-left">
+                <div className="home-quick-icon" style={{ background: "oklch(0.28 0.06 165 / 0.4)", color: "var(--accent-mint)" }}>
+                  <Ic.invoice size={16} />
+                </div>
+                <div>
+                  <div className="home-quick-label">Faturas pendentes</div>
+                  <div className="home-quick-sub">{pendingFaturas.length} {pendingFaturas.length === 1 ? "fatura" : "faturas"} em aberto</div>
+                </div>
+              </div>
+              <div className="home-quick-right">
+                <span className="home-quick-value" style={{ color: "#e08a7a" }}>{fmtBRL(pendingFaturas.reduce((s, f) => s + f.total, 0))}</span>
+                <Ic.chevron size={14} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
+              </div>
+            </button>
+          )}
+        </div>
       )}
 
       {recent.length > 0 ? (
