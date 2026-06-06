@@ -1067,25 +1067,19 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
       {/* Tab switcher */}
       <div className="gastos-tabs">
         <button className={"gastos-tab" + (tab === "lancamentos" ? " on" : "")} onClick={() => setTab("lancamentos")}>
-          <Ic.wallet size={15} />Lançamentos
+          <Ic.wallet size={14} />Gastos
         </button>
         <button className={"gastos-tab" + (tab === "cartoes" ? " on" : "")} onClick={() => setTab("cartoes")}>
-          <Ic.card size={15} />Cartões
+          <Ic.card size={14} />Cartões
         </button>
         <button className={"gastos-tab" + (tab === "faturas" ? " on" : "")} onClick={() => setTab("faturas")}>
-          <Ic.invoice size={15} />Faturas
+          <Ic.invoice size={14} />Faturas
         </button>
         <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
-          <Ic.receipt size={15} />Fixas
+          <Ic.receipt size={14} />Fixas
         </button>
         <button className={"gastos-tab" + (tab === "emprestimos" ? " on" : "")} onClick={() => setTab("emprestimos")}>
-          <Ic.coins size={15} />Empréstimos
-        </button>
-        <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
-          <Ic.receipt size={15} />Fixas
-        </button>
-        <button className={"gastos-tab" + (tab === "emprestimos" ? " on" : "")} onClick={() => setTab("emprestimos")}>
-          <Ic.coins size={15} />Empréstimos
+          <Ic.coins size={14} />Emprést.
         </button>
       </div>
 

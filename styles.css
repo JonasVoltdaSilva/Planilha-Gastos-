@@ -1322,21 +1322,17 @@ tbody tr:hover .row-actions { opacity: 1; }
    Gastos: tab switcher (Lançamentos / Faturas)
    ============================================================ */
 .gastos-tabs {
-  display: flex; gap: 4px;
+  display: flex; gap: 3px;
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  padding: 4px;
+  padding: 3px;
   margin-bottom: 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
-.gastos-tabs::-webkit-scrollbar { display: none; }
 .gastos-tab {
-  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 10px 14px; border-radius: calc(var(--radius-md) - 3px);
-  font-size: 12.5px; font-weight: 700; font-family: var(--font-body);
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 9px 2px; border-radius: calc(var(--radius-md) - 3px);
+  font-size: 11px; font-weight: 700; font-family: var(--font-body);
   color: var(--text-lo); background: transparent; border: none; cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
   -webkit-tap-highlight-color: transparent;
