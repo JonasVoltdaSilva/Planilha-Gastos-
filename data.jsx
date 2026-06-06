@@ -142,7 +142,11 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 const addMonths = (iso, n) => {
   const d = new Date(iso + "T12:00:00");
+  const origDay = d.getDate();
+  d.setDate(1);
   d.setMonth(d.getMonth() + n);
+  const maxDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(origDay, maxDay));
   return d.toISOString().slice(0, 10);
 };
 
@@ -418,8 +422,8 @@ function exportToCSV(expenses) {
   URL.revokeObjectURL(url);
 }
 
-function exportToJSON(expenses, cards, settings, customCats) {
-  const data = { version: 1, exportedAt: new Date().toISOString(), expenses, cards, settings, customCats };
+function exportToJSON(expenses, cards, settings, customCats, fixas, caloteiros, emprestimos) {
+  const data = { version: 1, exportedAt: new Date().toISOString(), expenses, cards, settings, customCats, fixas, caloteiros, emprestimos };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

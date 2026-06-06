@@ -603,7 +603,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
     : "var(--cat-saude)";
   const h = now.getHours();
   const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-  const recent = [...monthExp].sort((a, b) => b.data.localeCompare(a.data));
+  const recent = [...monthExp].filter(e => e.kind !== "entrada").sort((a, b) => b.data.localeCompare(a.data));
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
   const todayDay = now.getDate();
 
@@ -1397,7 +1397,7 @@ function RelatoriosView({ expenses, byCat, total }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro, emprestimos }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -1513,7 +1513,7 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
               <div className="d">Salva lançamentos e cartões para restauração futura</div>
             </div>
             <button className="btn btn-ghost" style={{ padding: "10px 14px", whiteSpace: "nowrap" }}
-              onClick={() => exportToJSON(expenses || [], cards || [], settings, customCats || [])}>
+              onClick={() => exportToJSON(expenses || [], cards || [], settings, customCats || [], fixas || [], caloteiros || [], emprestimos || [])}>
               <Ic.download size={15} />Baixar
             </button>
           </div>

@@ -268,7 +268,7 @@ function App() {
   // ---------- Ações ----------
   const saveTransaction = (exp) => {
     const isEditing = !!modal?.id;
-    if (exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
+    if (!isEditing && exp.kind === "gasto" && exp.forma === "parcelado" && exp.parcTotal > 1) {
       // Fix rounding: base value for N-1 parcels, last absorbs remainder
       const baseVal = Math.round((exp.valor / exp.parcTotal) * 100) / 100;
       const lastVal = Math.round((exp.valor - baseVal * (exp.parcTotal - 1)) * 100) / 100;
@@ -342,6 +342,9 @@ function App() {
   const restoreBackup = (data) => {
     if (data.expenses) setExpenses(data.expenses);
     if (data.cards) { setCards(data.cards); try { localStorage.setItem(LS_CARDS, JSON.stringify(data.cards)); } catch (e) {} }
+    if (data.fixas) { setFixas(data.fixas); try { localStorage.setItem(LS_FIXAS, JSON.stringify(data.fixas)); } catch (e) {} }
+    if (data.caloteiros) { setCaloteiros(data.caloteiros); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(data.caloteiros)); } catch (e) {} }
+    if (data.emprestimos) { setEmprestimos(data.emprestimos); try { localStorage.setItem(LS_EMPRESTIMOS, JSON.stringify(data.emprestimos)); } catch (e) {} }
     showToast(`${(data.expenses || []).length} lançamentos restaurados`);
   };
 
@@ -358,7 +361,7 @@ function App() {
         <div className="brand">
           <div className="brand-mark"><Ic.coins size={22} color="#06251a" /></div>
           <div>
-            <div className="brand-name">Cofrinho do Luiz</div>
+            <div className="brand-name">Cofrinho</div>
             <div className="brand-sub">Controle de gastos</div>
           </div>
         </div>
@@ -450,7 +453,8 @@ function App() {
                 expenses={expenses} customCats={customCats}
                 onRestoreBackup={restoreBackup}
                 fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
-                caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro} />
+                caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro}
+                emprestimos={emprestimos} />
             )}
           </div>
         </div>

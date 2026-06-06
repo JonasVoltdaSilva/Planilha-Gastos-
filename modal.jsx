@@ -6,7 +6,7 @@ const { useState: useStateM, useEffect: useEffectM, useRef: useRefM } = React;
 const BASE_CAT_IDS = ["comida","transporte","moradia","lazer","saude","compras","contas","outros"];
 
 function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
-  const cats = (allCats || CATEGORIES).filter(c => BASE_CAT_IDS.includes(c.id));
+  const cats = allCats || CATEGORIES;
   const defaultKind = initial?.kind || initKind || "gasto";
   const isEdit = !!initial?.id;
 
