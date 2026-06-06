@@ -122,28 +122,86 @@ body.theme-orange {
 }
 
 /* Ariana Grande — hate that i made you love me (lyric video)
-   Âmbar velho + verde musgo escuro · estética filme antigo granulado */
+   Diário antigo · tinta escura · flores botânicas · grain de filme · âmbar envelhecido */
 body.theme-ariana {
-  --accent-blue: oklch(0.72 0.14 76);       /* âmbar dourado desbotado */
-  --accent-mint: oklch(0.54 0.08 168);      /* verde musgo escuro */
-  --accent-blue-soft: oklch(0.72 0.14 76 / 0.18);
-  --accent-mint-soft: oklch(0.54 0.08 168 / 0.18);
-  --blob1-color: oklch(0.58 0.12 76 / 0.45);   /* blob âmbar muted */
-  --blob2-color: oklch(0.42 0.07 168 / 0.40);  /* blob musgo escuro */
-  --blob3-color: oklch(0.38 0.05 90 / 0.25);   /* blob oliva */
+  --accent-blue: oklch(0.70 0.13 72);
+  --accent-mint: oklch(0.50 0.07 162);
+  --accent-blue-soft: oklch(0.70 0.13 72 / 0.15);
+  --accent-mint-soft: oklch(0.50 0.07 162 / 0.15);
+  --blob1-color: oklch(0.55 0.11 72 / 0.30);
+  --blob2-color: oklch(0.38 0.06 162 / 0.26);
+  --blob3-color: oklch(0.33 0.04 85 / 0.17);
   --btn-primary-fg: #0e0c04;
-  --text-hi: rgba(240, 228, 190, 0.95);         /* texto levemente amarelado */
-  --text-mid: rgba(200, 188, 155, 0.65);
-  --text-lo: rgba(170, 158, 125, 0.42);
+  --text-hi: rgba(238, 222, 178, 0.95);
+  --text-mid: rgba(195, 180, 142, 0.62);
+  --text-lo: rgba(160, 148, 108, 0.38);
+  --font-display: "Cormorant Garamond", Georgia, serif;
 }
 body.theme-ariana .backdrop {
-  background: linear-gradient(135deg, #060604 0%, #0a0d08 40%, #080c06 75%, #060704 100%);
+  background: #060503;
 }
-body.theme-ariana .blob { filter: blur(110px) !important; }
-body.theme-ariana .blob.b1 { opacity: 0.36 !important; }
-body.theme-ariana .blob.b2 { opacity: 0.30 !important; }
-body.theme-ariana .blob.b3 { opacity: 0.18 !important; }
-body.theme-ariana .blob.b4 { opacity: 0.12 !important; }
+/* Vinheta escura nas bordas — queimado como filme antigo */
+body.theme-ariana .backdrop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 88% 88% at center,
+    transparent 26%, rgba(0,0,0,0.52) 60%, rgba(0,0,0,0.94) 100%);
+  pointer-events: none;
+}
+body.theme-ariana .blob { filter: blur(130px) !important; }
+body.theme-ariana .blob.b1 { opacity: 0.22 !important; }
+body.theme-ariana .blob.b2 { opacity: 0.18 !important; }
+body.theme-ariana .blob.b3 { opacity: 0.12 !important; }
+body.theme-ariana .blob.b4 { opacity: 0.08 !important; }
+
+/* Fonte caligráfica nos headings */
+body.theme-ariana h1,
+body.theme-ariana h2,
+body.theme-ariana .page-title,
+body.theme-ariana .hero-balance,
+body.theme-ariana .onb-app-name,
+body.theme-ariana .section-title { font-family: "Cormorant Garamond", Georgia, serif; }
+body.theme-ariana .hero-balance { font-style: italic; }
+body.theme-ariana .page-title { font-style: italic; letter-spacing: 0.025em; }
+body.theme-ariana .onb-app-name { font-style: italic; font-size: 1.35em; letter-spacing: 0.04em; }
+
+/* Borda dos cards com tom âmbar sutil */
+body.theme-ariana .glass {
+  border-color: rgba(200, 150, 26, 0.14) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.60), inset 0 1px 0 rgba(200,150,26,0.08), inset 0 -1px 0 rgba(0,0,0,0.12) !important;
+}
+
+/* === Film grain === */
+.ariana-grain {
+  position: fixed; inset: 0; z-index: 195;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  animation: grainShift 0.14s steps(1) infinite;
+}
+@keyframes grainShift {
+  0%   { background-position: 0px 0px; }
+  25%  { background-position: -38px 20px; }
+  50%  { background-position: 14px -32px; }
+  75%  { background-position: -22px 12px; }
+  100% { background-position: 30px -16px; }
+}
+
+/* === Pétalas / flores botânicas flutuantes === */
+.ariana-petal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 3;
+  will-change: transform, opacity;
+  top: -8vh;
+}
+@keyframes petalFall {
+  0%   { opacity: 0; transform: translateY(0) translateX(0) rotate(0deg) scale(0.85); }
+  7%   { opacity: 0.85; }
+  88%  { opacity: 0.50; }
+  100% { opacity: 0; transform: translateY(110vh) translateX(var(--drift, 28px)) rotate(var(--spin, 260deg)) scale(1.1); }
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 

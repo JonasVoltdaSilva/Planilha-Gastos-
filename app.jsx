@@ -30,6 +30,65 @@ const LS_FIXAS       = "planilha_gastos_fixas_v1";
 const LS_CALOTEIROS  = "planilha_gastos_caloteiros_v1";
 const LS_EMPRESTIMOS = "planilha_gastos_emprestimos_v1";
 
+/* Flores botânicas + grain de filme — tema Ariana */
+function ArianaDecor({ theme }) {
+  if (theme !== "ariana") return null;
+
+  const petals = [
+    { id: 0, left: "6%",  dur: "14s", delay: "0s",   size: 20, type: 0, drift: "-24px", spin: "260deg" },
+    { id: 1, left: "18%", dur: "19s", delay: "3.5s",  size: 26, type: 1, drift: "32px",  spin: "310deg" },
+    { id: 2, left: "33%", dur: "16s", delay: "7s",    size: 18, type: 0, drift: "-18px", spin: "200deg" },
+    { id: 3, left: "50%", dur: "22s", delay: "1.5s",  size: 22, type: 1, drift: "28px",  spin: "290deg" },
+    { id: 4, left: "65%", dur: "15s", delay: "5.5s",  size: 16, type: 0, drift: "-22px", spin: "340deg" },
+    { id: 5, left: "78%", dur: "20s", delay: "9.5s",  size: 28, type: 1, drift: "20px",  spin: "220deg" },
+    { id: 6, left: "90%", dur: "13s", delay: "2.5s",  size: 19, type: 0, drift: "-28px", spin: "300deg" },
+    { id: 7, left: "42%", dur: "18s", delay: "12s",   size: 17, type: 1, drift: "24px",  spin: "180deg" },
+    { id: 8, left: "25%", dur: "21s", delay: "15s",   size: 23, type: 0, drift: "-16px", spin: "240deg" },
+    { id: 9, left: "72%", dur: "17s", delay: "6s",    size: 21, type: 1, drift: "30px",  spin: "320deg" },
+  ];
+
+  return (
+    <>
+      <div className="ariana-grain" />
+      {petals.map(p => (
+        <div key={p.id} className="ariana-petal" style={{
+          left: p.left,
+          width: p.size,
+          height: p.size,
+          "--drift": p.drift,
+          "--spin": p.spin,
+          animation: `petalFall ${p.dur} ${p.delay} linear infinite`,
+        }}>
+          {p.type === 0 ? (
+            /* Flor botânica — pétalas de musgo escuro (como as ilustrações do lyric video) */
+            <svg viewBox="0 0 50 50" width={p.size} height={p.size} fill="none">
+              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70"/>
+              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(72 25 25)"/>
+              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(144 25 25)"/>
+              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(216 25 25)"/>
+              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(288 25 25)"/>
+              <circle  cx="25" cy="25" r="5.5"         fill="#4a7050" opacity="0.80"/>
+              <line x1="25" y1="38" x2="25" y2="50" stroke="#3a5840" strokeWidth="1.2" opacity="0.50"/>
+            </svg>
+          ) : (
+            /* Flor âmbar — tom dourado envelhecido */
+            <svg viewBox="0 0 50 50" width={p.size} height={p.size} fill="none">
+              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60"/>
+              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(60 25 25)"/>
+              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(120 25 25)"/>
+              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(180 25 25)"/>
+              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(240 25 25)"/>
+              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(300 25 25)"/>
+              <circle  cx="25" cy="25" r="5"            fill="#c8961a" opacity="0.75"/>
+              <circle  cx="25" cy="25" r="2.5"          fill="#e8b840" opacity="0.60"/>
+            </svg>
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
 function App() {
   const [page, setPage] = useState("home");
   const [gastosInitialTab, setGastosInitialTab] = useState("lancamentos");
@@ -476,6 +535,7 @@ function App() {
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
       )}
+      <ArianaDecor theme={profile?.theme} />
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );
