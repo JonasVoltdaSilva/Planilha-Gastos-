@@ -139,62 +139,96 @@ function AcidDecor({ theme }) {
 
 /* Sparkle stars + lip prints — tema Short n' Sweet (Sabrina Carpenter) */
 function SweetDecor({ theme }) {
-  const [items, setItems] = useState(null);
+  const [sparkles, setSparkles] = useState([]);
+  const [kisses,   setKisses]   = useState([]);
+  /* ref compartilhado rastreia {t,l} de tudo que está posicionado */
+  const occupied = React.useRef([]);
+
+  const r   = (a, b) => Math.random() * (b - a) + a;
+  const ri  = (a, b) => Math.floor(r(a, b + 1));
+  const fs  = n => n.toFixed(1) + "s";
+  const fp  = n => n.toFixed(1) + "%";
+
+  /* Sorteia posição que não sobrepõe nenhum ocupado */
+  const pick = (dist) => {
+    for (let i = 0; i < 100; i++) {
+      const t = r(4, 90), l = r(4, 90);
+      if (occupied.current.every(p => Math.hypot(p.t - t, p.l - l) > dist))
+        return { t, l };
+    }
+    return { t: r(4, 90), l: r(4, 90) }; // fallback sem verificação
+  };
+
+  /* Reserva posição e retorna strings CSS */
+  const place = (dist) => {
+    const p = pick(dist);
+    occupied.current = [...occupied.current, p];
+    return { top: fp(p.t), left: fp(p.l), _t: p.t, _l: p.l };
+  };
+
+  /* Libera posição de um item */
+  const free = (t, l) => {
+    occupied.current = occupied.current.filter(
+      p => Math.hypot(p.t - t, p.l - l) > 0.15
+    );
+  };
 
   useEffect(() => {
-    if (theme !== "sweet") { setItems(null); return; }
-    const r  = (a, b) => Math.random() * (b - a) + a;
-    const ri = (a, b) => Math.floor(r(a, b + 1));
-    const fmt = n => n.toFixed(1) + "s";
-
-    setItems({
-      sparkles: Array.from({ length: 14 }, (_, i) => ({
-        id: i,
-        top:   r(4,  93).toFixed(1) + "%",
-        left:  r(3,  93).toFixed(1) + "%",
-        size:  ri(8, 18),
-        dur:   fmt(r(3.5, 6.5)),
-        delay: fmt(r(1.5, 14)),
-      })),
-      kisses: Array.from({ length: 6 }, (_, i) => ({
-        id: i,
-        top:   r(8,  85).toFixed(1) + "%",
-        left:  r(4,  88).toFixed(1) + "%",
-        rot:   ri(-22, 22),
-        dur:   fmt(r(7, 13)),
-        delay: fmt(r(2, 16)),
-      })),
-    });
+    if (theme !== "sweet") {
+      setSparkles([]); setKisses([]); occupied.current = []; return;
+    }
+    occupied.current = [];
+    setSparkles(Array.from({ length: 10 }, (_, id) => {
+      const pos = place(10);
+      return { id, ...pos, size: ri(8,18), dur: fs(r(3.5,6)), delay: fs(r(1.5,12)) };
+    }));
+    setKisses(Array.from({ length: 5 }, (_, id) => {
+      const pos = place(13);
+      return { id, ...pos, rot: ri(-22,22), dur: fs(r(7,13)), delay: fs(r(3,15)) };
+    }));
   }, [theme]);
 
-  if (!items) return null;
+  /* Ao reiniciar o ciclo (opacidade volta a 0) → nova posição aleatória */
+  const nextSparkle = (id, oldT, oldL) => {
+    free(oldT, oldL);
+    const pos = place(10);
+    setSparkles(prev => prev.map(s => s.id !== id ? s : {
+      ...s, ...pos, size: ri(8,18), dur: fs(r(3.5,6)),
+    }));
+  };
+
+  const nextKiss = (id, oldT, oldL) => {
+    free(oldT, oldL);
+    const pos = place(13);
+    setKisses(prev => prev.map(k => k.id !== id ? k : {
+      ...k, ...pos, rot: ri(-22,22), dur: fs(r(7,13)),
+    }));
+  };
+
+  if (!sparkles.length) return null;
 
   return (
     <>
-      {items.sparkles.map(s => (
+      {sparkles.map(s => (
         <div key={s.id} className="sweet-sparkle" style={{
-          position: "fixed",
-          top: s.top, left: s.left,
-          animationDuration: s.dur,
-          animationDelay: s.delay,
+          position: "fixed", top: s.top, left: s.left,
+          animationDuration: s.dur, animationDelay: s.delay,
           animationFillMode: "backwards",
-        }}>
+        }} onAnimationIteration={() => nextSparkle(s.id, s._t, s._l)}>
           <svg width={s.size * 2} height={s.size * 2} viewBox="0 0 24 24" fill="none">
             <path d="M12 0 L13.2 10.8 L24 12 L13.2 13.2 L12 24 L10.8 13.2 L0 12 L10.8 10.8 Z" fill="#E6C98D"/>
             <path d="M12 3 L12.8 11.2 L21 12 L12.8 12.8 L12 21 L11.2 12.8 L3 12 L11.2 11.2 Z" fill="#FFF2B8" opacity="0.7"/>
           </svg>
         </div>
       ))}
-      {items.kisses.map(k => (
+      {kisses.map(k => (
         <div key={k.id} className="sweet-kiss-wrap" style={{
-          top: k.top, left: k.left,
-          transform: `rotate(${k.rot}deg)`,
+          top: k.top, left: k.left, transform: `rotate(${k.rot}deg)`,
         }}>
           <div className="sweet-kiss" style={{
-            animationDuration: k.dur,
-            animationDelay: k.delay,
+            animationDuration: k.dur, animationDelay: k.delay,
             animationFillMode: "backwards",
-          }}>
+          }} onAnimationIteration={() => nextKiss(k.id, k._t, k._l)}>
             <svg width="40" height="28" viewBox="0 0 40 28" fill="none">
               <path d="M2 13 Q3 4, 12 3 Q16 0, 20 5 Q24 0, 28 3 Q37 4, 38 13 Q36 23, 28 27 Q24 30, 20 27 Q16 30, 12 27 Q4 23, 2 13Z" fill="rgba(218,72,98,0.85)"/>
               <path d="M8 13 Q13 8, 20 13 Q27 8, 32 13 Q27 20, 20 20 Q13 20, 8 13Z" fill="rgba(168,38,62,0.72)"/>
