@@ -121,6 +121,25 @@ body.theme-orange {
   --btn-primary-fg: #1a0e00;
 }
 
+/* Ariana Grande — hate that i made you love me
+   Amarelo limão + Teal escuro · filtro cinematográfico anos 60 */
+body.theme-ariana {
+  --accent-blue: oklch(0.90 0.22 98);
+  --accent-mint: oklch(0.78 0.16 188);
+  --accent-blue-soft: oklch(0.90 0.22 98 / 0.16);
+  --accent-mint-soft: oklch(0.78 0.16 188 / 0.16);
+  --blob1-color: oklch(0.82 0.22 98 / 0.52);
+  --blob2-color: oklch(0.65 0.16 188 / 0.48);
+  --blob3-color: oklch(0.55 0.10 210 / 0.28);
+  --btn-primary-fg: #0a1008;
+}
+body.theme-ariana .backdrop {
+  background: linear-gradient(135deg, #020810 0%, #031018 45%, #021410 80%, #010c0e 100%);
+}
+body.theme-ariana .blob.b1 { opacity: 0.42 !important; }
+body.theme-ariana .blob.b2 { opacity: 0.38 !important; }
+body.theme-ariana .blob.b3 { opacity: 0.22 !important; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
