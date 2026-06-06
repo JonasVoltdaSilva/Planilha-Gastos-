@@ -741,42 +741,13 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         )}
       </div>
 
-      {/* Quick-access group card */}
-      {(pendingCaloteiros.length > 0 || (fixas && fixas.length > 0)) && (
-        <div className="home-quick-group">
-          {pendingCaloteiros.length > 0 && (
-            <button className="home-quick-row" onClick={onGoToConfig}>
-              <div className="home-quick-row-left">
-                <div className="home-quick-icon" style={{ background: "oklch(0.32 0.08 60 / 0.35)", color: "#e0c85a" }}>
-                  <Ic.coins size={16} />
-                </div>
-                <div>
-                  <div className="home-quick-label">A receber</div>
-                  <div className="home-quick-sub">{pendingCaloteiros.length} devedor{pendingCaloteiros.length !== 1 ? "es" : ""} pendente{pendingCaloteiros.length !== 1 ? "s" : ""}</div>
-                </div>
-              </div>
-              <div className="home-quick-right">
-                <span className="home-quick-value" style={{ color: "#e0c85a" }}>{fmtBRL(totalCaloteiros)}</span>
-                <Ic.chevron size={14} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
-              </div>
-            </button>
-          )}
-          {fixas && fixas.length > 0 && (
-            <button className="home-quick-row" onClick={onGoToConfig}>
-              <div className="home-quick-row-left">
-                <div className="home-quick-icon" style={{ background: "oklch(0.28 0.06 255 / 0.35)", color: "var(--accent-blue)" }}>
-                  <Ic.receipt size={16} />
-                </div>
-                <div>
-                  <div className="home-quick-label">Contas fixas</div>
-                  <div className="home-quick-sub">{fixas.length} conta{fixas.length !== 1 ? "s" : ""} · {fmtBRL(totalFixas)}/mês</div>
-                </div>
-              </div>
-              <div className="home-quick-right">
-                <Ic.chevron size={14} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
-              </div>
-            </button>
-          )}
+      {/* Últimas compras */}
+      {recent.length > 0 && (
+        <div className="panel glass">
+          <div className="panel-head">
+            <div className="panel-title">Últimas compras</div>
+          </div>
+          <ExpenseTable rows={recent.slice(0, 5)} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>
       )}
     </>

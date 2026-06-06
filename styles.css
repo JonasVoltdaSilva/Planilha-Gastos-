@@ -1397,7 +1397,15 @@ body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--ink-900);
     border-top: 1px solid rgba(255,255,255,0.07);
-    box-shadow: 0 -1px 0 rgba(255,255,255,0.04);
+  }
+  /* Solid fill below the nav icons into the safe area */
+  .bottom-nav::after {
+    content: '';
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background: var(--ink-900);
+    z-index: 39;
   }
   .bottom-nav-item {
     flex: 1;
