@@ -192,13 +192,13 @@ body.no-glow .bar, body.no-glow .donut circle { filter: none !important; }
 
 /* ---- Glass ---- */
 .glass {
-  background: rgba(10, 18, 32, 0.82);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(8, 15, 28, 0.58);
+  backdrop-filter: blur(22px) brightness(0.68);
+  -webkit-backdrop-filter: blur(22px) brightness(0.68);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
-    0 24px 60px -16px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    0 24px 60px -16px rgba(0, 0, 0, 0.90),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ---- App layout (desktop) ---- */
@@ -1385,22 +1385,6 @@ body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(
 }
 .fatura-home-chip { display: none; }
 
-/* Solid fill below nav — covers safe area regardless of env() support */
-.bottom-safe-fill {
-  display: none;
-}
-@media (max-width: 920px) {
-  .bottom-safe-fill {
-    display: block;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 160px;
-    background: #050b14;
-    z-index: 38;
-    pointer-events: none;
-  }
-}
-
 /* ============================================================
    Bottom nav: 3 anchors + centered FAB (mobile)
    ============================================================ */
@@ -1411,8 +1395,17 @@ body.light-mode .gastos-tab.on { background: rgba(255,255,255,0.85); color: var(
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
     height: calc(62px + env(safe-area-inset-bottom, 0px));
     padding: 0 8px;
-    background: var(--ink-900);
+    background: #050b14;
     border-top: 1px solid rgba(255,255,255,0.07);
+    overflow: visible;
+  }
+  /* Extend background below the nav into any remaining system area */
+  .bottom-nav::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: -4px; right: -4px;
+    height: 120px;
+    background: #050b14;
   }
   .bottom-nav-item {
     flex: 1;

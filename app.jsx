@@ -460,7 +460,6 @@ function App() {
         </div>
       </main>
 
-      <div className="bottom-safe-fill" />
       <BottomNav page={page} setPage={(p) => { if (p === "gastos") setGastosInitialTab("lancamentos"); setPage(p); }} onAdd={() => setModal({})} />
 
       {showFilterSheet && (
