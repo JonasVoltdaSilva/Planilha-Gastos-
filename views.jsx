@@ -883,6 +883,11 @@ function EmprestimosSection({ emprestimos, onAdd, onDelete, onUpdate }) {
                 <span style={{ fontSize: 11, color: "var(--text-lo)", fontWeight: 400, marginLeft: 6 }}>{e.tipo === "dado" ? "emprestei" : "peguei"}</span>
               </div>
               {e.obs && <div style={{ fontSize: 12, color: "var(--text-lo)", marginBottom: 5 }}>{e.obs}</div>}
+              {e.parcelas > 1 && (
+                <div style={{ fontSize: 12, color: "var(--text-mid)", fontWeight: 600, marginBottom: 5 }}>
+                  {fmtBRL(Math.round((e.valor / e.parcelas) * 100) / 100)}<span style={{ fontWeight: 400, color: "var(--text-lo)" }}>/parcela</span>
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${pct * 100}%`, background: color, borderRadius: 999, transition: "width 0.4s" }} />
