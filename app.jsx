@@ -168,11 +168,16 @@ function SweetDecor({ theme }) {
     <>
       {sparkles.map(s => (
         <div key={s.id} className="sweet-sparkle" style={{
+          position: "fixed",
           top: s.top, left: s.left,
-          width: s.size, height: s.size,
           animationDuration: s.dur,
           animationDelay: s.delay,
-        }} />
+        }}>
+          <svg width={s.size * 2} height={s.size * 2} viewBox="0 0 24 24" fill="none">
+            <path d="M12 0 L13.2 10.8 L24 12 L13.2 13.2 L12 24 L10.8 13.2 L0 12 L10.8 10.8 Z" fill="#E6C98D"/>
+            <path d="M12 3 L12.8 11.2 L21 12 L12.8 12.8 L12 21 L11.2 12.8 L3 12 L11.2 11.2 Z" fill="#FFF2B8" opacity="0.7"/>
+          </svg>
+        </div>
       ))}
       {kisses.map(k => (
         <div key={k.id} className="sweet-kiss-wrap" style={{
