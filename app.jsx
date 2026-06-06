@@ -183,10 +183,11 @@ function SweetDecor({ theme }) {
             animationDuration: k.dur,
             animationDelay: k.delay,
           }}>
-            <svg width="34" height="24" viewBox="0 0 34 24" fill="none">
-              <path d="M2 11 Q3 4, 10 3 Q14 0, 17 4 Q20 0, 24 3 Q31 4, 32 11 Q30 20, 24 23 Q20 25, 17 22 Q14 25, 10 23 Q4 20, 2 11Z" fill="rgba(232,100,118,0.28)"/>
-              <path d="M8 11 Q12 7, 17 11 Q22 7, 26 11 Q22 16, 17 16 Q12 16, 8 11Z" fill="rgba(195,65,85,0.20)"/>
-              <ellipse cx="12" cy="7.5" rx="3" ry="1.6" fill="rgba(255,220,225,0.22)"/>
+            <svg width="40" height="28" viewBox="0 0 40 28" fill="none">
+              <path d="M2 13 Q3 4, 12 3 Q16 0, 20 5 Q24 0, 28 3 Q37 4, 38 13 Q36 23, 28 27 Q24 30, 20 27 Q16 30, 12 27 Q4 23, 2 13Z" fill="rgba(218,72,98,0.85)"/>
+              <path d="M8 13 Q13 8, 20 13 Q27 8, 32 13 Q27 20, 20 20 Q13 20, 8 13Z" fill="rgba(168,38,62,0.72)"/>
+              <ellipse cx="14" cy="8.5" rx="4.5" ry="2.2" fill="rgba(255,195,205,0.50)"/>
+              <ellipse cx="26" cy="8"   rx="2.8" ry="1.6" fill="rgba(255,195,205,0.35)"/>
             </svg>
           </div>
         </div>

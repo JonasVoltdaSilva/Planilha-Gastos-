@@ -720,9 +720,9 @@ body.theme-sweet .onb-card {
 }
 @keyframes sweetSparkle {
   0%   { transform: scale(0)   rotate(0deg);   opacity: 0; }
-  18%  { transform: scale(1)   rotate(55deg);  opacity: 0.82; }
-  55%  { transform: scale(1.1) rotate(145deg); opacity: 0.60; }
-  88%  { transform: scale(0.8) rotate(300deg); opacity: 0.30; }
+  18%  { transform: scale(1)   rotate(55deg);  opacity: 1; }
+  55%  { transform: scale(1.2) rotate(145deg); opacity: 0.90; }
+  88%  { transform: scale(0.9) rotate(300deg); opacity: 0.60; }
   100% { transform: scale(0)   rotate(360deg); opacity: 0; }
 }
 
@@ -737,9 +737,9 @@ body.theme-sweet .onb-card {
 }
 @keyframes sweetKiss {
   0%   { opacity: 0;    transform: scale(0.65); }
-  22%  { opacity: 0.22; transform: scale(1.00); }
-  72%  { opacity: 0.15; transform: scale(1.00); }
-  100% { opacity: 0;    transform: scale(0.75); }
+  22%  { opacity: 0.75; transform: scale(1.00); }
+  72%  { opacity: 0.55; transform: scale(1.00); }
+  100% { opacity: 0;    transform: scale(0.80); }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
