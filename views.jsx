@@ -972,16 +972,25 @@ function FixasSection({ fixas, onAdd, onDelete, allCats }) {
 }
 
 function CaloteirosSection({ caloteiros, onAdd, onDelete, onToggle }) {
-  const [form, setForm] = useS({ show: false, nome: "", valor: "", descricao: "" });
+  const [form, setForm] = useS({ show: false, nome: "", valor: "", descricao: "", parcelas: "1", alertaDia: "" });
   const pending = (caloteiros || []).filter(c => !c.pago);
   const paid = (caloteiros || []).filter(c => c.pago);
   const totalPending = pending.reduce((s, c) => s + c.valor, 0);
+  const today = new Date().getDate();
+
+  const formValor = parseFloat(form.valor.replace(",", "."));
+  const formParc = parseInt(form.parcelas) || 1;
+  const formValorParc = formParc > 1 && !isNaN(formValor) && formValor > 0
+    ? Math.round((formValor / formParc) * 100) / 100 : null;
 
   const submit = () => {
-    const valor = parseFloat(form.valor.replace(",", "."));
-    if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
-    onAdd({ nome: form.nome.trim(), valor, descricao: form.descricao, data: todayISO() });
-    setForm(f => ({ ...f, show: false, nome: "", valor: "", descricao: "" }));
+    if (!form.nome.trim() || isNaN(formValor) || formValor <= 0) return;
+    onAdd({
+      nome: form.nome.trim(), valor: formValor, descricao: form.descricao,
+      parcelas: formParc, alertaDia: form.alertaDia ? parseInt(form.alertaDia) : null,
+      data: todayISO()
+    });
+    setForm({ show: false, nome: "", valor: "", descricao: "", parcelas: "1", alertaDia: "" });
   };
 
   return (
@@ -1000,8 +1009,20 @@ function CaloteirosSection({ caloteiros, onAdd, onDelete, onToggle }) {
       {form.show && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
           <input className="form-input" placeholder="Nome do devedor" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
-          <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} />
-          <input className="form-input" placeholder="Motivo (opcional)" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Valor total (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Parcelas" type="number" min="1" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} style={{ flex: 1 }} title="Nº de parcelas (1 = à vista)" />
+          </div>
+          {formValorParc && (
+            <div style={{ fontSize: 12, color: "var(--accent-mint)", fontWeight: 600, padding: "2px 0" }}>
+              Parcela: {fmtBRL(formValorParc)} × {formParc}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="form-input" placeholder="Motivo (opcional)" value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} style={{ flex: 2 }} />
+            <input className="form-input" placeholder="Dia alerta" type="number" min="1" max="31" value={form.alertaDia} onChange={e => setForm(f => ({ ...f, alertaDia: e.target.value }))} style={{ flex: 1 }} title="Dia do mês para lembrar de cobrar" />
+          </div>
+          {form.alertaDia && <div style={{ fontSize: 11, color: "var(--text-lo)" }}>🔔 Alerta todo dia {form.alertaDia} do mês</div>}
           <button className="btn btn-primary" onClick={submit}>Adicionar devedor</button>
         </div>
       )}
@@ -1011,21 +1032,62 @@ function CaloteirosSection({ caloteiros, onAdd, onDelete, onToggle }) {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {[...pending, ...paid].map(c => (
-          <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", borderBottom: "1px solid var(--glass-border)", opacity: c.pago ? 0.5 : 1 }}>
-            <button className={"icon-btn" + (c.pago ? " active" : "")} style={{ width: 28, height: 28, flexShrink: 0, borderColor: c.pago ? "var(--accent-mint)" : "var(--glass-border)", color: c.pago ? "var(--accent-mint)" : "var(--text-lo)" }}
-              title={c.pago ? "Marcar como pendente" : "Marcar como recebido"}
-              onClick={() => onToggle(c.id)}>
-              <Ic.check size={13} />
-            </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, textDecoration: c.pago ? "line-through" : "none" }}>{c.nome}</div>
-              {c.descricao && <div style={{ fontSize: 12, color: "var(--text-lo)" }}>{c.descricao}</div>}
+        {[...pending, ...paid].map(c => {
+          const parcelas = c.parcelas || 1;
+          const parcPaga = c.parcPaga || 0;
+          const parcelado = parcelas > 1;
+          const pct = parcelado ? parcPaga / parcelas : (c.pago ? 1 : 0);
+          const valorParc = parcelado ? Math.round((c.valor / parcelas) * 100) / 100 : null;
+          const diff = c.alertaDia ? c.alertaDia - today : null;
+          const alertaLabel = !c.pago && diff !== null
+            ? diff === 0 ? "hoje" : diff === 1 ? "amanhã" : diff === -1 ? "ontem" : diff > 1 && diff <= 3 ? `em ${diff} dias` : null
+            : null;
+          return (
+            <div key={c.id} style={{ padding: "11px 4px", borderBottom: "1px solid var(--glass-border)", opacity: c.pago ? 0.5 : 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button className={"icon-btn" + (c.pago ? " active" : "")}
+                  style={{ width: 28, height: 28, flexShrink: 0, borderColor: c.pago ? "var(--accent-mint)" : "var(--glass-border)", color: c.pago ? "var(--accent-mint)" : "var(--text-lo)" }}
+                  title={c.pago ? "Reabrir" : parcelado ? `Marcar parcela ${parcPaga + 1}/${parcelas}` : "Marcar como recebido"}
+                  onClick={() => onToggle(c.id)}>
+                  <Ic.check size={13} />
+                </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, textDecoration: c.pago ? "line-through" : "none", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    {c.nome}
+                    {alertaLabel && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: alertaLabel === "hoje" ? "#e0c85a22" : "rgba(255,255,255,0.06)", color: alertaLabel === "hoje" ? "#e0c85a" : "var(--text-mid)", border: `1px solid ${alertaLabel === "hoje" ? "#e0c85a44" : "var(--glass-border)"}` }}>
+                        🔔 {alertaLabel}
+                      </span>
+                    )}
+                  </div>
+                  {c.descricao && <div style={{ fontSize: 12, color: "var(--text-lo)", marginTop: 1 }}>{c.descricao}</div>}
+                  {parcelado && (
+                    <div style={{ fontSize: 12, color: "var(--text-mid)", fontWeight: 600, marginTop: 2 }}>
+                      {fmtBRL(valorParc)}<span style={{ fontWeight: 400, color: "var(--text-lo)" }}>/parcela · {parcPaga}/{parcelas} pagas</span>
+                    </div>
+                  )}
+                  {c.alertaDia && !alertaLabel && !c.pago && (
+                    <div style={{ fontSize: 11, color: "var(--text-lo)", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
+                      <Ic.bell size={10} /> cobrar todo dia {c.alertaDia}
+                    </div>
+                  )}
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: c.pago ? "var(--text-lo)" : "#e0c85a" }}>{fmtBRL(c.valor)}</div>
+                  {parcelado && !c.pago && <div style={{ fontSize: 11, color: "var(--text-lo)", marginTop: 1 }}>{parcelas - parcPaga} restantes</div>}
+                </div>
+                <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(c.id)}><Ic.trash size={13} /></button>
+              </div>
+              {parcelado && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, paddingLeft: 38 }}>
+                  <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct * 100}%`, background: "#e0c85a", borderRadius: 999, transition: "width 0.4s" }} />
+                  </div>
+                </div>
+              )}
             </div>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: c.pago ? "var(--text-lo)" : "#e0c85a", flexShrink: 0 }}>{fmtBRL(c.valor)}</div>
-            <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(c.id)}><Ic.trash size={13} /></button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

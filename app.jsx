@@ -157,9 +157,21 @@ function App() {
     try { const s = localStorage.getItem(LS_CALOTEIROS); if (s) return JSON.parse(s); } catch(e) {}
     return [];
   });
-  const addCaloteiro = (c) => { const u = [...caloteiros, { ...c, id: uid(), pago: false }]; setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Devedor adicionado"); };
+  const addCaloteiro = (c) => { const u = [...caloteiros, { ...c, id: uid(), pago: false, parcPaga: 0 }]; setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Devedor adicionado"); };
   const deleteCaloteiro = (id) => { const u = caloteiros.filter(c => c.id !== id); setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} showToast("Removido", "trash"); };
-  const toggleCaloteiro = (id) => { const u = caloteiros.map(c => c.id === id ? { ...c, pago: !c.pago } : c); setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {} };
+  const toggleCaloteiro = (id) => {
+    const u = caloteiros.map(c => {
+      if (c.id !== id) return c;
+      const parcelas = c.parcelas || 1;
+      if (c.pago) return { ...c, pago: false, parcPaga: 0 };
+      if (parcelas > 1) {
+        const newParcPaga = (c.parcPaga || 0) + 1;
+        return { ...c, parcPaga: newParcPaga, pago: newParcPaga >= parcelas };
+      }
+      return { ...c, pago: true };
+    });
+    setCaloteiros(u); try { localStorage.setItem(LS_CALOTEIROS, JSON.stringify(u)); } catch(e) {}
+  };
 
   // Empréstimos
   const [emprestimos, setEmprestimos] = useState(() => {
