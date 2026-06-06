@@ -619,7 +619,8 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
 
   const notifications = useM(() => {
     const list = [];
-    // Faturas com vencimento próximo (não pagas)
+    // Faturas próximas do vencimento — agrupadas em uma única notificação
+    const fatVencendo = [];
     (cards || []).forEach(c => {
       const key = `${c.id}:${monthStr}`;
       if (faturaOverrides?.[key]?.status === "paga") return;
@@ -628,12 +629,17 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
       const dueDate = new Date(now.getFullYear(), now.getMonth(), c.diaVencimento);
       if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
       const diff = Math.ceil((dueDate - now) / 86400000);
-      if (diff >= 0 && diff <= 7) {
-        list.push({ id: `fat-${c.id}`, urgente: diff <= 1,
-          texto: `Fatura do ${c.nome}`,
-          detalhe: diff === 0 ? "vence hoje!" : `vence dia ${c.diaVencimento} — em ${diff} dia${diff === 1 ? "" : "s"}` });
-      }
+      if (diff >= 0 && diff <= 7) fatVencendo.push({ diff, total: fatura.total });
     });
+    if (fatVencendo.length > 0) {
+      const totalFat = fatVencendo.reduce((s, f) => s + f.total, 0);
+      const minDiff = Math.min(...fatVencendo.map(f => f.diff));
+      const urgente = minDiff <= 1;
+      const detalhe = minDiff === 0 ? "vence hoje!" : `vence em ${minDiff} dia${minDiff === 1 ? "" : "s"}`;
+      list.push({ id: "fat-all", urgente,
+        texto: `${fatVencendo.length} fatura${fatVencendo.length !== 1 ? "s" : ""} pendente${fatVencendo.length !== 1 ? "s" : ""} · ${fmtBRL(totalFat)}`,
+        detalhe });
+    }
     // Devedores com alerta no dia
     (caloteiros || []).filter(c => !c.pago && c.alertaDia).forEach(c => {
       const diff = c.alertaDia - todayDay;
@@ -736,12 +742,12 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
       </div>
 
       {/* Quick-access group card */}
-      {(pendingCaloteiros.length > 0 || (fixas && fixas.length > 0) || (pendingFaturas.length > 0 && onGoToFaturas)) && (
-        <div className="home-quick-group glass">
+      {(pendingCaloteiros.length > 0 || (fixas && fixas.length > 0)) && (
+        <div className="home-quick-group">
           {pendingCaloteiros.length > 0 && (
             <button className="home-quick-row" onClick={onGoToConfig}>
               <div className="home-quick-row-left">
-                <div className="home-quick-icon" style={{ background: "oklch(0.32 0.08 60 / 0.4)", color: "#e0c85a" }}>
+                <div className="home-quick-icon" style={{ background: "oklch(0.32 0.08 60 / 0.35)", color: "#e0c85a" }}>
                   <Ic.coins size={16} />
                 </div>
                 <div>
@@ -758,7 +764,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
           {fixas && fixas.length > 0 && (
             <button className="home-quick-row" onClick={onGoToConfig}>
               <div className="home-quick-row-left">
-                <div className="home-quick-icon" style={{ background: "oklch(0.28 0.06 255 / 0.4)", color: "var(--accent-blue)" }}>
+                <div className="home-quick-icon" style={{ background: "oklch(0.28 0.06 255 / 0.35)", color: "var(--accent-blue)" }}>
                   <Ic.receipt size={16} />
                 </div>
                 <div>
@@ -771,40 +777,6 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
               </div>
             </button>
           )}
-          {pendingFaturas.length > 0 && onGoToFaturas && (
-            <button className="home-quick-row" onClick={onGoToFaturas}>
-              <div className="home-quick-row-left">
-                <div className="home-quick-icon" style={{ background: "oklch(0.28 0.06 165 / 0.4)", color: "var(--accent-mint)" }}>
-                  <Ic.invoice size={16} />
-                </div>
-                <div>
-                  <div className="home-quick-label">Faturas pendentes</div>
-                  <div className="home-quick-sub">{pendingFaturas.length} {pendingFaturas.length === 1 ? "fatura" : "faturas"} em aberto</div>
-                </div>
-              </div>
-              <div className="home-quick-right">
-                <span className="home-quick-value" style={{ color: "#e08a7a" }}>{fmtBRL(pendingFaturas.reduce((s, f) => s + f.total, 0))}</span>
-                <Ic.chevron size={14} style={{ transform: "rotate(-90deg)", color: "var(--text-lo)", flexShrink: 0 }} />
-              </div>
-            </button>
-          )}
-        </div>
-      )}
-
-      {recent.length > 0 ? (
-        <div className="panel glass">
-          <div className="panel-head">
-            <div className="panel-title">Transações do mês</div>
-          </div>
-          <ExpenseTable rows={recent} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
-        </div>
-      ) : (
-        <div className="panel glass">
-          <EmptyState
-            title="Tudo em branco por aqui"
-            text="Toque no + para registrar seu primeiro gasto ou entrada."
-            icon={Ic.coins}
-          />
         </div>
       )}
     </>
