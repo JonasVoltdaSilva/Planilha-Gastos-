@@ -287,9 +287,11 @@ function FilterBar({ period, setPeriod, cat, setCat, search, setSearch, tipoFilt
         </div>
         <div className="field sel">
           <select className="select" value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="mes-atual">Este mês</option>
+            <option value="mes-anterior">Mês passado</option>
             <option value="7">7 dias</option>
+            <option value="14">14 dias</option>
             <option value="30">30 dias</option>
-            <option value="90">90 dias</option>
             <option value="all">Todo período</option>
           </select>
         </div>
@@ -490,11 +492,11 @@ function BankImportModal({ onImport, onClose }) {
             {tab === "text" ? (
               <>
                 <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
-                  Cole o texto do seu extrato. O app detecta e categoriza as transações automaticamente.
+                  Cole o texto do extrato (Bradesco, Itaú, Santander, Nubank, Inter…). O app detecta datas, valores e categoriza automaticamente.
                 </p>
                 <textarea className="import-textarea"
                   value={text} onChange={e => setText(e.target.value)}
-                  placeholder={"02/06 PIX MERCADO LIVRE R$150,00\n02/06 DÉBITO UBER R$22,90\n03/06 AMAZON R$89,99\n..."} />
+                  placeholder={"Formatos aceitos:\n02/06 PIX MERCADO LIVRE 150,00\n04/06/2025 DÉBITO UBER 22,90\n04 JUN RESTAURANTE XPTO 45,00\nAMAZON 89,99\n..."} />
                 <div className="modal-actions">
                   <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
                   <button className="btn btn-primary" onClick={() => runAnalysis(text)} disabled={!text.trim()}>
@@ -1078,8 +1080,17 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
         <button className={"gastos-tab" + (tab === "lancamentos" ? " on" : "")} onClick={() => setTab("lancamentos")}>
           <Ic.wallet size={15} />Lançamentos
         </button>
+        <button className={"gastos-tab" + (tab === "cartoes" ? " on" : "")} onClick={() => setTab("cartoes")}>
+          <Ic.card size={15} />Cartões
+        </button>
         <button className={"gastos-tab" + (tab === "faturas" ? " on" : "")} onClick={() => setTab("faturas")}>
-          <Ic.card size={15} />Faturas
+          <Ic.invoice size={15} />Faturas
+        </button>
+        <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
+          <Ic.receipt size={15} />Fixas
+        </button>
+        <button className={"gastos-tab" + (tab === "emprestimos" ? " on" : "")} onClick={() => setTab("emprestimos")}>
+          <Ic.coins size={15} />Empréstimos
         </button>
         <button className={"gastos-tab" + (tab === "fixas" ? " on" : "")} onClick={() => setTab("fixas")}>
           <Ic.receipt size={15} />Fixas
@@ -1145,18 +1156,17 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
         </div>
       )}
 
+      {tab === "cartoes" && (
+        <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
+      )}
+
       {tab === "faturas" && (
-        <>
-          <CardManager cards={cards || []} onAddCard={onAddCard} onDeleteCard={onDeleteCard} />
-          <div style={{ marginTop: 16 }}>
-            <FaturasView
-              cards={cards} expenses={expenses}
-              faturaOverrides={faturaOverrides}
-              onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
-              onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
-            />
-          </div>
-        </>
+        <FaturasView
+          cards={cards} expenses={expenses}
+          faturaOverrides={faturaOverrides}
+          onMarkPaid={onMarkPaid} onUnmarkPaid={onUnmarkPaid}
+          onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup}
+        />
       )}
 
       {tab === "fixas" && (
@@ -1167,7 +1177,6 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
           </div>
         </>
       )}
-
       {tab === "emprestimos" && (
         <EmprestimosSection
           emprestimos={emprestimos}

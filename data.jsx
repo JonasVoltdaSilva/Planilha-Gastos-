@@ -233,40 +233,55 @@ function parseQuick(text) {
   return makeTransaction({ valor, categoria, descricao: desc, tipo });
 }
 
+const MONTH_PT = { jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12 };
+
 function parseStatement(text) {
   if (!text || !text.trim()) return [];
   const results = [];
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const currYear = new Date().getFullYear();
 
   for (const line of lines) {
-    if (/saldo|extrato|período|periodo|limite|agência|agencia|cpf|cnpj|data\s+desc/i.test(line)) continue;
+    // Skip metadata/header lines
+    if (/^\s*$|saldo anterior|saldo final|saldo disponível|extrato|período|limite disponível|agência|agencia|cpf|cnpj|conta corrente|data\s+desc|valor\s+saldo|histórico/i.test(line)) continue;
 
-    const amtMatch = line.match(/R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})/i);
-    if (!amtMatch) continue;
+    // Find all monetary amounts in the line (Brazilian format: 1.234,56 or 234,56)
+    const allAmts = [...line.matchAll(/(?<![,\d])(\d{1,3}(?:\.\d{3})*,\d{2})(?![,\d])/g)];
+    if (!allAmts.length) continue;
 
-    const numStr = amtMatch[1].replace(/\./g, "").replace(",", ".");
-    const valor = parseFloat(numStr);
-    if (isNaN(valor) || valor <= 0 || valor > 100000) continue;
+    // Take the first amount that's not obviously a balance (prefer leftmost)
+    let chosenAmt = null;
+    for (const m of allAmts) {
+      const v = parseFloat(m[1].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(v) && v > 0 && v <= 100000) { chosenAmt = { match: m[0], valor: v }; break; }
+    }
+    if (!chosenAmt) continue;
 
-    if (/\bcr\b|crédito recebido|recebimento pix|pix recebido|transferência recebida|ted recebida/i.test(line)) continue;
+    // Skip clear income/credit lines
+    if (/\bcr\b|\bcrédito\b|\bcredito\b|recebimento pix|pix recebido|transferência recebida|ted recebida|salário recebido|crédito em conta/i.test(line)) continue;
 
-    const dateMatch = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
-    let iso;
-    if (dateMatch) {
-      const d = dateMatch[1].padStart(2, "0");
-      const mo = dateMatch[2].padStart(2, "0");
-      const y = dateMatch[3]
-        ? (dateMatch[3].length === 2 ? "20" + dateMatch[3] : dateMatch[3])
-        : new Date().getFullYear().toString();
-      iso = `${y}-${mo}-${d}`;
-    } else {
-      iso = todayISO();
+    // Parse date — supports DD/MM, DD/MM/YY, DD/MM/YYYY, DD-MM, "DD JAN", "04 JUN"
+    let iso = todayISO();
+    const ddmm = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+    const ddmon = line.match(/\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i);
+    if (ddmm) {
+      const day = ddmm[1].padStart(2, "0");
+      const mon = ddmm[2].padStart(2, "0");
+      const yr = ddmm[3] ? (ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3]) : String(currYear);
+      iso = `${yr}-${mon}-${day}`;
+    } else if (ddmon) {
+      const day = ddmon[1].padStart(2, "0");
+      const mon = String(MONTH_PT[ddmon[2].toLowerCase()]).padStart(2, "0");
+      iso = `${currYear}-${mon}-${day}`;
     }
 
+    // Clean description
     let desc = line
-      .replace(amtMatch[0], "")
+      .replace(chosenAmt.match, "")
       .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/, "")
-      .replace(/\s+/g, " ").trim();
+      .replace(/\b\d{1,2}\s+(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i, "")
+      .replace(/\bR\$\s*/gi, "")
+      .replace(/\s{2,}/g, " ").trim();
     if (!desc || desc.length < 2) desc = "Gasto importado";
     if (desc.length > 80) desc = desc.slice(0, 80);
 
@@ -274,7 +289,7 @@ function parseStatement(text) {
       data: iso,
       descricao: desc,
       categoria: detectCategory(desc),
-      valor,
+      valor: chosenAmt.valor,
       tipo: detectTipo(line),
     }));
   }

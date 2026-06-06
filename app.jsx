@@ -190,7 +190,7 @@ function App() {
   const [quick, setQuick] = useState("");
 
   // filtros globais (período, categoria, busca)
-  const [period, setPeriod] = useState("30");
+  const [period, setPeriod] = useState("mes-atual");
   const [cat, setCat]       = useState("all");
   const [search, setSearch] = useState("");
 
@@ -216,7 +216,17 @@ function App() {
   // ---------- Filtragem global (sem tipo/cartão — esses ficam em GastosView) ----------
   const filtered = useMemo(() => {
     let arr = [...expenses];
-    if (period !== "all") {
+    if (period === "mes-atual") {
+      const now = new Date();
+      const first = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      arr = arr.filter(e => e.data >= first);
+    } else if (period === "mes-anterior") {
+      const now = new Date();
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const firstPrev = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}-01`;
+      const firstCurr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      arr = arr.filter(e => e.data >= firstPrev && e.data < firstCurr);
+    } else if (period !== "all") {
       const min = addDays(todayISO(), -parseInt(period));
       arr = arr.filter(e => e.data >= min);
     }
