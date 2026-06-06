@@ -589,6 +589,7 @@ function BankImportModal({ onImport, onClose }) {
    HOME / INÍCIO
    ============================================================ */
 function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName, faturaOverrides, onGoToFaturas, fixas, caloteiros, onGoToConfig }) {
+  const [showNotifs, setShowNotifs] = useS(false);
   const now = new Date();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
@@ -604,14 +605,8 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
   const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
   const recent = [...monthExp].sort((a, b) => b.data.localeCompare(a.data));
   const monthName = now.toLocaleString("pt-BR", { month: "long" });
+  const todayDay = now.getDate();
 
-  // Projeção mensal: com base nos dias decorridos
-  const dayOfMonth = now.getDate();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const projection = dayOfMonth > 0 ? Math.round((monthGastos / dayOfMonth) * daysInMonth * 100) / 100 : 0;
-  const projectionOver = budget > 0 && projection > budget;
-
-  // Faturas abertas/fechadas com saldo
   const pendingFaturas = useM(() => {
     if (!cards || cards.length === 0) return [];
     return computeFaturas(cards, expenses, faturaOverrides || {})
@@ -622,22 +617,59 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
   const totalCaloteiros = pendingCaloteiros.reduce((s, c) => s + c.valor, 0);
   const totalFixas = (fixas || []).reduce((s, f) => s + f.valor, 0);
 
-  const dueAlerts = (cards || []).map(c => {
-    const today = new Date();
-    const dueDate = new Date(today.getFullYear(), today.getMonth(), c.diaVencimento);
-    if (dueDate < today) dueDate.setMonth(dueDate.getMonth() + 1);
-    const diffDays = Math.ceil((dueDate - today) / 86400000);
-    return { ...c, diffDays };
-  }).filter(c => c.diffDays >= 0 && c.diffDays <= 7);
+  const notifications = useM(() => {
+    const list = [];
+    // Faturas com vencimento próximo (não pagas)
+    (cards || []).forEach(c => {
+      const key = `${c.id}:${monthStr}`;
+      if (faturaOverrides?.[key]?.status === "paga") return;
+      const fatura = computeFaturas([c], expenses, faturaOverrides || {}).find(f => f.total > 0);
+      if (!fatura) return;
+      const dueDate = new Date(now.getFullYear(), now.getMonth(), c.diaVencimento);
+      if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
+      const diff = Math.ceil((dueDate - now) / 86400000);
+      if (diff >= 0 && diff <= 7) {
+        list.push({ id: `fat-${c.id}`, urgente: diff <= 1,
+          texto: `Fatura do ${c.nome}`,
+          detalhe: diff === 0 ? "vence hoje!" : `vence dia ${c.diaVencimento} — em ${diff} dia${diff === 1 ? "" : "s"}` });
+      }
+    });
+    // Devedores com alerta no dia
+    (caloteiros || []).filter(c => !c.pago && c.alertaDia).forEach(c => {
+      const diff = c.alertaDia - todayDay;
+      if (diff >= -1 && diff <= 3) {
+        const detalhe = diff === 0 ? "cobrar hoje!" : diff === 1 ? "cobrar amanhã" : diff === -1 ? "era ontem" : `cobrar em ${diff} dias`;
+        list.push({ id: `cal-${c.id}`, urgente: diff <= 0,
+          texto: `Cobrar ${c.nome}`,
+          detalhe: `${detalhe} · ${fmtBRL(c.valor)}` });
+      }
+    });
+    return list;
+  }, [cards, expenses, faturaOverrides, caloteiros, monthStr, todayDay]);
 
   return (
     <>
-      {dueAlerts.map(c => (
-        <div key={c.id} className="due-alert">
-          <Ic.bell size={16} />
-          Fatura do <strong>{c.nome}</strong> vence dia {c.diaVencimento} — {c.diffDays === 0 ? "hoje!" : `em ${c.diffDays} dia${c.diffDays === 1 ? "" : "s"}`}
-        </div>
-      ))}
+      {showNotifs && notifications.length > 0 && ReactDOM.createPortal(
+        <>
+          <div className="notif-overlay" onClick={() => setShowNotifs(false)} />
+          <div className="notif-panel glass">
+            <div className="notif-panel-head">
+              <span>Alertas</span>
+              <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setShowNotifs(false)}><Ic.close size={14} /></button>
+            </div>
+            {notifications.map(n => (
+              <div key={n.id} className={"notif-item" + (n.urgente ? " urgente" : "")}>
+                <Ic.bell size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div className="notif-item-text">{n.texto}</div>
+                  <div className="notif-item-sub">{n.detalhe}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>,
+        document.body
+      )}
 
       <div className="home-hero glass">
         <div className="home-hero-top">
@@ -645,9 +677,17 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
             <div className="home-greeting">{greeting}, <strong>{userName || "Luiz Ricardo"}</strong>!</div>
             <div className="home-date">{fmtDateLong(todayISO())}</div>
           </div>
-          <button className="btn btn-primary btn-desktop-only" onClick={onAdd}>
-            <Ic.plus size={18} />Novo lançamento
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {notifications.length > 0 && (
+              <button className="notif-bell-btn" onClick={() => setShowNotifs(s => !s)} title="Alertas">
+                <Ic.bell size={17} />
+                <span className="notif-badge">{notifications.length}</span>
+              </button>
+            )}
+            <button className="btn btn-primary btn-desktop-only" onClick={onAdd}>
+              <Ic.plus size={18} />Novo lançamento
+            </button>
+          </div>
         </div>
 
         {/* Hero balance */}
