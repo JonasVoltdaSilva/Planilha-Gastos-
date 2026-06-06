@@ -654,18 +654,25 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
           <div className="notif-overlay" onClick={() => setShowNotifs(false)} />
           <div className="notif-panel glass">
             <div className="notif-panel-head">
-              <span>Alertas</span>
-              <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setShowNotifs(false)}><Ic.close size={14} /></button>
-            </div>
-            {notifications.map(n => (
-              <div key={n.id} className={"notif-item" + (n.urgente ? " urgente" : "")}>
-                <Ic.bell size={14} style={{ flexShrink: 0, marginTop: 1 }} />
-                <div>
-                  <div className="notif-item-text">{n.texto}</div>
-                  <div className="notif-item-sub">{n.detalhe}</div>
-                </div>
+              <div className="notif-panel-title-row">
+                <div className="notif-panel-icon"><Ic.bell size={15} /></div>
+                <span>Alertas</span>
               </div>
-            ))}
+              <button className="icon-btn" style={{ width: 32, height: 32 }} onClick={() => setShowNotifs(false)}>
+                <Ic.close size={14} />
+              </button>
+            </div>
+            <div className="notif-list">
+              {notifications.map(n => (
+                <div key={n.id} className={"notif-item" + (n.urgente ? " urgente" : "")}>
+                  <div className={"notif-item-dot" + (n.urgente ? " urgente" : "")} />
+                  <div className="notif-item-body">
+                    <div className="notif-item-text">{n.texto}</div>
+                    <div className="notif-item-sub">{n.detalhe}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </>,
         document.body
