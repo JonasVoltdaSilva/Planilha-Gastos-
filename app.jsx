@@ -137,6 +137,58 @@ function AcidDecor({ theme }) {
   );
 }
 
+/* Raios de luz + faíscas metálicas — tema Chrome (cyberpunk/mangá) */
+function ChromeDecor({ theme }) {
+  if (theme !== "chrome") return null;
+
+  const streaks = [
+    { id: 0,  top: "8%",  left: "12%", w: 180, angle: 18,  dur: "6.2s", delay: "0s"    },
+    { id: 1,  top: "23%", left: "55%", w: 240, angle: -12, dur: "8.5s", delay: "1.4s"  },
+    { id: 2,  top: "41%", left: "3%",  w: 160, angle: 22,  dur: "7.0s", delay: "3.1s"  },
+    { id: 3,  top: "62%", left: "70%", w: 200, angle: -8,  dur: "9.1s", delay: "0.7s"  },
+    { id: 4,  top: "80%", left: "30%", w: 140, angle: 15,  dur: "5.8s", delay: "4.5s"  },
+    { id: 5,  top: "15%", left: "82%", w: 190, angle: -20, dur: "7.7s", delay: "2.2s"  },
+  ];
+
+  const sparks = [
+    { id: 0,  top: "12%", left: "28%", dur: "3.2s", delay: "0.5s",  s: 4  },
+    { id: 1,  top: "33%", left: "67%", dur: "4.1s", delay: "1.8s",  s: 3  },
+    { id: 2,  top: "55%", left: "14%", dur: "2.8s", delay: "0.2s",  s: 5  },
+    { id: 3,  top: "71%", left: "88%", dur: "5.0s", delay: "3.3s",  s: 3  },
+    { id: 4,  top: "47%", left: "50%", dur: "3.6s", delay: "2.0s",  s: 4  },
+    { id: 5,  top: "88%", left: "42%", dur: "4.4s", delay: "1.1s",  s: 3  },
+    { id: 6,  top: "22%", left: "9%",  dur: "2.5s", delay: "4.0s",  s: 5  },
+    { id: 7,  top: "64%", left: "76%", dur: "3.9s", delay: "0.9s",  s: 3  },
+    { id: 8,  top: "18%", left: "95%", dur: "4.7s", delay: "2.7s",  s: 4  },
+    { id: 9,  top: "79%", left: "6%",  dur: "3.3s", delay: "1.5s",  s: 3  },
+  ];
+
+  return (
+    <>
+      {streaks.map(s => (
+        <div key={s.id} className="chrome-streak" style={{
+          top: s.top,
+          left: s.left,
+          width: s.w,
+          transform: `rotate(${s.angle}deg)`,
+          animationDuration: s.dur,
+          animationDelay: s.delay,
+        }} />
+      ))}
+      {sparks.map(s => (
+        <div key={s.id} className="chrome-spark" style={{
+          top: s.top,
+          left: s.left,
+          width: s.s,
+          height: s.s,
+          animationDuration: s.dur,
+          animationDelay: s.delay,
+        }} />
+      ))}
+    </>
+  );
+}
+
 function App() {
   const [page, setPage] = useState("home");
   const [gastosInitialTab, setGastosInitialTab] = useState("lancamentos");
@@ -587,8 +639,9 @@ function App() {
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
       )}
-      <PetalDecor theme={profile?.theme} />
-      <AcidDecor  theme={profile?.theme} />
+      <PetalDecor  theme={profile?.theme} />
+      <AcidDecor   theme={profile?.theme} />
+      <ChromeDecor theme={profile?.theme} />
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );

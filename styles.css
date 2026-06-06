@@ -332,6 +332,174 @@ body.theme-acid [class*="progress"] {
   100% { top: 100vh; opacity: 0; }
 }
 
+/* ============================================================
+   CHROME — cyberpunk metálico · preto puro · prata reflexiva
+   Inspirado em: aespa Whiplash · chrome boombox · manga P&B
+   ============================================================ */
+body.theme-chrome {
+  --accent-blue:      #D0DCF0;
+  --accent-mint:      #9AAEC8;
+  --accent-blue-soft: rgba(208, 220, 240, 0.13);
+  --accent-mint-soft: rgba(154, 174, 200, 0.11);
+  --blob1-color:      rgba(185, 200, 225, 0.42);
+  --blob2-color:      rgba(145, 165, 195, 0.36);
+  --blob3-color:      rgba(210, 220, 235, 0.28);
+  --btn-primary-fg:   #040408;
+  --text-hi:          rgba(238, 242, 252, 0.97);
+  --text-mid:         rgba(175, 188, 215, 0.68);
+  --text-lo:          rgba(120, 138, 165, 0.44);
+}
+
+body.theme-chrome .backdrop {
+  background: #040408;
+}
+/* Grade fina de fio — inspirada na escultura chrome */
+body.theme-chrome .backdrop::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(180, 200, 230, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 200, 230, 0.028) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+}
+/* Vinheta suave nas bordas */
+body.theme-chrome .backdrop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 85% 85% at center,
+    transparent 40%, rgba(0,0,0,0.50) 72%, rgba(0,0,0,0.92) 100%);
+  pointer-events: none;
+}
+
+/* Blobs frios, de baixa saturação */
+body.theme-chrome .blob { filter: blur(80px) saturate(50%) brightness(1.15) !important; }
+body.theme-chrome .blob.b1 { opacity: 0.48 !important; }
+body.theme-chrome .blob.b2 { opacity: 0.38 !important; }
+body.theme-chrome .blob.b3 { opacity: 0.25 !important; }
+body.theme-chrome .blob.b4 {
+  background: radial-gradient(circle, rgba(160, 175, 210, 0.35), transparent 70%) !important;
+  opacity: 0.20 !important;
+}
+
+/* Cards com borda prata e shimmer metálico */
+body.theme-chrome .glass {
+  background: rgba(8, 10, 18, 0.78) !important;
+  border-color: rgba(200, 215, 240, 0.18) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28) !important;
+  overflow: hidden;
+}
+/* Reflexo cromado varrendo o card */
+body.theme-chrome .glass::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    108deg,
+    transparent 25%,
+    rgba(255,255,255,0.03) 38%,
+    rgba(255,255,255,0.09) 45%,
+    rgba(255,255,255,0.13) 50%,
+    rgba(255,255,255,0.09) 55%,
+    rgba(255,255,255,0.03) 62%,
+    transparent 75%
+  );
+  background-size: 250% 100%;
+  animation: chromeShimmer 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes chromeShimmer {
+  0%   { background-position: 150% center; }
+  100% { background-position: -50% center; }
+}
+
+/* FAB — gradiente prata com pulse */
+body.theme-chrome .bottom-nav-fab {
+  background: linear-gradient(135deg, #E8EEF8 0%, #9AAEC8 45%, #D8E2F2 100%) !important;
+  color: #040408 !important;
+  box-shadow: 0 0 20px rgba(190, 210, 240, 0.50), 0 6px 20px rgba(0,0,0,0.65) !important;
+  animation: chromeFabPulse 3s ease-in-out infinite !important;
+}
+@keyframes chromeFabPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(190, 210, 240, 0.45), 0 6px 20px rgba(0,0,0,0.65); }
+  50%       { box-shadow: 0 0 42px rgba(200, 220, 255, 0.80), 0 0 65px rgba(170, 195, 235, 0.38), 0 6px 20px rgba(0,0,0,0.65); }
+}
+
+/* Nav ativo em prata */
+body.theme-chrome .nav-item.active,
+body.theme-chrome .bottom-nav-item.active { color: #D8E8FF !important; }
+
+/* Saldo com gradiente chrome + glow */
+body.theme-chrome .home-balance-value,
+body.theme-chrome .hero-balance {
+  background: linear-gradient(135deg, #FFFFFF 0%, #C8D8F0 40%, #F0F4FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none !important;
+  filter: drop-shadow(0 0 18px rgba(180, 210, 255, 0.65));
+}
+
+/* === Chrome light streaks (reflexos de superfície metálica) === */
+.chrome-streak {
+  position: fixed;
+  left: -45%;
+  height: 1px;
+  width: 40%;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(200, 220, 255, 0.30) 20%,
+    rgba(230, 240, 255, 0.75) 50%,
+    rgba(200, 220, 255, 0.30) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 6px rgba(200, 220, 255, 0.50), 0 0 18px rgba(180, 205, 245, 0.25);
+  opacity: 0;
+  animation: chromeStreak linear infinite;
+}
+.chrome-streak.thick {
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(220, 235, 255, 0.20) 15%,
+    rgba(245, 250, 255, 0.65) 50%,
+    rgba(220, 235, 255, 0.20) 85%,
+    transparent 100%
+  );
+}
+@keyframes chromeStreak {
+  0%   { left: -45%; opacity: 0; }
+  5%   { opacity: 1; }
+  92%  { opacity: 0.85; }
+  100% { left: 108%; opacity: 0; }
+}
+
+/* Sparkle chrome — estrelinhas prata */
+.chrome-spark {
+  position: fixed;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+  background: #E8F0FF;
+  box-shadow: 0 0 4px #D0E4FF, 0 0 10px rgba(200,220,255,0.70);
+  opacity: 0;
+  animation: chromeSpark ease-out infinite;
+}
+@keyframes chromeSpark {
+  0%   { opacity: 0; transform: scale(0.5); }
+  15%  { opacity: 1; transform: scale(1.2); }
+  60%  { opacity: 0.6; transform: scale(0.9); }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
