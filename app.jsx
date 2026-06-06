@@ -30,21 +30,23 @@ const LS_FIXAS       = "planilha_gastos_fixas_v1";
 const LS_CALOTEIROS  = "planilha_gastos_caloteiros_v1";
 const LS_EMPRESTIMOS = "planilha_gastos_emprestimos_v1";
 
-/* Flores botânicas + grain de filme — tema Ariana */
-function ArianaDecor({ theme }) {
-  if (theme !== "ariana") return null;
+/* Flores P&B + grain de filme — tema Petal (Ariana Grande, álbum 31/07) */
+function PetalDecor({ theme }) {
+  if (theme !== "petal") return null;
 
   const petals = [
-    { id: 0, left: "6%",  dur: "14s", delay: "0s",   size: 20, type: 0, drift: "-24px", spin: "260deg" },
-    { id: 1, left: "18%", dur: "19s", delay: "3.5s",  size: 26, type: 1, drift: "32px",  spin: "310deg" },
-    { id: 2, left: "33%", dur: "16s", delay: "7s",    size: 18, type: 0, drift: "-18px", spin: "200deg" },
-    { id: 3, left: "50%", dur: "22s", delay: "1.5s",  size: 22, type: 1, drift: "28px",  spin: "290deg" },
-    { id: 4, left: "65%", dur: "15s", delay: "5.5s",  size: 16, type: 0, drift: "-22px", spin: "340deg" },
-    { id: 5, left: "78%", dur: "20s", delay: "9.5s",  size: 28, type: 1, drift: "20px",  spin: "220deg" },
-    { id: 6, left: "90%", dur: "13s", delay: "2.5s",  size: 19, type: 0, drift: "-28px", spin: "300deg" },
-    { id: 7, left: "42%", dur: "18s", delay: "12s",   size: 17, type: 1, drift: "24px",  spin: "180deg" },
-    { id: 8, left: "25%", dur: "21s", delay: "15s",   size: 23, type: 0, drift: "-16px", spin: "240deg" },
-    { id: 9, left: "72%", dur: "17s", delay: "6s",    size: 21, type: 1, drift: "30px",  spin: "320deg" },
+    { id: 0,  left: "5%",  dur: "15s", delay: "0s",    size: 22, type: 0, drift: "-26px", spin: "260deg" },
+    { id: 1,  left: "17%", dur: "20s", delay: "3.5s",  size: 28, type: 1, drift: "34px",  spin: "310deg" },
+    { id: 2,  left: "32%", dur: "17s", delay: "7s",    size: 19, type: 0, drift: "-20px", spin: "200deg" },
+    { id: 3,  left: "49%", dur: "23s", delay: "1.5s",  size: 24, type: 1, drift: "28px",  spin: "290deg" },
+    { id: 4,  left: "64%", dur: "16s", delay: "5.5s",  size: 17, type: 0, drift: "-24px", spin: "340deg" },
+    { id: 5,  left: "77%", dur: "21s", delay: "9.5s",  size: 30, type: 1, drift: "20px",  spin: "220deg" },
+    { id: 6,  left: "89%", dur: "14s", delay: "2.5s",  size: 20, type: 0, drift: "-30px", spin: "300deg" },
+    { id: 7,  left: "41%", dur: "19s", delay: "12s",   size: 18, type: 2, drift: "22px",  spin: "180deg" },
+    { id: 8,  left: "24%", dur: "22s", delay: "15s",   size: 25, type: 0, drift: "-18px", spin: "240deg" },
+    { id: 9,  left: "71%", dur: "18s", delay: "6.5s",  size: 22, type: 2, drift: "32px",  spin: "320deg" },
+    { id: 10, left: "56%", dur: "13s", delay: "18s",   size: 16, type: 1, drift: "-22px", spin: "270deg" },
+    { id: 11, left: "12%", dur: "24s", delay: "10s",   size: 26, type: 2, drift: "18px",  spin: "190deg" },
   ];
 
   return (
@@ -60,27 +62,38 @@ function ArianaDecor({ theme }) {
           animation: `petalFall ${p.dur} ${p.delay} linear infinite`,
         }}>
           {p.type === 0 ? (
-            /* Flor botânica — pétalas de musgo escuro (como as ilustrações do lyric video) */
+            /* Margarida branca — 12 pétalas finas (como nas capas do álbum Petal) */
             <svg viewBox="0 0 50 50" width={p.size} height={p.size} fill="none">
-              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70"/>
-              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(72 25 25)"/>
-              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(144 25 25)"/>
-              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(216 25 25)"/>
-              <ellipse cx="25" cy="9"  rx="5" ry="13" fill="#3a5840" opacity="0.70" transform="rotate(288 25 25)"/>
-              <circle  cx="25" cy="25" r="5.5"         fill="#4a7050" opacity="0.80"/>
-              <line x1="25" y1="38" x2="25" y2="50" stroke="#3a5840" strokeWidth="1.2" opacity="0.50"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(30 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(60 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(90 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(120 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(150 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(180 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(210 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(240 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(270 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(300 25 25)"/>
+              <ellipse cx="25" cy="7"  rx="2.5" ry="11" fill="white" opacity="0.72" transform="rotate(330 25 25)"/>
+              <circle  cx="25" cy="25" r="5.5"           fill="#e8e0d0" opacity="0.85"/>
+              <circle  cx="25" cy="25" r="3"             fill="#f8f2e8" opacity="0.70"/>
+            </svg>
+          ) : p.type === 1 ? (
+            /* Pétala solta caindo — oval simples */
+            <svg viewBox="0 0 30 50" width={p.size * 0.6} height={p.size} fill="none">
+              <ellipse cx="15" cy="25" rx="10" ry="20" fill="white" opacity="0.55"/>
+              <ellipse cx="15" cy="25" rx="6"  ry="16" fill="white" opacity="0.30"/>
             </svg>
           ) : (
-            /* Flor âmbar — tom dourado envelhecido */
+            /* Florzinha silvestre — 5 pétalas redondas */
             <svg viewBox="0 0 50 50" width={p.size} height={p.size} fill="none">
-              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60"/>
-              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(60 25 25)"/>
-              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(120 25 25)"/>
-              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(180 25 25)"/>
-              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(240 25 25)"/>
-              <ellipse cx="25" cy="8"  rx="4.5" ry="12" fill="#b88018" opacity="0.60" transform="rotate(300 25 25)"/>
-              <circle  cx="25" cy="25" r="5"            fill="#c8961a" opacity="0.75"/>
-              <circle  cx="25" cy="25" r="2.5"          fill="#e8b840" opacity="0.60"/>
+              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65"/>
+              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(72 25 25)"/>
+              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(144 25 25)"/>
+              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(216 25 25)"/>
+              <circle cx="25" cy="9"  r="6"  fill="white" opacity="0.65" transform="rotate(288 25 25)"/>
+              <circle cx="25" cy="25" r="5"  fill="#e8e0d0" opacity="0.80"/>
             </svg>
           )}
         </div>
@@ -97,7 +110,11 @@ function App() {
   const [profile, setProfile] = useState(() => {
     try {
       const s = localStorage.getItem(LS_PROFILE);
-      if (s) return JSON.parse(s);
+      if (s) {
+        const p = JSON.parse(s);
+        if (p.theme === "ariana") p.theme = "petal"; // migra theme ID renomeado
+        return p;
+      }
     } catch (e) {}
     return null;
   });
@@ -535,7 +552,7 @@ function App() {
         <ExpenseModal initKind={modal?.kind || "gasto"} initial={modal && modal.id ? modal : null}
           onSave={saveTransaction} onClose={() => setModal(null)} allCats={allCats} cards={cards} />
       )}
-      <ArianaDecor theme={profile?.theme} />
+      <PetalDecor theme={profile?.theme} />
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );
