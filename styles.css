@@ -747,6 +747,202 @@ body.theme-sweet .onb-card {
   100% { opacity: 0;    transform: scale(0.80); }
 }
 
+/* ============================================================
+   FANCY THAT — PinkPantheress · Y2K British editorial fashion
+   Cream base · Baby blue · Sage green · Chrome silver
+   ============================================================ */
+body.theme-fancy {
+  --accent-blue:      #8AAAC4;
+  --accent-mint:      #A8C088;
+  --accent-blue-soft: rgba(138, 170, 196, 0.13);
+  --accent-mint-soft: rgba(168, 192, 136, 0.12);
+  --blob1-color:      rgba(168, 192, 136, 0.38);
+  --blob2-color:      rgba(138, 170, 196, 0.34);
+  --blob3-color:      rgba(200, 188, 218, 0.28);
+  --btn-primary-fg:   #1c1428;
+  --text-hi:          rgba(30, 22, 42, 0.94);
+  --text-mid:         rgba(72, 62, 88, 0.68);
+  --text-lo:          rgba(128, 118, 144, 0.46);
+}
+
+/* Cream editorial backdrop */
+body.theme-fancy .backdrop {
+  background: linear-gradient(148deg, #F7F4EF 0%, #FDFBF8 35%, #F4F1EC 65%, #F9F6F1 100%);
+}
+/* Very subtle plaid/check grid — nod to tartan aesthetic */
+body.theme-fancy .backdrop::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(138,170,196,0.05) 40px, rgba(138,170,196,0.05) 41px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(168,192,136,0.04) 40px, rgba(168,192,136,0.04) 41px);
+  pointer-events: none;
+}
+/* Soft lavender vignette */
+body.theme-fancy .backdrop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 88% 82% at center,
+    transparent 52%, rgba(188,180,205,0.10) 78%, rgba(168,158,188,0.20) 100%);
+  pointer-events: none;
+}
+
+/* Blobs — pastel & diffuse */
+body.theme-fancy .blob {
+  filter: blur(88px) saturate(55%) brightness(1.06) !important;
+}
+body.theme-fancy .blob.b1 { opacity: 0.52 !important; }
+body.theme-fancy .blob.b2 { opacity: 0.42 !important; }
+body.theme-fancy .blob.b3 { opacity: 0.30 !important; }
+body.theme-fancy .blob.b4 {
+  background: radial-gradient(circle, rgba(200,188,218,0.35), transparent 68%) !important;
+  opacity: 0.28 !important;
+}
+
+/* Glass cards — pearl cream */
+body.theme-fancy .glass {
+  background: rgba(252, 250, 247, 0.90) !important;
+  border-color: rgba(196, 188, 212, 0.30) !important;
+  box-shadow:
+    0 4px 28px rgba(100, 88, 128, 0.10),
+    0 1px 6px rgba(100, 88, 128, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(178, 168, 198, 0.12) !important;
+  backdrop-filter: blur(22px) saturate(118%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+}
+
+/* Bottom nav */
+body.theme-fancy .bottom-nav {
+  background: rgba(248, 246, 242, 0.95) !important;
+  border-top: 1px solid rgba(196, 188, 212, 0.28) !important;
+  box-shadow: 0 -3px 18px rgba(100, 88, 128, 0.10) !important;
+}
+body.theme-fancy .bottom-nav-item       { color: rgba(128, 118, 144, 0.50) !important; }
+body.theme-fancy .bottom-nav-item.active { color: #5a7e9a !important; }
+
+/* FAB — chrome pearl sphere */
+body.theme-fancy .bottom-nav-fab {
+  background: linear-gradient(148deg, #E2E8F4 0%, #C4D0E0 45%, #B0BED0 100%) !important;
+  box-shadow:
+    0 4px 18px rgba(120, 138, 168, 0.25),
+    0 0 0 2px rgba(255, 255, 255, 0.72),
+    inset 0 2px 6px rgba(255, 255, 255, 0.62),
+    inset 0 -1px 4px rgba(88, 108, 138, 0.16) !important;
+  animation: fancyFabPulse 4.2s ease-in-out infinite !important;
+}
+body.theme-fancy .bottom-nav-fab svg { color: #1c1428 !important; }
+@keyframes fancyFabPulse {
+  0%, 100% {
+    box-shadow: 0 4px 18px rgba(120,138,168,0.25), 0 0 0 2px rgba(255,255,255,0.72),
+                inset 0 2px 6px rgba(255,255,255,0.62), inset 0 -1px 4px rgba(88,108,138,0.16);
+  }
+  50% {
+    box-shadow: 0 6px 26px rgba(120,138,168,0.35), 0 0 0 4px rgba(255,255,255,0.55),
+                inset 0 2px 8px rgba(255,255,255,0.72), inset 0 -1px 4px rgba(88,108,138,0.16);
+  }
+}
+
+/* Nav sidebar */
+body.theme-fancy .nav-item       { color: rgba(72, 62, 88, 0.55) !important; }
+body.theme-fancy .nav-item.active {
+  background: rgba(138, 170, 196, 0.12) !important;
+  color: #5a7e9a !important;
+}
+body.theme-fancy .nav-label { color: rgba(128, 118, 144, 0.50) !important; }
+
+/* Brand */
+body.theme-fancy .brand-mark {
+  background: linear-gradient(135deg, #C4D0E0, #C4BACC) !important;
+}
+body.theme-fancy .brand-mark svg { color: #1c1428 !important; }
+body.theme-fancy .avatar {
+  background: linear-gradient(135deg, #C4D0E0, #C4BACC) !important;
+  color: #1c1428 !important;
+}
+
+/* Balance — Cormorant Garamond italic, magazine headline */
+body.theme-fancy .home-balance-value,
+body.theme-fancy .hero-balance {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-weight: 600 !important;
+  font-style: italic !important;
+  color: #1e1630 !important;
+  -webkit-text-fill-color: #1e1630 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Headings */
+body.theme-fancy h1, body.theme-fancy h2, body.theme-fancy h3,
+body.theme-fancy .page-title, body.theme-fancy .brand-name,
+body.theme-fancy .onb-app-name { color: var(--text-hi) !important; }
+
+/* Progress bars — blue → sage gradient */
+body.theme-fancy .budget-bar-fill,
+body.theme-fancy [class*="progress"],
+body.theme-fancy [class*="bar-fill"] {
+  background: linear-gradient(90deg, #8AAAC4, #A8C088) !important;
+  box-shadow: 0 0 5px rgba(138,170,196,0.20) !important;
+}
+
+/* Form inputs (light) */
+body.theme-fancy .form-input,
+body.theme-fancy .input,
+body.theme-fancy select.select {
+  background: rgba(252, 250, 247, 0.88) !important;
+  border-color: rgba(196, 188, 212, 0.38) !important;
+  color: rgba(30, 22, 42, 0.94) !important;
+}
+body.theme-fancy .form-input::placeholder,
+body.theme-fancy .input::placeholder { color: rgba(128, 118, 144, 0.52) !important; }
+body.theme-fancy .form-input:focus,
+body.theme-fancy .input:focus {
+  border-color: rgba(138, 170, 196, 0.72) !important;
+  box-shadow: 0 0 0 3px rgba(138, 170, 196, 0.14) !important;
+}
+body.theme-fancy select.select option { background: #F7F4EF; color: #1e1630; }
+
+/* Btn primary */
+body.theme-fancy .btn-primary {
+  background: linear-gradient(135deg, #C4D0E0 0%, #B8C8A4 100%) !important;
+  box-shadow: 0 3px 14px rgba(138,170,196,0.35) !important;
+}
+
+/* Expense rows */
+body.theme-fancy .expense-row { background: rgba(0,0,0,0.020) !important; }
+body.theme-fancy .expense-row:hover { background: rgba(0,0,0,0.045) !important; border-color: rgba(196,188,212,0.28) !important; }
+
+/* Stat cards */
+body.theme-fancy .home-stat-card { background: rgba(0,0,0,0.030) !important; border-color: rgba(196,188,212,0.22) !important; }
+
+/* Scrollbar */
+body.theme-fancy ::-webkit-scrollbar-thumb { background: rgba(196,188,212,0.40) !important; }
+body.theme-fancy ::-webkit-scrollbar-track { background: rgba(248,246,242,0.60) !important; }
+
+/* Onboarding card */
+body.theme-fancy .onb-card {
+  background: rgba(253, 251, 248, 0.92) !important;
+  border-color: rgba(196, 188, 212, 0.28) !important;
+}
+
+/* ---- FancyDecor: floating fashion charms ---- */
+.fancy-charm {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  animation: fancyFloat linear infinite;
+  will-change: transform, opacity;
+}
+@keyframes fancyFloat {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg);                                           opacity: 0; }
+  8%   { opacity: var(--fc-op, 0.22); }
+  46%  { transform: translateY(-46vh) translateX(var(--fc-dx1, 14px)) rotate(var(--fc-r1, 22deg));  }
+  88%  { opacity: var(--fc-op, 0.22); }
+  100% { transform: translateY(-110vh) translateX(var(--fc-dx2, -10px)) rotate(var(--fc-r2, 48deg)); opacity: 0; }
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {

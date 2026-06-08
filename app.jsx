@@ -352,6 +352,102 @@ function SweetDecor({ theme }) {
   );
 }
 
+/* Charm SVG helper — estrela cromada, mini CD, coração, burst Y2K, gema */
+function FancyCharmSVG({ type, sz }) {
+  if (type === 0) {
+    return (
+      <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none">
+        <path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z" fill="#B2C4D8" />
+        <path d="M12 2.8 L13.1 11.0 L21.2 12 L13.1 13.0 L12 21.2 L10.9 13.0 L2.8 12 L10.9 11.0 Z" fill="rgba(228,236,248,0.68)" />
+        <circle cx="12" cy="12" r="1.3" fill="rgba(255,255,255,0.82)" />
+      </svg>
+    );
+  }
+  if (type === 1) {
+    return (
+      <svg width={sz} height={sz} viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="18" fill="#BCC8D8" opacity="0.90" />
+        <circle cx="20" cy="20" r="15" fill="#C8D4E2" opacity="0.82" />
+        <circle cx="20" cy="20" r="12" fill="#B4C0D0" opacity="0.78" />
+        <path d="M 5 19 A 14 14 0 0 1 19 5"   stroke="rgba(255,196,214,0.42)" strokeWidth="2.2" fill="none" />
+        <path d="M 19 5 A 14 14 0 0 1 35 19"  stroke="rgba(196,214,255,0.38)" strokeWidth="2.2" fill="none" />
+        <path d="M 35 20 A 14 14 0 0 1 20 35" stroke="rgba(196,255,214,0.35)" strokeWidth="2.2" fill="none" />
+        <path d="M 20 35 A 14 14 0 0 1 5 20"  stroke="rgba(255,230,196,0.35)" strokeWidth="2.2" fill="none" />
+        <circle cx="20" cy="20" r="4.5" fill="rgba(250,248,254,0.96)" />
+        <circle cx="20" cy="20" r="2.0" fill="rgba(195,188,215,0.60)" />
+        <path d="M 9 13 Q 16 7 24 11" stroke="rgba(255,255,255,0.68)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (type === 2) {
+    return (
+      <svg width={sz} height={sz} viewBox="0 0 28 26" fill="none">
+        <path d="M14 24 Q2 16 2 9 Q2 2 8 2 Q11 2 14 6.5 Q17 2 20 2 Q26 2 26 9 Q26 16 14 24Z" fill="#C2B2D0" opacity="0.78" />
+        <path d="M14 21 Q4.5 14.5 4.5 9.5 Q4.5 4.5 9 4.5 Q12 4.5 14 8.5 Q16 4.5 19 4.5 Q23.5 4.5 23.5 9.5 Q23.5 14.5 14 21Z" fill="rgba(210,200,225,0.48)" />
+        <path d="M 7.5 7 Q 11 4 14 7" stroke="rgba(255,252,255,0.55)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (type === 3) {
+    return (
+      <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none">
+        <path d="M12 0 L13.4 9.4 L21.5 6.0 L14.6 12.0 L21.5 18.0 L13.4 14.6 L12 24 L10.6 14.6 L2.5 18.0 L9.4 12.0 L2.5 6.0 L10.6 9.4 Z" fill="#A8BCCC" opacity="0.88" />
+        <path d="M12 3 L13.0 10.4 L19.5 8.0 L14.0 12 L19.5 16 L13.0 13.6 L12 21 L11.0 13.6 L4.5 16 L10.0 12 L4.5 8.0 L11.0 10.4 Z" fill="rgba(228,236,246,0.65)" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={sz} height={sz} viewBox="0 0 22 28" fill="none">
+      <path d="M11 2 L19 9 L11 26 L3 9 Z" fill="#B8C8D6" opacity="0.86" />
+      <path d="M3 9 L11 2 L19 9 Z" fill="rgba(230,238,248,0.78)" />
+      <path d="M7 6 L11 2.5 L15 6" stroke="rgba(255,255,255,0.62)" strokeWidth="0.9" fill="none" />
+      <path d="M3 9 L11 26 L19 9" fill="rgba(175,192,210,0.45)" />
+    </svg>
+  );
+}
+
+/* Floating fashion charms — tema Fancy That (PinkPantheress Y2K editorial) */
+function FancyDecor({ theme }) {
+  if (theme !== "fancy") return null;
+
+  const charms = [
+    { id: 0,  type: 0, left: "5%",  sz: 22, dur: "24s", delay: "0s",    op: 0.26, dx1: "16px",  dx2: "-12px", r1: "32deg",  r2: "68deg"  },
+    { id: 1,  type: 1, left: "16%", sz: 32, dur: "30s", delay: "5.5s",  op: 0.20, dx1: "-22px", dx2: "16px",  r1: "-18deg", r2: "-40deg" },
+    { id: 2,  type: 2, left: "29%", sz: 26, dur: "22s", delay: "9.5s",  op: 0.24, dx1: "13px",  dx2: "-18px", r1: "22deg",  r2: "50deg"  },
+    { id: 3,  type: 3, left: "43%", sz: 20, dur: "27s", delay: "2.5s",  op: 0.22, dx1: "-15px", dx2: "11px",  r1: "44deg",  r2: "90deg"  },
+    { id: 4,  type: 4, left: "57%", sz: 18, dur: "28s", delay: "12.5s", op: 0.24, dx1: "19px",  dx2: "-14px", r1: "28deg",  r2: "62deg"  },
+    { id: 5,  type: 0, left: "70%", sz: 28, dur: "21s", delay: "7.5s",  op: 0.26, dx1: "-16px", dx2: "20px",  r1: "-28deg", r2: "-58deg" },
+    { id: 6,  type: 1, left: "82%", sz: 36, dur: "33s", delay: "16.5s", op: 0.18, dx1: "9px",   dx2: "-16px", r1: "14deg",  r2: "32deg"  },
+    { id: 7,  type: 2, left: "92%", sz: 22, dur: "23s", delay: "4.0s",  op: 0.22, dx1: "-12px", dx2: "18px",  r1: "36deg",  r2: "78deg"  },
+    { id: 8,  type: 3, left: "11%", sz: 24, dur: "26s", delay: "14.0s", op: 0.20, dx1: "18px",  dx2: "-14px", r1: "-22deg", r2: "-52deg" },
+    { id: 9,  type: 4, left: "36%", sz: 16, dur: "19s", delay: "18.5s", op: 0.26, dx1: "15px",  dx2: "-11px", r1: "48deg",  r2: "96deg"  },
+    { id: 10, type: 0, left: "51%", sz: 20, dur: "25s", delay: "8.0s",  op: 0.22, dx1: "-13px", dx2: "17px",  r1: "20deg",  r2: "44deg"  },
+    { id: 11, type: 2, left: "65%", sz: 30, dur: "29s", delay: "11.5s", op: 0.20, dx1: "11px",  dx2: "-19px", r1: "33deg",  r2: "68deg"  },
+    { id: 12, type: 1, left: "78%", sz: 28, dur: "20s", delay: "3.5s",  op: 0.24, dx1: "-20px", dx2: "13px",  r1: "-14deg", r2: "-32deg" },
+    { id: 13, type: 3, left: "23%", sz: 18, dur: "24s", delay: "19.5s", op: 0.22, dx1: "13px",  dx2: "-9px",  r1: "52deg",  r2: "105deg" },
+  ];
+
+  return (
+    <>
+      {charms.map(c => (
+        <div key={c.id} className="fancy-charm" style={{
+          left: c.left,
+          bottom: `-${c.sz + 20}px`,
+          "--fc-op":  c.op,
+          "--fc-dx1": c.dx1,
+          "--fc-dx2": c.dx2,
+          "--fc-r1":  c.r1,
+          "--fc-r2":  c.r2,
+          animationDuration: c.dur,
+          animationDelay:    c.delay,
+        }}>
+          <FancyCharmSVG type={c.type} sz={c.sz} />
+        </div>
+      ))}
+    </>
+  );
+}
+
 /* Raios de luz + faíscas metálicas — tema Chrome (cyberpunk/mangá) */
 function ChromeDecor({ theme }) {
   if (theme !== "chrome") return null;
@@ -858,6 +954,7 @@ function App() {
       <AcidDecor   theme={profile?.theme} />
       <ChromeDecor theme={profile?.theme} />
       <SweetDecor  theme={profile?.theme} />
+      <FancyDecor  theme={profile?.theme} />
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );
