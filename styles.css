@@ -2539,7 +2539,7 @@ body.light-mode .home-quick-row:active { background: rgba(0,0,0,0.05); }
 
 /* scrollable body */
 .ts-body {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
   padding: 0 16px 24px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
