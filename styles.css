@@ -2467,7 +2467,7 @@ body.light-mode .home-quick-row:active { background: rgba(0,0,0,0.05); }
 /* sheet */
 .ts-sheet {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 1101;
-  max-height: 87vh;
+  height: 87svh; max-height: 87svh;
   border-radius: 22px 22px 0 0;
   background: var(--glass-bg-strong);
   border-top: 1px solid var(--glass-border-strong);
@@ -2540,6 +2540,8 @@ body.light-mode .home-quick-row:active { background: rgba(0,0,0,0.05); }
 /* scrollable body */
 .ts-body {
   flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 0 16px 24px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
