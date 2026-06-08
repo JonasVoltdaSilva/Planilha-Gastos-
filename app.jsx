@@ -104,40 +104,109 @@ function PetalDecor({ theme }) {
   );
 }
 
-/* Fatia de limão SVG — seção transversal com gomos, casca e brilho */
+/* Fatia de limão SVG — anatomia real: casca + pith + gomos + brilho */
 function LemonSVG({ sz }) {
   const cx = sz / 2, cy = sz / 2;
-  const R  = sz * 0.46;
-  const rp = sz * 0.30;
-  const rc = sz * 0.065;
   const toR = d => (d * Math.PI) / 180;
-  const wedge = (startDeg) => {
-    const x1 = cx + R * Math.cos(toR(startDeg));
-    const y1 = cy + R * Math.sin(toR(startDeg));
-    const x2 = cx + R * Math.cos(toR(startDeg + 45));
-    const y2 = cy + R * Math.sin(toR(startDeg + 45));
-    return `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 0 1 ${x2} ${y2} Z`;
+
+  // Camadas concêntricas (do maior para o menor)
+  const rOuter = sz * 0.48;  // borda exterior da casca
+  const rRind  = sz * 0.375; // casca → pith
+  const rPith  = sz * 0.305; // pith → polpa (carne)
+  const rFlesh = sz * 0.305; // raio externo dos gomos
+  const rCore  = sz * 0.062; // pip central
+
+  const N    = 8;      // 8 gomos (típico do limão)
+  const step = 360 / N;
+  const gap  = 2.2;    // graus de margem entre gomos
+
+  // Caminho de cada gomo: fatia de pizza com arco
+  const seg = (i) => {
+    const a1 = toR(i * step - 90 + gap);
+    const a2 = toR((i + 1) * step - 90 - gap);
+    const x1 = cx + rFlesh * Math.cos(a1), y1 = cy + rFlesh * Math.sin(a1);
+    const x2 = cx + rFlesh * Math.cos(a2), y2 = cy + rFlesh * Math.sin(a2);
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${rFlesh} ${rFlesh} 0 0 1 ${x2} ${y2} Z`;
   };
-  const divLine = i => {
-    const a = toR(i * 45);
-    return { x2: cx + R * Math.cos(a), y2: cy + R * Math.sin(a) };
+
+  // Linhas de membrana do centro ao pith
+  const memEnd = (i) => {
+    const a = toR(i * step - 90);
+    return { x: cx + rFlesh * Math.cos(a), y: cy + rFlesh * Math.sin(a) };
   };
+
+  // ID único por tamanho para gradientes
+  const gid = `lsv${sz}`;
+
   return (
     <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} fill="none">
-      <circle cx={cx} cy={cy} r={sz * 0.48} fill="rgba(160,220,0,0.68)" />
-      <circle cx={cx} cy={cy} r={sz * 0.44} fill="rgba(235,255,110,0.55)" />
-      <circle cx={cx} cy={cy} r={rp + sz * 0.05} fill="rgba(245,255,210,0.72)" />
-      {[0,1,2,3,4,5,6,7].map(i => (
-        <path key={i} d={wedge(i * 45)} fill={`rgba(215,255,70,${i % 2 === 0 ? 0.55 : 0.40})`} />
+      <defs>
+        {/* Gradiente da casca: brilhante no centro da iluminação, escuro nas bordas */}
+        <radialGradient id={`${gid}k`} cx="38%" cy="33%" r="62%">
+          <stop offset="0%"   stopColor="#D8F528" />
+          <stop offset="50%"  stopColor="#9AC800" />
+          <stop offset="100%" stopColor="#507800" />
+        </radialGradient>
+        {/* Gradiente dos gomos: amarelo-limão → verde-limão */}
+        <radialGradient id={`${gid}f`} cx="50%" cy="50%" r="52%">
+          <stop offset="0%"   stopColor="#F2FF68" />
+          <stop offset="100%" stopColor="#C8EC00" />
+        </radialGradient>
+      </defs>
+
+      {/* 1. Disco da casca (ring externo visível) */}
+      <circle cx={cx} cy={cy} r={rOuter} fill={`url(#${gid}k)`} />
+
+      {/* 2. Disco do pith — branco-creme, esconde centro da casca */}
+      <circle cx={cx} cy={cy} r={rRind} fill="rgba(246,255,230,0.95)" />
+
+      {/* 3. Disco de fundo da polpa */}
+      <circle cx={cx} cy={cy} r={rPith} fill={`url(#${gid}f)`} />
+
+      {/* 4. Gomos individuais — alternância de tonalidade */}
+      {Array.from({ length: N }, (_, i) => (
+        <path key={i} d={seg(i)}
+          fill={i % 2 === 0 ? "rgba(238,255,72,0.92)" : "rgba(208,242,18,0.85)"} />
       ))}
-      {[0,1,2,3,4,5,6,7].map(i => {
-        const l = divLine(i);
-        return <line key={i} x1={cx} y1={cy} x2={l.x2} y2={l.y2} stroke="rgba(245,255,200,0.50)" strokeWidth={Math.max(0.6, sz * 0.01)} />;
+
+      {/* 5. Linhas de membrana (separam os gomos) */}
+      {Array.from({ length: N }, (_, i) => {
+        const m = memEnd(i);
+        return (
+          <line key={i} x1={cx} y1={cy} x2={m.x} y2={m.y}
+            stroke="rgba(252,255,225,0.78)"
+            strokeWidth={Math.max(0.5, sz * 0.016)} />
+        );
       })}
-      <circle cx={cx} cy={cy} r={rp}  fill="rgba(248,255,215,0.60)" />
-      <circle cx={cx} cy={cy} r={rc}  fill="rgba(185,235,0,0.82)" />
-      <path d={`M ${cx + rp * 0.28} ${cy - rp * 0.72} A ${rp * 0.8} ${rp * 0.8} 0 0 1 ${cx + rp * 0.78} ${cy - rp * 0.20}`}
-        stroke="rgba(255,255,230,0.55)" strokeWidth={Math.max(1, sz * 0.022)} fill="none" strokeLinecap="round" />
+
+      {/* 6. Anel do pith interno (aro que separa pith da polpa) */}
+      <circle cx={cx} cy={cy} r={rPith}
+        stroke="rgba(248,255,220,0.60)"
+        strokeWidth={Math.max(0.6, sz * 0.022)} />
+
+      {/* 7. Halo do pith externo */}
+      <circle cx={cx} cy={cy} r={rRind}
+        stroke="rgba(90,140,0,0.22)"
+        strokeWidth={Math.max(0.5, sz * 0.016)} />
+
+      {/* 8. Pip central */}
+      <circle cx={cx} cy={cy} r={rCore * 1.5} fill="rgba(250,255,225,0.90)" />
+      <circle cx={cx} cy={cy} r={rCore}        fill="#9EC000" opacity="0.97" />
+      <circle cx={cx} cy={cy} r={rCore * 0.5}  fill="#D8F000" opacity="0.80" />
+
+      {/* 9. Arco de brilho na casca (reflexo vítreo) */}
+      <path
+        d={`M ${cx - rOuter * 0.62} ${cy - rOuter * 0.24}
+            Q ${cx - rOuter * 0.10} ${cy - rOuter * 0.82}
+              ${cx + rOuter * 0.44} ${cy - rOuter * 0.25}`}
+        stroke="rgba(255,255,245,0.50)"
+        strokeWidth={Math.max(1.2, sz * 0.030)}
+        fill="none" strokeLinecap="round" />
+
+      {/* 10. Ponto especular brilhante */}
+      <circle cx={cx - sz * 0.12} cy={cy - sz * 0.19}
+        r={Math.max(1.2, sz * 0.038)}
+        fill="rgba(255,255,255,0.68)" />
     </svg>
   );
 }
