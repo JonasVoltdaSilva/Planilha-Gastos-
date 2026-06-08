@@ -39,7 +39,7 @@
   --radius-md: 14px;
   --radius-sm: 10px;
 
-  --font-display: "Sora", system-ui, sans-serif;
+  --font-display: "Clash Display", "Sora", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
 
   --bottom-nav-h: calc(62px + env(safe-area-inset-bottom, 0px));
