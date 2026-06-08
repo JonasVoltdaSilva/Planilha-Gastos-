@@ -104,34 +104,44 @@ function PetalDecor({ theme }) {
   );
 }
 
-/* Slime drips + scan line neon — tema Acid Neon (aespa Lemonade) */
+/* Fatias de limão flutuantes — tema Lemonade Premium (aespa Lemonade) */
 function AcidDecor({ theme }) {
   if (theme !== "acid") return null;
 
-  const drips = [
-    { id: 0, left: "5%",  dur: "3.4s", delay: "0s",   w: 5, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
-    { id: 1, left: "16%", dur: "4.9s", delay: "1.1s", w: 3, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
-    { id: 2, left: "28%", dur: "3.1s", delay: "2.3s", w: 7, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
-    { id: 3, left: "43%", dur: "5.3s", delay: "0.4s", w: 4, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
-    { id: 4, left: "58%", dur: "3.8s", delay: "1.7s", w: 6, c: "#FF2D95", glow: "rgba(255,45,149,0.88)" },
-    { id: 5, left: "72%", dur: "4.5s", delay: "3.2s", w: 4, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
-    { id: 6, left: "84%", dur: "2.9s", delay: "0.8s", w: 5, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
-    { id: 7, left: "93%", dur: "4.1s", delay: "2.0s", w: 3, c: "#FF2D95", glow: "rgba(255,45,149,0.88)" },
+  const slices = [
+    { id: 0, left: "6%",  dur: "14s", delay: "0s",  size: 44, spin: "130deg",  opacity: 0.26 },
+    { id: 1, left: "19%", dur: "18s", delay: "4s",  size: 30, spin: "-100deg", opacity: 0.22 },
+    { id: 2, left: "33%", dur: "12s", delay: "8s",  size: 56, spin: "210deg",  opacity: 0.18 },
+    { id: 3, left: "50%", dur: "20s", delay: "2s",  size: 36, spin: "-160deg", opacity: 0.24 },
+    { id: 4, left: "64%", dur: "15s", delay: "6s",  size: 48, spin: "175deg",  opacity: 0.20 },
+    { id: 5, left: "79%", dur: "16s", delay: "10s", size: 28, spin: "-75deg",  opacity: 0.28 },
+    { id: 6, left: "91%", dur: "11s", delay: "3s",  size: 40, spin: "145deg",  opacity: 0.16 },
   ];
 
   return (
     <>
-      <div className="acid-scan" />
-      {drips.map(d => (
-        <div key={d.id} className="acid-drip" style={{
-          left: d.left,
-          width: d.w,
-          "--drip-c":    d.c,
-          "--drip-glow": d.glow,
-          "--drip-w":    d.w + "px",
-          animationDuration: d.dur,
-          animationDelay:    d.delay,
-        }} />
+      {slices.map(s => (
+        <div key={s.id} className="lemon-slice" style={{
+          left: s.left,
+          "--spin": s.spin,
+          "--slice-opacity": s.opacity,
+          animationDuration: s.dur,
+          animationDelay: s.delay,
+        }}>
+          <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" width={s.size} height={s.size} style={{ display: "block" }}>
+            <circle cx="30" cy="30" r="28" fill="rgba(175,255,0,0.10)" stroke="rgba(175,255,0,0.42)" strokeWidth="1.5"/>
+            <circle cx="30" cy="30" r="20" fill="rgba(244,255,77,0.07)" stroke="rgba(175,255,0,0.26)" strokeWidth="0.8"/>
+            <circle cx="30" cy="30" r="4.5" fill="rgba(175,255,0,0.20)" stroke="rgba(175,255,0,0.35)" strokeWidth="0.6"/>
+            <line x1="30" y1="10" x2="30" y2="50" stroke="rgba(175,255,0,0.28)" strokeWidth="0.8"/>
+            <line x1="10" y1="30" x2="50" y2="30" stroke="rgba(175,255,0,0.28)" strokeWidth="0.8"/>
+            <line x1="15.9" y1="15.9" x2="44.1" y2="44.1" stroke="rgba(175,255,0,0.20)" strokeWidth="0.8"/>
+            <line x1="44.1" y1="15.9" x2="15.9" y2="44.1" stroke="rgba(175,255,0,0.20)" strokeWidth="0.8"/>
+            <line x1="21" y1="9.5" x2="39" y2="50.5" stroke="rgba(175,255,0,0.12)" strokeWidth="0.6"/>
+            <line x1="9.5" y1="21" x2="50.5" y2="39" stroke="rgba(175,255,0,0.12)" strokeWidth="0.6"/>
+            <line x1="50.5" y1="21" x2="9.5" y2="39" stroke="rgba(175,255,0,0.12)" strokeWidth="0.6"/>
+            <line x1="39" y1="9.5" x2="21" y2="50.5" stroke="rgba(175,255,0,0.12)" strokeWidth="0.6"/>
+          </svg>
+        </div>
       ))}
     </>
   );
