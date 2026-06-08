@@ -1395,6 +1395,170 @@ function RelatoriosView({ expenses, byCat, total }) {
 }
 
 /* ============================================================
+   THEME SHEET — Bottom Sheet premium para seleção de temas
+   ============================================================ */
+const { useEffect: useEffTS, useRef: useRefTS } = React;
+
+const TS_CATS = [
+  { id: "padrao",   label: "Padrão",    ids: ["default","dark","rose","orange"] },
+  { id: "neon",     label: "Neon",      ids: ["blue","purple","acid"] },
+  { id: "albuns",   label: "Álbuns",    ids: ["petal","chrome","sweet","fancy"] },
+  { id: "especiais",label: "Especiais", ids: [] },
+];
+
+const LIGHT_THEMES = new Set(["petal","sweet","fancy"]);
+
+function ThemePreview({ theme, active }) {
+  const isLight = LIGHT_THEMES.has(theme.id);
+  const [a, b] = theme.colors;
+  return (
+    <div className={"ts-prev" + (isLight ? " ts-prev-light" : "")}>
+      {/* mini balance */}
+      <div className="ts-prev-balance" style={{ color: a }}>R$ 2.840</div>
+      {/* progress bars */}
+      <div className="ts-prev-bars">
+        {[["68%", 0.9], ["42%", 0.65], ["85%", 0.5]].map(([w, op], i) => (
+          <div key={i} className="ts-prev-bar-row">
+            <div className="ts-prev-bar-bg">
+              <div className="ts-prev-bar-fill" style={{
+                width: w,
+                background: `linear-gradient(90deg, ${a}, ${b})`,
+                opacity: op,
+              }} />
+            </div>
+            <div className="ts-prev-bar-val" style={{ color: a }}>{["R$ 420","R$ 190","R$ 890"][i]}</div>
+          </div>
+        ))}
+      </div>
+      {/* mini card strip */}
+      <div className="ts-prev-card" style={{ background: `linear-gradient(135deg, ${a}22, ${b}33)`, borderColor: `${a}44` }}>
+        <div className="ts-prev-card-dot" style={{ background: `linear-gradient(135deg, ${a}, ${b})` }} />
+        <div className="ts-prev-card-lines">
+          <div className="ts-prev-card-line" />
+          <div className="ts-prev-card-line" style={{ width: "55%" }} />
+        </div>
+        {active && <div className="ts-pill">Ativo</div>}
+      </div>
+      {/* gradient overlay — subtle depth */}
+      <div className="ts-prev-overlay" style={{ background: `linear-gradient(180deg, transparent 40%, ${isLight ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.18)"} 100%)` }} />
+    </div>
+  );
+}
+
+function ThemeSheet({ open, onClose, currentTheme, onSelect }) {
+  const [tab, setTab] = useS("padrao");
+  const sheetRef = useRefTS(null);
+  const dragStartY = useRefTS(null);
+  const dragCurrentY = useRefTS(null);
+
+  /* reset tab whenever sheet opens */
+  useEffTS(() => {
+    if (open) {
+      /* find which category contains current theme */
+      const cat = TS_CATS.find(c => c.ids.includes(currentTheme)) || TS_CATS[0];
+      setTab(cat.id);
+    }
+  }, [open]);
+
+  /* swipe-to-close on handle */
+  const onTouchStart = (e) => { dragStartY.current = e.touches[0].clientY; dragCurrentY.current = 0; };
+  const onTouchMove  = (e) => {
+    const dy = e.touches[0].clientY - dragStartY.current;
+    dragCurrentY.current = dy;
+    if (dy > 0 && sheetRef.current) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  };
+  const onTouchEnd   = () => {
+    if (sheetRef.current) sheetRef.current.style.transform = "";
+    if (dragCurrentY.current > 90) onClose();
+  };
+
+  /* lock body scroll when open */
+  useEffTS(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  const currentCat = TS_CATS.find(c => c.id === tab) || TS_CATS[0];
+  const themes = (window.THEMES || []).filter(t => currentCat.ids.includes(t.id));
+
+  return (
+    <>
+      {/* overlay */}
+      <div className={"ts-overlay" + (open ? " ts-open" : "")} onClick={onClose} />
+
+      {/* sheet */}
+      <div
+        ref={sheetRef}
+        className={"ts-sheet glass" + (open ? " ts-open" : "")}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Selecionar tema visual"
+      >
+        {/* drag handle */}
+        <div className="ts-handle-wrap"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}>
+          <div className="ts-handle" />
+        </div>
+
+        {/* header */}
+        <div className="ts-head">
+          <span className="ts-head-title">Tema Visual</span>
+          <button className="ts-close-btn" onClick={onClose} aria-label="Fechar">
+            <Ic.close size={18} />
+          </button>
+        </div>
+
+        {/* category tabs */}
+        <div className="ts-tabs" role="tablist">
+          {TS_CATS.map(c => (
+            <button
+              key={c.id}
+              role="tab"
+              aria-selected={tab === c.id}
+              className={"ts-tab" + (tab === c.id ? " on" : "") + (c.ids.length === 0 ? " ts-tab-empty" : "")}
+              onClick={() => c.ids.length > 0 && setTab(c.id)}
+            >
+              {c.label}
+              {c.ids.length === 0 && <span className="ts-tab-badge">Em breve</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* theme cards */}
+        <div className="ts-body">
+          {themes.length === 0 ? (
+            <div className="ts-empty">Novos temas em breve ✨</div>
+          ) : (
+            <div className="ts-grid">
+              {themes.map(t => {
+                const isActive = currentTheme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={"ts-card" + (isActive ? " ts-active" : "")}
+                    onClick={() => { onSelect(t.id); onClose(); }}
+                    aria-pressed={isActive}
+                  >
+                    {isActive && <div className="ts-badge"><Ic.check size={11} />Ativo</div>}
+                    <ThemePreview theme={t} active={isActive} />
+                    <div className="ts-card-name">{t.nome}</div>
+                    <div className="ts-mini-swatch"
+                      style={{ background: `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})` }} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
 function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro, emprestimos }) {
@@ -1404,6 +1568,7 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
   const [newCatName, setNewCatName] = useS("");
   const [newCatColor, setNewCatColor] = useS(CAT_PRESET_COLORS[0]);
   const [budgetInput, setBudgetInput] = useS(String(settings.budget || ""));
+  const [themeSheetOpen, setThemeSheetOpen] = useS(false);
 
   const submitCat = () => {
     const nome = newCatName.trim();
@@ -1429,23 +1594,34 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* Tema visual */}
-      <div className="panel glass">
-        <div className="panel-head"><div className="panel-title">Tema visual</div></div>
-        <div className="onb-theme-grid">
-          {(window.THEMES || []).map(t => (
-            <button key={t.id} type="button"
-              className={"onb-theme-opt" + (currentTheme === t.id ? " on" : "")}
-              onClick={() => onThemeChange(t.id)}>
-              <div className="onb-theme-swatch"
-                style={{ background: `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})` }}>
-                {currentTheme === t.id && <Ic.check size={14} />}
-              </div>
-              <span>{t.nome}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Tema visual — row que abre o Bottom Sheet */}
+      {(() => {
+        const activeT = (window.THEMES || []).find(t => t.id === currentTheme) || { nome: "—", colors: ["#5ad9a8","#5aa3e0"] };
+        return (
+          <>
+            <div className="panel glass">
+              <div className="panel-head"><div className="panel-title">Tema visual</div></div>
+              <button className="set-row set-row-btn" onClick={() => setThemeSheetOpen(true)}>
+                <div className="set-info">
+                  <div className="t">{activeT.nome}</div>
+                  <div className="d">Toque para explorar e trocar o tema</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div className="ts-mini-swatch"
+                    style={{ background: `linear-gradient(135deg, ${activeT.colors[0]}, ${activeT.colors[1]})` }} />
+                  <Ic.chevron size={18} style={{ opacity: 0.5, transform: "rotate(-90deg)" }} />
+                </div>
+              </button>
+            </div>
+            <ThemeSheet
+              open={themeSheetOpen}
+              onClose={() => setThemeSheetOpen(false)}
+              currentTheme={currentTheme}
+              onSelect={onThemeChange}
+            />
+          </>
+        );
+      })()}
 
       <div className="grid-2 config-grid">
         {/* Preferências */}
