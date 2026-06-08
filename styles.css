@@ -202,134 +202,140 @@ body.theme-petal .bottom-nav-fab {
 }
 
 /* ============================================================
-   ACID NEON / TOXIC UI — aespa "Lemonade" · slime · radioativo
-   Verde neon #39FF14 · Amarelo ácido #CCFF00 · Rosa neon #FF2D95
+   LEMONADE — aespa · editorial citrus luxury · fintech premium
+   Lime Green #AFFF00 · Lemon Yellow #F4FF4D · verde escuro profundo
    ============================================================ */
 body.theme-acid {
-  --accent-blue:      #39FF14;
-  --accent-mint:      #CCFF00;
-  --accent-blue-soft: rgba(57, 255, 20, 0.15);
-  --accent-mint-soft: rgba(204, 255, 0, 0.13);
-  --blob1-color:      rgba(57,  255, 20,  0.70);
-  --blob2-color:      rgba(204, 255, 0,   0.62);
-  --blob3-color:      rgba(255, 45,  149, 0.52);
-  --btn-primary-fg:   #020b01;
-  --text-hi:          rgba(220, 255, 200, 0.97);
-  --text-mid:         rgba(155, 230, 125, 0.72);
-  --text-lo:          rgba(100, 185, 80,  0.48);
+  --accent-blue:      #AFFF00;
+  --accent-mint:      #F4FF4D;
+  --accent-blue-soft: rgba(175, 255,  0, 0.13);
+  --accent-mint-soft: rgba(244, 255, 77, 0.11);
+  --blob1-color:      rgba(148, 225,  0, 0.52);
+  --blob2-color:      rgba(210, 255, 40, 0.42);
+  --blob3-color:      rgba(100, 185,  0, 0.30);
+  --btn-primary-fg:   #0a1a00;
+  --text-hi:          rgba(228, 255, 195, 0.96);
+  --text-mid:         rgba(165, 218, 125, 0.72);
+  --text-lo:          rgba(108, 172,  78, 0.48);
 }
 
+/* Verde extremamente escuro — fundo premium */
 body.theme-acid .backdrop {
-  background: linear-gradient(145deg, #010801 0%, #020e03 35%, #050a00 65%, #010601 100%);
+  background: linear-gradient(148deg, #060d03 0%, #0b1404 42%, #060a02 68%, #040800 100%);
+}
+/* Grade discreta tipo embalagem premium */
+body.theme-acid .backdrop::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(175,255,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(175,255,0,0.025) 1px, transparent 1px);
+  background-size: 54px 54px;
+  pointer-events: none;
+}
+/* Vinheta suave */
+body.theme-acid .backdrop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 85% 80% at center,
+    transparent 45%, rgba(0,0,0,0.28) 72%, rgba(0,0,0,0.58) 100%);
+  pointer-events: none;
 }
 
-/* Blobs intensos — baixo blur, alta saturação, como o slime neon */
+/* Blobs difusos — elegantes, não agressivos */
 body.theme-acid .blob {
-  filter: blur(55px) saturate(250%) brightness(1.15) !important;
+  filter: blur(80px) saturate(140%) brightness(1.06) !important;
 }
-body.theme-acid .blob.b1 { opacity: 0.80 !important; }
-body.theme-acid .blob.b2 { opacity: 0.72 !important; }
-body.theme-acid .blob.b3 { opacity: 0.60 !important; }
+body.theme-acid .blob.b1 { opacity: 0.52 !important; }
+body.theme-acid .blob.b2 { opacity: 0.44 !important; }
+body.theme-acid .blob.b3 { opacity: 0.36 !important; }
 body.theme-acid .blob.b4 {
-  background: radial-gradient(circle, rgba(255, 45, 149, 0.50), transparent 70%) !important;
-  opacity: 0.45 !important;
+  background: radial-gradient(circle, rgba(210,255,40,0.30), transparent 70%) !important;
+  opacity: 0.28 !important;
 }
 
-/* Cards com borda neon e glow verde */
+/* Glass — vidro fosco premium com toque lime */
 body.theme-acid .glass {
-  background: rgba(2, 14, 2, 0.72) !important;
-  border-color: rgba(57, 255, 20, 0.28) !important;
+  background: rgba(7, 16, 3, 0.74) !important;
+  border-color: rgba(175, 255, 0, 0.15) !important;
   box-shadow:
-    0 0 18px rgba(57, 255, 20, 0.12),
-    0 8px 32px rgba(0, 0, 0, 0.80),
-    inset 0 1px 0 rgba(57, 255, 20, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.20) !important;
+    0 4px 32px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(175, 255, 0, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(28px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(125%) !important;
 }
 
-/* FAB pulsando em neon */
+/* FAB — esfera de limão translúcida */
 body.theme-acid .bottom-nav-fab {
-  background: linear-gradient(135deg, #39FF14 0%, #CCFF00 100%) !important;
-  color: #020b01 !important;
-  box-shadow: 0 0 28px rgba(57, 255, 20, 0.80), 0 6px 20px rgba(0, 0, 0, 0.55) !important;
-  animation: acidFabPulse 1.8s ease-in-out infinite !important;
+  background: radial-gradient(circle at 35% 32%,
+    rgba(255, 255, 130, 0.92) 0%,
+    rgba(195, 255, 25, 0.88) 45%,
+    rgba(115, 200, 0, 0.90) 100%) !important;
+  box-shadow:
+    0 4px 20px rgba(175, 255, 0, 0.30),
+    0 0 0 2px rgba(244, 255, 77, 0.20),
+    inset 0 2px 8px rgba(255, 255, 200, 0.38) !important;
+  animation: lemonFabPulse 3.6s ease-in-out infinite !important;
 }
-@keyframes acidFabPulse {
-  0%, 100% { box-shadow: 0 0 22px rgba(57, 255, 20, 0.70), 0 6px 20px rgba(0,0,0,0.55); }
-  50%       { box-shadow: 0 0 55px rgba(57, 255, 20, 1.00), 0 0 80px rgba(204,255,0,0.50), 0 6px 20px rgba(0,0,0,0.55); }
+body.theme-acid .bottom-nav-fab svg { color: #0a1a00 !important; }
+@keyframes lemonFabPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(175,255,0,0.30), 0 0 0 2px rgba(244,255,77,0.20),
+                inset 0 2px 8px rgba(255,255,200,0.38);
+  }
+  50% {
+    box-shadow: 0 6px 28px rgba(195,255,30,0.42), 0 0 0 5px rgba(244,255,77,0.12),
+                inset 0 2px 8px rgba(255,255,200,0.50);
+  }
 }
 
-/* Nav ativo neon */
-body.theme-acid .nav-item.active,
-body.theme-acid .bottom-nav-item.active { color: #39FF14 !important; }
-body.theme-acid .bottom-nav-fab svg { color: #020b01 !important; }
+/* Bottom nav — vidro escuro sofisticado */
+body.theme-acid .bottom-nav {
+  background: rgba(5, 11, 2, 0.92) !important;
+  border-top: 1px solid rgba(175, 255, 0, 0.12) !important;
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.45) !important;
+}
+body.theme-acid .bottom-nav-item       { color: rgba(165,218,125,0.48) !important; }
+body.theme-acid .bottom-nav-item.active { color: #AFFF00 !important; }
 
-/* Saldo principal com glow */
+/* Nav sidebar */
+body.theme-acid .nav-item.active { color: #AFFF00 !important; }
+body.theme-acid .nav-item.active { background: rgba(175,255,0,0.07) !important; }
+
+/* Saldo — gradiente cítrico editorial */
 body.theme-acid .home-balance-value,
 body.theme-acid .hero-balance {
-  text-shadow: 0 0 22px rgba(57, 255, 20, 0.85), 0 0 50px rgba(57, 255, 20, 0.45) !important;
-  color: #39FF14 !important;
+  background: linear-gradient(135deg, #AFFF00 0%, #F4FF4D 65%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  text-shadow: none !important;
+  filter: none !important;
 }
 
-/* Progress bar neon */
+/* Progress bars */
 body.theme-acid .budget-bar-fill,
 body.theme-acid [class*="progress"] {
-  box-shadow: 0 0 8px rgba(57, 255, 20, 0.70);
+  background: linear-gradient(90deg, #AFFF00, #F4FF4D) !important;
+  box-shadow: 0 0 6px rgba(175, 255, 0, 0.25) !important;
 }
 
-/* === Slime drips (gotas de ácido caindo do topo) === */
-.acid-drip {
+/* === Fatias de limão decorativas (lemon slices falling) === */
+.lemon-slice {
   position: fixed;
-  top: 0;
+  top: -120px;
   pointer-events: none;
-  z-index: 4;
-  border-radius: 0 0 8px 8px;
-  background: linear-gradient(180deg,
-    var(--drip-c, #39FF14) 0%,
-    var(--drip-c, #39FF14) 60%,
-    transparent 100%
-  );
-  box-shadow: 0 0 10px var(--drip-glow, rgba(57,255,20,0.9)), 0 0 20px var(--drip-glow, rgba(57,255,20,0.5));
-  opacity: 0;
-  animation: acidDrip linear infinite;
+  z-index: 2;
+  animation: lemonFall linear infinite;
+  will-change: transform, opacity;
 }
-/* "bolha" no fim da gota */
-.acid-drip::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(var(--drip-w, 5px) * 2.4);
-  height: calc(var(--drip-w, 5px) * 2.4);
-  border-radius: 50%;
-  background: var(--drip-c, #39FF14);
-  box-shadow: 0 0 12px var(--drip-glow, rgba(57,255,20,0.9));
-}
-@keyframes acidDrip {
-  0%   { height: 0;     opacity: 0; }
-  8%   { opacity: 1; }
-  55%  { height: 90px;  opacity: 0.92; }
-  80%  { height: 130px; opacity: 0.65; }
-  100% { height: 160px; opacity: 0; }
-}
-
-/* Linha de scan neon (efeito futurista) */
-.acid-scan {
-  position: fixed;
-  left: 0; right: 0;
-  height: 2px;
-  pointer-events: none;
-  z-index: 5;
-  background: linear-gradient(90deg, transparent 0%, #39FF14 30%, #CCFF00 50%, #39FF14 70%, transparent 100%);
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.80), 0 0 25px rgba(204, 255, 0, 0.40);
-  opacity: 0;
-  animation: acidScan 6s ease-in-out infinite;
-}
-@keyframes acidScan {
-  0%   { top: -2px; opacity: 0; }
-  3%   { opacity: 0.9; }
-  97%  { opacity: 0.6; }
-  100% { top: 100vh; opacity: 0; }
+@keyframes lemonFall {
+  0%   { transform: translateY(0)     rotate(0deg)                    translateX(0);                   opacity: 0;   }
+  7%   { opacity: var(--ls-op, 0.30); }
+  48%  { transform: translateY(48vh)  rotate(var(--ls-r1, 130deg))    translateX(var(--ls-d1, 22px));  }
+  88%  { opacity: var(--ls-op, 0.30); }
+  100% { transform: translateY(112vh) rotate(var(--ls-r2, 280deg))    translateX(var(--ls-d2, -18px)); opacity: 0;   }
 }
 
 /* ============================================================

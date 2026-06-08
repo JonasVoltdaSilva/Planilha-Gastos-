@@ -104,34 +104,75 @@ function PetalDecor({ theme }) {
   );
 }
 
-/* Slime drips + scan line neon — tema Acid Neon (aespa Lemonade) */
+/* Fatia de limão SVG — seção transversal com gomos, casca e brilho */
+function LemonSVG({ sz }) {
+  const cx = sz / 2, cy = sz / 2;
+  const R  = sz * 0.46;
+  const rp = sz * 0.30;
+  const rc = sz * 0.065;
+  const toR = d => (d * Math.PI) / 180;
+  const wedge = (startDeg) => {
+    const x1 = cx + R * Math.cos(toR(startDeg));
+    const y1 = cy + R * Math.sin(toR(startDeg));
+    const x2 = cx + R * Math.cos(toR(startDeg + 45));
+    const y2 = cy + R * Math.sin(toR(startDeg + 45));
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 0 1 ${x2} ${y2} Z`;
+  };
+  const divLine = i => {
+    const a = toR(i * 45);
+    return { x2: cx + R * Math.cos(a), y2: cy + R * Math.sin(a) };
+  };
+  return (
+    <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} fill="none">
+      <circle cx={cx} cy={cy} r={sz * 0.48} fill="rgba(160,220,0,0.68)" />
+      <circle cx={cx} cy={cy} r={sz * 0.44} fill="rgba(235,255,110,0.55)" />
+      <circle cx={cx} cy={cy} r={rp + sz * 0.05} fill="rgba(245,255,210,0.72)" />
+      {[0,1,2,3,4,5,6,7].map(i => (
+        <path key={i} d={wedge(i * 45)} fill={`rgba(215,255,70,${i % 2 === 0 ? 0.55 : 0.40})`} />
+      ))}
+      {[0,1,2,3,4,5,6,7].map(i => {
+        const l = divLine(i);
+        return <line key={i} x1={cx} y1={cy} x2={l.x2} y2={l.y2} stroke="rgba(245,255,200,0.50)" strokeWidth={Math.max(0.6, sz * 0.01)} />;
+      })}
+      <circle cx={cx} cy={cy} r={rp}  fill="rgba(248,255,215,0.60)" />
+      <circle cx={cx} cy={cy} r={rc}  fill="rgba(185,235,0,0.82)" />
+      <path d={`M ${cx + rp * 0.28} ${cy - rp * 0.72} A ${rp * 0.8} ${rp * 0.8} 0 0 1 ${cx + rp * 0.78} ${cy - rp * 0.20}`}
+        stroke="rgba(255,255,230,0.55)" strokeWidth={Math.max(1, sz * 0.022)} fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* Fatias de limão caindo — tema Lemonade (aespa editorial citrus) */
 function AcidDecor({ theme }) {
   if (theme !== "acid") return null;
 
-  const drips = [
-    { id: 0, left: "5%",  dur: "3.4s", delay: "0s",   w: 5, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
-    { id: 1, left: "16%", dur: "4.9s", delay: "1.1s", w: 3, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
-    { id: 2, left: "28%", dur: "3.1s", delay: "2.3s", w: 7, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
-    { id: 3, left: "43%", dur: "5.3s", delay: "0.4s", w: 4, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
-    { id: 4, left: "58%", dur: "3.8s", delay: "1.7s", w: 6, c: "#FF2D95", glow: "rgba(255,45,149,0.88)" },
-    { id: 5, left: "72%", dur: "4.5s", delay: "3.2s", w: 4, c: "#39FF14", glow: "rgba(57,255,20,0.90)"  },
-    { id: 6, left: "84%", dur: "2.9s", delay: "0.8s", w: 5, c: "#CCFF00", glow: "rgba(204,255,0,0.85)"  },
-    { id: 7, left: "93%", dur: "4.1s", delay: "2.0s", w: 3, c: "#FF2D95", glow: "rgba(255,45,149,0.88)" },
+  const slices = [
+    { id: 0, left: "8%",  sz: 52, dur: "22s", delay: "0s",   op: 0.28, r1: "140deg", r2: "295deg", d1: "18px",  d2: "-14px" },
+    { id: 1, left: "22%", sz: 38, dur: "18s", delay: "4.5s", op: 0.24, r1: "95deg",  r2: "210deg", d1: "-22px", d2: "20px"  },
+    { id: 2, left: "37%", sz: 62, dur: "25s", delay: "9s",   op: 0.22, r1: "175deg", r2: "330deg", d1: "28px",  d2: "-24px", blur: true },
+    { id: 3, left: "53%", sz: 44, dur: "19s", delay: "2s",   op: 0.26, r1: "110deg", r2: "255deg", d1: "-16px", d2: "18px"  },
+    { id: 4, left: "67%", sz: 35, dur: "21s", delay: "7s",   op: 0.30, r1: "155deg", r2: "280deg", d1: "24px",  d2: "-20px" },
+    { id: 5, left: "79%", sz: 58, dur: "24s", delay: "13s",  op: 0.22, r1: "80deg",  r2: "200deg", d1: "-30px", d2: "26px",  blur: true },
+    { id: 6, left: "91%", sz: 42, dur: "17s", delay: "5.5s", op: 0.28, r1: "120deg", r2: "245deg", d1: "20px",  d2: "-16px" },
+    { id: 7, left: "44%", sz: 48, dur: "20s", delay: "16s",  op: 0.25, r1: "165deg", r2: "310deg", d1: "-26px", d2: "22px",  blur: true },
   ];
 
   return (
     <>
-      <div className="acid-scan" />
-      {drips.map(d => (
-        <div key={d.id} className="acid-drip" style={{
-          left: d.left,
-          width: d.w,
-          "--drip-c":    d.c,
-          "--drip-glow": d.glow,
-          "--drip-w":    d.w + "px",
-          animationDuration: d.dur,
-          animationDelay:    d.delay,
-        }} />
+      {slices.map(s => (
+        <div key={s.id} className="lemon-slice" style={{
+          left: s.left,
+          "--ls-op": s.op,
+          "--ls-r1": s.r1,
+          "--ls-r2": s.r2,
+          "--ls-d1": s.d1,
+          "--ls-d2": s.d2,
+          animationDuration: s.dur,
+          animationDelay:    s.delay,
+          filter: s.blur ? "blur(0.6px)" : "none",
+        }}>
+          <LemonSVG sz={s.sz} />
+        </div>
       ))}
     </>
   );
