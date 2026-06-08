@@ -11,7 +11,7 @@ const THEMES = [
   { id: "dark",    nome: "Neutro",        colors: ["#8a96a8", "#5a6878"] },
   { id: "orange",  nome: "Âmbar",         colors: ["#e8b85a", "#e07a3a"] },
   { id: "petal",   nome: "Petal",          colors: ["#d8d4ce", "#1a1a1a"] },
-  { id: "acid",    nome: "Lemonade",        colors: ["#AFFF00", "#F4FF4D"] },
+  { id: "acid",    nome: "Lemonade",        colors: ["#39FF14", "#CCFF00"] },
   { id: "chrome",  nome: "Whiplash",        colors: ["#D0DCF0", "#040408"] },
   { id: "sweet",   nome: "Short n' Sweet", colors: ["#F8D6DD", "#E6C98D"] },
 ];
