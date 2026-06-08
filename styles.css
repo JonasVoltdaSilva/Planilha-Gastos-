@@ -142,16 +142,17 @@ body.theme-petal {
   --text-mid: rgba(200, 196, 192, 0.65);
   --text-lo: rgba(148, 144, 140, 0.40);
 }
-/* Overlay preto em mix-blend-mode: color → remove toda saturação do app
-   Funciona como grayscale total sem quebrar position:fixed no iOS */
+/* Overlay sépia — mix-blend-mode: color com warm brown H=35° tinge o app inteiro.
+   Sombras → dark chocolate · Meios-tons → caramel · Altas luzes → warm parchment.
+   Referência: Ariana Grande "Eternal Sunshine" · nenhum filtro · intimidade warm vintage */
 body.theme-petal::after {
   content: '';
   position: fixed; inset: 0; z-index: 9980;
   pointer-events: none;
-  background: #1a1a1a;
+  background: #7A5522;
   mix-blend-mode: color;
 }
-body.theme-petal .backdrop { background: #060606; }
+body.theme-petal .backdrop { background: #100904; }
 /* Vinheta dramática — fotografia P&B com bordas muito escurecidas */
 body.theme-petal .backdrop::after {
   content: '';
@@ -167,10 +168,11 @@ body.theme-petal .blob.b2 { opacity: 0.24 !important; }
 body.theme-petal .blob.b3 { opacity: 0.15 !important; }
 body.theme-petal .blob.b4 { opacity: 0.09 !important; }
 
-/* Cards P&B */
+/* Cards sépia — tint warm parchment para a camada 30% ser visível antes do blend */
 body.theme-petal .glass {
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.20) !important;
+  background: rgba(255, 240, 210, 0.11) !important;
+  border-color: rgba(255, 230, 185, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(20,10,2,0.72), inset 0 1px 0 rgba(255,220,170,0.09), inset 0 -1px 0 rgba(0,0,0,0.20) !important;
 }
 body.theme-petal .bottom-nav-fab {
   box-shadow: 0 6px 24px -4px rgba(255,255,255,0.22), 0 0 0 5px rgba(0,0,0,0.45) !important;
@@ -257,8 +259,9 @@ body.theme-acid .blob.b1 { opacity: 0.52 !important; }
 body.theme-acid .blob.b2 { opacity: 0.44 !important; }
 body.theme-acid .blob.b3 { opacity: 0.36 !important; }
 body.theme-acid .blob.b4 {
-  background: radial-gradient(circle, rgba(210,255,40,0.30), transparent 70%) !important;
-  opacity: 0.28 !important;
+  /* Roxo #9B4D96 — cor secundária real do aespa Lemonade (2025) */
+  background: radial-gradient(circle, rgba(155, 77, 150, 0.40), transparent 70%) !important;
+  opacity: 0.32 !important;
 }
 
 /* Glass — 30% musgo visível sobre o verde quase-preto do backdrop */
@@ -494,23 +497,37 @@ body.theme-chrome .hero-balance {
   100% { left: 108%; opacity: 0; }
 }
 
-/* Sparkle chrome — estrelinhas prata */
+/* Cristais Y3K — losango 4-pontas em vez de círculo, como fragmentos de metal */
 .chrome-spark {
   position: fixed;
-  width: 3px; height: 3px;
-  border-radius: 50%;
+  width: 10px; height: 10px;
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 57% 40%, 100% 50%, 57% 60%, 50% 100%, 43% 60%, 0% 50%, 43% 40%);
   pointer-events: none;
   z-index: 4;
-  background: #E8F0FF;
-  box-shadow: 0 0 4px #D0E4FF, 0 0 10px rgba(200,220,255,0.70);
+  background: linear-gradient(135deg, #F0F6FF 0%, #C8DCFF 50%, #E8F2FF 100%);
+  filter: drop-shadow(0 0 4px rgba(200,220,255,0.90));
   opacity: 0;
   animation: chromeSpark ease-out infinite;
 }
 @keyframes chromeSpark {
-  0%   { opacity: 0; transform: scale(0.5); }
-  15%  { opacity: 1; transform: scale(1.2); }
-  60%  { opacity: 0.6; transform: scale(0.9); }
-  100% { opacity: 0; transform: scale(0.3); }
+  0%   { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  12%  { opacity: 1; transform: scale(1.1) rotate(15deg); }
+  55%  { opacity: 0.65; transform: scale(0.95) rotate(35deg); }
+  100% { opacity: 0; transform: scale(0.2) rotate(60deg); }
+}
+
+/* Glitch Y3K — distorção digital ocasional no saldo (a cada ~8s) */
+@keyframes chromeGlitch {
+  0%, 87%, 100% { transform: none; filter: none; }
+  88% { transform: translate(3px, 0) scaleX(1.02); filter: hue-rotate(55deg) brightness(1.15); }
+  89% { transform: translate(-3px, 0); filter: hue-rotate(-45deg) brightness(0.95); }
+  90% { transform: translate(1px, 0); filter: brightness(1.08); }
+  91% { transform: none; filter: none; }
+}
+body.theme-chrome .home-balance-value,
+body.theme-chrome .hero-balance {
+  animation: chromeGlitch 8.5s ease-in-out infinite !important;
 }
 
 /* ============================================================
@@ -519,29 +536,30 @@ body.theme-chrome .hero-balance {
    coquette · editorial luxury · soft femininity
    ============================================================ */
 body.theme-sweet {
-  --accent-blue:      #C8963A;
-  --accent-mint:      #E8849A;
-  --accent-blue-soft: rgba(200, 150,  58, 0.16);
+  /* Sabrina Carpenter Short n' Sweet — paleta real: butter #F5CBA1 + caramel-rust #D18E61 + borgonha #6B1812 */
+  --accent-blue:      #C07038;  /* caramel-rust, próximo ao #D18E61 da paleta real */
+  --accent-mint:      #E8849A;  /* blush pink (tour color) */
+  --accent-blue-soft: rgba(192, 112,  56, 0.16);
   --accent-mint-soft: rgba(232, 132, 154, 0.14);
-  --blob1-color:      rgba(248, 214, 221, 0.70);
-  --blob2-color:      rgba(255, 242, 184, 0.58);
-  --blob3-color:      rgba(220, 235, 255, 0.48);
+  --blob1-color:      rgba(245, 203, 161, 0.72);  /* butter yellow blob */
+  --blob2-color:      rgba(248, 214, 221, 0.62);  /* blush pink blob */
+  --blob3-color:      rgba(220, 235, 255, 0.46);  /* baby blue (tour color) */
   --btn-primary-fg:   #5C2E1A;
   --text-hi:          rgba(50, 24, 16, 0.95);
   --text-mid:         rgba(108, 62, 48, 0.72);
   --text-lo:          rgba(158, 112, 96, 0.50);
 }
 
-/* Cream-to-blush gradient backdrop */
+/* Butter-to-blush gradient backdrop — mais distinctamente manteiga que creme puro */
 body.theme-sweet .backdrop {
-  background: linear-gradient(148deg, #FFFDF8 0%, #FFF0F4 52%, #FFFAEE 100%);
+  background: linear-gradient(148deg, #FFFCEE 0%, #FFF4E0 52%, #FFFBEC 100%);
 }
 
-/* Gold dot lace texture */
+/* Caramel dot lace texture — mais quente que o dourado original */
 body.theme-sweet .backdrop::before {
   content: '';
   position: absolute; inset: 0;
-  background-image: radial-gradient(circle, rgba(230,201,141,0.16) 1.2px, transparent 1.2px);
+  background-image: radial-gradient(circle, rgba(215,150,90,0.15) 1.2px, transparent 1.2px);
   background-size: 26px 26px;
   pointer-events: none;
 }
@@ -662,13 +680,13 @@ body.theme-sweet .avatar {
   color: #5C2E1A !important;
 }
 
-/* Progress bars — gold-to-blush gradient */
+/* Progress bars — caramel-rust → blush (paleta real Sabrina) */
 body.theme-sweet [class*="progress"],
-body.theme-sweet [class*="prog-bar"] { background: rgba(230,201,141,0.18) !important; }
+body.theme-sweet [class*="prog-bar"] { background: rgba(215,150,90,0.16) !important; }
 body.theme-sweet [class*="progress-fill"],
 body.theme-sweet [class*="prog-fill"],
 body.theme-sweet [class*="bar-fill"] {
-  background: linear-gradient(90deg, #E6C98D 0%, #F09AB0 100%) !important;
+  background: linear-gradient(90deg, #C07038 0%, #E8849A 100%) !important;
 }
 
 /* Form inputs */
@@ -706,10 +724,10 @@ body.theme-sweet .tag, body.theme-sweet .chip {
   border-color: rgba(230, 201, 141, 0.30) !important;
 }
 
-/* Btn primary */
+/* Btn primary — caramel-rust para blush */
 body.theme-sweet .btn-primary {
-  background: linear-gradient(135deg, #E6C98D 0%, #F09AB0 100%) !important;
-  box-shadow: 0 3px 14px rgba(224,170,128,0.45) !important;
+  background: linear-gradient(135deg, #C07038 0%, #E8849A 100%) !important;
+  box-shadow: 0 3px 14px rgba(192,112,56,0.42) !important;
 }
 
 /* Scrollbar */
@@ -780,19 +798,20 @@ body.theme-fancy .backdrop {
 body.theme-fancy .backdrop::before {
   content: '';
   position: absolute; inset: 0;
+  /* Tartan é o "visual motto" do PinkPantheress 2025 — opacidade reforçada */
   background-image:
     repeating-linear-gradient(0deg,
-      transparent,              transparent              22px,
-      rgba(130, 42, 55, 0.072) 22px,  rgba(130, 42, 55, 0.072) 24px,
-      transparent              24px,  transparent              36px,
-      rgba(100, 28, 40, 0.042) 36px,  rgba(100, 28, 40, 0.042) 37px,
-      transparent              37px),
+      transparent,               transparent               22px,
+      rgba(130, 42, 55, 0.095)  22px,  rgba(130, 42, 55, 0.095)  24px,
+      transparent                24px,  transparent                36px,
+      rgba(100, 28, 40, 0.060)  36px,  rgba(100, 28, 40, 0.060)  37px,
+      transparent                37px),
     repeating-linear-gradient(90deg,
-      transparent,              transparent              22px,
-      rgba(130, 42, 55, 0.072) 22px,  rgba(130, 42, 55, 0.072) 24px,
-      transparent              24px,  transparent              36px,
-      rgba(100, 28, 40, 0.042) 36px,  rgba(100, 28, 40, 0.042) 37px,
-      transparent              37px);
+      transparent,               transparent               22px,
+      rgba(130, 42, 55, 0.095)  22px,  rgba(130, 42, 55, 0.095)  24px,
+      transparent                24px,  transparent                36px,
+      rgba(100, 28, 40, 0.060)  36px,  rgba(100, 28, 40, 0.060)  37px,
+      transparent                37px);
   pointer-events: none;
 }
 /* Vinheta borgonha nas bordas */

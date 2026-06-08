@@ -489,16 +489,16 @@ function ChromeDecor({ theme }) {
   ];
 
   const sparks = [
-    { id: 0,  top: "12%", left: "28%", dur: "3.2s", delay: "0.5s",  s: 4  },
-    { id: 1,  top: "33%", left: "67%", dur: "4.1s", delay: "1.8s",  s: 3  },
-    { id: 2,  top: "55%", left: "14%", dur: "2.8s", delay: "0.2s",  s: 5  },
-    { id: 3,  top: "71%", left: "88%", dur: "5.0s", delay: "3.3s",  s: 3  },
-    { id: 4,  top: "47%", left: "50%", dur: "3.6s", delay: "2.0s",  s: 4  },
-    { id: 5,  top: "88%", left: "42%", dur: "4.4s", delay: "1.1s",  s: 3  },
-    { id: 6,  top: "22%", left: "9%",  dur: "2.5s", delay: "4.0s",  s: 5  },
-    { id: 7,  top: "64%", left: "76%", dur: "3.9s", delay: "0.9s",  s: 3  },
-    { id: 8,  top: "18%", left: "95%", dur: "4.7s", delay: "2.7s",  s: 4  },
-    { id: 9,  top: "79%", left: "6%",  dur: "3.3s", delay: "1.5s",  s: 3  },
+    { id: 0,  top: "12%", left: "28%", dur: "3.2s", delay: "0.5s",  s: 11 },
+    { id: 1,  top: "33%", left: "67%", dur: "4.1s", delay: "1.8s",  s: 9  },
+    { id: 2,  top: "55%", left: "14%", dur: "2.8s", delay: "0.2s",  s: 13 },
+    { id: 3,  top: "71%", left: "88%", dur: "5.0s", delay: "3.3s",  s: 9  },
+    { id: 4,  top: "47%", left: "50%", dur: "3.6s", delay: "2.0s",  s: 11 },
+    { id: 5,  top: "88%", left: "42%", dur: "4.4s", delay: "1.1s",  s: 9  },
+    { id: 6,  top: "22%", left: "9%",  dur: "2.5s", delay: "4.0s",  s: 13 },
+    { id: 7,  top: "64%", left: "76%", dur: "3.9s", delay: "0.9s",  s: 9  },
+    { id: 8,  top: "18%", left: "95%", dur: "4.7s", delay: "2.7s",  s: 11 },
+    { id: 9,  top: "79%", left: "6%",  dur: "3.3s", delay: "1.5s",  s: 9  },
   ];
 
   return (
