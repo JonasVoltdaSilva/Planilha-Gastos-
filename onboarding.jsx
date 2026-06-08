@@ -10,7 +10,7 @@ const THEMES = [
   { id: "purple",  nome: "Roxo",          colors: ["#b98ae8", "#7a5ae0"] },
   { id: "dark",    nome: "Neutro",        colors: ["#8a96a8", "#5a6878"] },
   { id: "orange",  nome: "Âmbar",         colors: ["#e8b85a", "#e07a3a"] },
-  { id: "petal",   nome: "Petal",          colors: ["#E3C7A1", "#261C14"] },
+  { id: "petal",   nome: "Petal",          colors: ["#d8d4ce", "#1a1a1a"] },
   { id: "acid",    nome: "Lemonade",        colors: ["#AFFF00", "#F4FF4D"] },
   { id: "chrome",  nome: "Whiplash",        colors: ["#D0DCF0", "#040408"] },
   { id: "sweet",   nome: "Short n' Sweet", colors: ["#F5CBA1", "#B85040"] },

@@ -142,17 +142,16 @@ body.theme-petal {
   --text-mid: rgba(200, 196, 192, 0.65);
   --text-lo: rgba(148, 144, 140, 0.40);
 }
-/* Overlay sépia — mix-blend-mode: color com warm brown H=35° tinge o app inteiro.
-   Sombras → dark chocolate · Meios-tons → caramel · Altas luzes → warm parchment.
-   Referência: Ariana Grande "Eternal Sunshine" · nenhum filtro · intimidade warm vintage */
+/* Overlay preto em mix-blend-mode: color → remove toda saturação do app
+   Funciona como grayscale total sem quebrar position:fixed no iOS */
 body.theme-petal::after {
   content: '';
   position: fixed; inset: 0; z-index: 9980;
   pointer-events: none;
-  background: #7A5522;
+  background: #1a1a1a;
   mix-blend-mode: color;
 }
-body.theme-petal .backdrop { background: #100904; }
+body.theme-petal .backdrop { background: #060606; }
 /* Vinheta dramática — fotografia P&B com bordas muito escurecidas */
 body.theme-petal .backdrop::after {
   content: '';
@@ -168,11 +167,10 @@ body.theme-petal .blob.b2 { opacity: 0.24 !important; }
 body.theme-petal .blob.b3 { opacity: 0.15 !important; }
 body.theme-petal .blob.b4 { opacity: 0.09 !important; }
 
-/* Cards sépia — tint warm parchment para a camada 30% ser visível antes do blend */
+/* Cards P&B */
 body.theme-petal .glass {
-  background: rgba(255, 240, 210, 0.11) !important;
-  border-color: rgba(255, 230, 185, 0.12) !important;
-  box-shadow: 0 8px 32px rgba(20,10,2,0.72), inset 0 1px 0 rgba(255,220,170,0.09), inset 0 -1px 0 rgba(0,0,0,0.20) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.20) !important;
 }
 body.theme-petal .bottom-nav-fab {
   box-shadow: 0 6px 24px -4px rgba(255,255,255,0.22), 0 0 0 5px rgba(0,0,0,0.45) !important;
