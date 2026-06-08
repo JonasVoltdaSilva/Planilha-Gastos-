@@ -70,6 +70,13 @@ body[class*="theme-"] .bottom-nav-fab {
 body[class*="theme-"] .nav-item.active { color: var(--accent-mint); }
 body[class*="theme-"] .home-balance-value { text-shadow: 0 0 32px color-mix(in srgb, var(--accent-mint) 40%, transparent); }
 
+/* 60-30-10: tint glass (30%) com a cor acento de cada tema — cards visivelmente distintos do backdrop */
+body.theme-rose .glass   { background: rgba(240, 170, 195, 0.075) !important; }
+body.theme-blue .glass   { background: rgba(155, 210, 255, 0.072) !important; }
+body.theme-purple .glass { background: rgba(195, 165, 252, 0.072) !important; }
+body.theme-dark .glass   { background: rgba(185, 198, 218, 0.065) !important; }
+body.theme-orange .glass { background: rgba(255, 210, 145, 0.072) !important; }
+
 body.theme-rose {
   --accent-blue: oklch(0.72 0.15 10);
   --accent-mint: oklch(0.78 0.15 350);
@@ -254,9 +261,9 @@ body.theme-acid .blob.b4 {
   opacity: 0.28 !important;
 }
 
-/* Glass — vidro fosco premium com toque lime */
+/* Glass — 30% musgo visível sobre o verde quase-preto do backdrop */
 body.theme-acid .glass {
-  background: rgba(7, 16, 3, 0.74) !important;
+  background: rgba(14, 36, 6, 0.84) !important;
   border-color: rgba(175, 255, 0, 0.15) !important;
   box-shadow:
     0 4px 32px rgba(0, 0, 0, 0.68),
@@ -388,9 +395,9 @@ body.theme-chrome .blob.b4 {
   opacity: 0.20 !important;
 }
 
-/* Cards com borda prata e shimmer metálico */
+/* Cards com borda prata e shimmer metálico — 30% azul-aço distinto do preto puro */
 body.theme-chrome .glass {
-  background: rgba(8, 10, 18, 0.78) !important;
+  background: rgba(16, 22, 44, 0.83) !important;
   border-color: rgba(200, 215, 240, 0.18) !important;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.05),
@@ -551,9 +558,9 @@ body.theme-sweet .backdrop::after {
 /* Blobs — pastel, softly saturated */
 body.theme-sweet .blob { filter: blur(72px) saturate(62%) brightness(1.06) !important; }
 
-/* Glass cards — cream with champagne gold rim */
+/* Glass cards — 30% champagne dourado, distinto do creme puro do backdrop */
 body.theme-sweet .glass {
-  background: rgba(255, 251, 247, 0.84) !important;
+  background: rgba(252, 234, 218, 0.86) !important;
   border-color: rgba(230, 201, 141, 0.28) !important;
   box-shadow:
     0 4px 32px rgba(175, 112, 88, 0.10),
@@ -583,9 +590,9 @@ body.theme-sweet .glass::before {
   100% { background-position: -45% 0; opacity: 0; }
 }
 
-/* Bottom nav — cream, gold hairline top */
+/* Bottom nav — champagne quente */
 body.theme-sweet .bottom-nav {
-  background: rgba(255, 251, 245, 0.93) !important;
+  background: rgba(252, 236, 220, 0.96) !important;
   border-top: 1px solid rgba(230, 201, 141, 0.30) !important;
   box-shadow: 0 -4px 20px rgba(175, 112, 88, 0.07) !important;
 }
@@ -669,7 +676,7 @@ body.theme-sweet .form-input,
 body.theme-sweet .input,
 body.theme-sweet .form-select,
 body.theme-sweet .select {
-  background: rgba(255, 252, 248, 0.90) !important;
+  background: rgba(252, 240, 228, 0.92) !important;
   border-color: rgba(230, 201, 141, 0.38) !important;
   color: rgba(50, 24, 16, 0.94) !important;
 }
@@ -711,7 +718,7 @@ body.theme-sweet ::-webkit-scrollbar-track { background: rgba(255,248,235,0.60) 
 
 /* Onboarding card for sweet */
 body.theme-sweet .onb-card {
-  background: rgba(255, 251, 246, 0.90) !important;
+  background: rgba(252, 236, 220, 0.92) !important;
   border-color: rgba(230, 201, 141, 0.30) !important;
 }
 
@@ -809,10 +816,10 @@ body.theme-fancy .blob.b4 {
   opacity: 0.28 !important;
 }
 
-/* Glass cards — mauve pérola */
+/* Glass cards — 30% marfim quente, distinto do mauve frio do backdrop */
 body.theme-fancy .glass {
-  background: rgba(246, 242, 246, 0.90) !important;
-  border-color: rgba(168, 145, 158, 0.28) !important;
+  background: rgba(250, 245, 238, 0.92) !important;
+  border-color: rgba(180, 152, 120, 0.22) !important;
   box-shadow:
     0 4px 28px rgba(100, 60, 72, 0.10),
     0 1px 6px rgba(100, 60, 72, 0.06),
@@ -822,10 +829,10 @@ body.theme-fancy .glass {
   -webkit-backdrop-filter: blur(22px) saturate(120%) !important;
 }
 
-/* Bottom nav */
+/* Bottom nav — marfim quente */
 body.theme-fancy .bottom-nav {
-  background: rgba(244, 240, 244, 0.96) !important;
-  border-top: 1px solid rgba(168, 145, 158, 0.25) !important;
+  background: rgba(250, 245, 238, 0.97) !important;
+  border-top: 1px solid rgba(180, 152, 120, 0.20) !important;
   box-shadow: 0 -3px 18px rgba(100, 60, 72, 0.10) !important;
 }
 body.theme-fancy .bottom-nav-item       { color: rgba(148, 122, 130, 0.55) !important; }
@@ -898,12 +905,12 @@ body.theme-fancy [class*="bar-fill"] {
   box-shadow: 0 0 6px rgba(192,52,74,0.28) !important;
 }
 
-/* Form inputs */
+/* Form inputs — marfim quente */
 body.theme-fancy .form-input,
 body.theme-fancy .input,
 body.theme-fancy select.select {
-  background: rgba(248, 244, 248, 0.88) !important;
-  border-color: rgba(168, 145, 158, 0.38) !important;
+  background: rgba(250, 246, 240, 0.92) !important;
+  border-color: rgba(180, 152, 120, 0.32) !important;
   color: rgba(46, 28, 33, 0.94) !important;
 }
 body.theme-fancy .form-input::placeholder,
@@ -932,10 +939,10 @@ body.theme-fancy .home-stat-card { background: rgba(0,0,0,0.025) !important; bor
 body.theme-fancy ::-webkit-scrollbar-thumb { background: rgba(168,145,158,0.40) !important; }
 body.theme-fancy ::-webkit-scrollbar-track { background: rgba(244,240,244,0.60) !important; }
 
-/* Onboarding card */
+/* Onboarding card — marfim quente */
 body.theme-fancy .onb-card {
-  background: rgba(248, 244, 248, 0.92) !important;
-  border-color: rgba(168, 145, 158, 0.25) !important;
+  background: rgba(250, 245, 238, 0.93) !important;
+  border-color: rgba(180, 152, 120, 0.20) !important;
 }
 
 /* ---- FancyDecor: grain de filme Y2K ---- */
