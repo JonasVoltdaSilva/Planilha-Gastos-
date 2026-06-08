@@ -14,7 +14,7 @@ const THEMES = [
   { id: "acid",    nome: "Lemonade",        colors: ["#AFFF00", "#F4FF4D"] },
   { id: "chrome",  nome: "Whiplash",        colors: ["#D0DCF0", "#040408"] },
   { id: "sweet",   nome: "Short n' Sweet", colors: ["#F8D6DD", "#E6C98D"] },
-  { id: "fancy",   nome: "Fancy That",      colors: ["#C4D0E0", "#C0BACC"] },
+  { id: "fancy",   nome: "Fancy That",      colors: ["#CC2030", "#9B8FA3"] },
 ];
 
 const LS_PROFILE = "planilha_gastos_profile_v1";

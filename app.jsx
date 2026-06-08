@@ -352,83 +352,110 @@ function SweetDecor({ theme }) {
   );
 }
 
-/* Charm SVG helper — estrela cromada, mini CD, coração, burst Y2K, gema */
+/* Charm SVG — coroa real, flor Cath Kidston, polaroid, laço tartan, cabine telefônica */
 function FancyCharmSVG({ type, sz }) {
-  if (type === 0) {
+  if (type === 0) { // Coroa real britânica
     return (
-      <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none">
-        <path d="M12 0 L13.5 10.5 L24 12 L13.5 13.5 L12 24 L10.5 13.5 L0 12 L10.5 10.5 Z" fill="#B2C4D8" />
-        <path d="M12 2.8 L13.1 11.0 L21.2 12 L13.1 13.0 L12 21.2 L10.9 13.0 L2.8 12 L10.9 11.0 Z" fill="rgba(228,236,248,0.68)" />
-        <circle cx="12" cy="12" r="1.3" fill="rgba(255,255,255,0.82)" />
+      <svg width={sz} height={sz} viewBox="0 0 28 22" fill="none">
+        <rect x="2" y="14" width="24" height="6" rx="1.5" fill="#B83048" opacity="0.82" />
+        <path d="M2 14 L2 6 L9 12 L14 2 L19 12 L26 6 L26 14 Z" fill="#C03A52" opacity="0.80" />
+        <circle cx="14" cy="5"  r="1.8" fill="rgba(255,215,220,0.88)" />
+        <circle cx="7"  cy="11" r="1.2" fill="rgba(255,215,220,0.78)" />
+        <circle cx="21" cy="11" r="1.2" fill="rgba(255,215,220,0.78)" />
+        <circle cx="8"  cy="17" r="0.9" fill="rgba(255,235,238,0.65)" />
+        <circle cx="14" cy="17" r="0.9" fill="rgba(255,235,238,0.65)" />
+        <circle cx="20" cy="17" r="0.9" fill="rgba(255,235,238,0.65)" />
+        <path d="M4 8 Q7 6 10 8" stroke="rgba(255,255,255,0.42)" strokeWidth="0.8" fill="none" strokeLinecap="round" />
       </svg>
     );
   }
-  if (type === 1) {
+  if (type === 1) { // Flor Cath Kidston — floral kitsch britânico
+    const petals = [0,72,144,216,288];
     return (
-      <svg width={sz} height={sz} viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="18" fill="#BCC8D8" opacity="0.90" />
-        <circle cx="20" cy="20" r="15" fill="#C8D4E2" opacity="0.82" />
-        <circle cx="20" cy="20" r="12" fill="#B4C0D0" opacity="0.78" />
-        <path d="M 5 19 A 14 14 0 0 1 19 5"   stroke="rgba(255,196,214,0.42)" strokeWidth="2.2" fill="none" />
-        <path d="M 19 5 A 14 14 0 0 1 35 19"  stroke="rgba(196,214,255,0.38)" strokeWidth="2.2" fill="none" />
-        <path d="M 35 20 A 14 14 0 0 1 20 35" stroke="rgba(196,255,214,0.35)" strokeWidth="2.2" fill="none" />
-        <path d="M 20 35 A 14 14 0 0 1 5 20"  stroke="rgba(255,230,196,0.35)" strokeWidth="2.2" fill="none" />
-        <circle cx="20" cy="20" r="4.5" fill="rgba(250,248,254,0.96)" />
-        <circle cx="20" cy="20" r="2.0" fill="rgba(195,188,215,0.60)" />
-        <path d="M 9 13 Q 16 7 24 11" stroke="rgba(255,255,255,0.68)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <svg width={sz} height={sz} viewBox="0 0 30 30" fill="none">
+        {petals.map((a, i) => (
+          <ellipse key={i} cx="15" cy="6" rx="3.2" ry="7" fill="#C4889A" opacity="0.76"
+            transform={`rotate(${a} 15 15)`} />
+        ))}
+        <circle cx="15" cy="15" r="4.2" fill="#E8B4C0" opacity="0.88" />
+        <circle cx="15" cy="15" r="2.4" fill="#F8D8E0" opacity="0.90" />
+        <circle cx="15" cy="15" r="1.0" fill="#D89AAA" opacity="0.80" />
+        <path d="M13.5 13.5 Q15 12 16.5 13.5" stroke="rgba(255,255,255,0.45)" strokeWidth="0.7" fill="none" />
       </svg>
     );
   }
-  if (type === 2) {
+  if (type === 2) { // Moldura Polaroid
     return (
-      <svg width={sz} height={sz} viewBox="0 0 28 26" fill="none">
-        <path d="M14 24 Q2 16 2 9 Q2 2 8 2 Q11 2 14 6.5 Q17 2 20 2 Q26 2 26 9 Q26 16 14 24Z" fill="#C2B2D0" opacity="0.78" />
-        <path d="M14 21 Q4.5 14.5 4.5 9.5 Q4.5 4.5 9 4.5 Q12 4.5 14 8.5 Q16 4.5 19 4.5 Q23.5 4.5 23.5 9.5 Q23.5 14.5 14 21Z" fill="rgba(210,200,225,0.48)" />
-        <path d="M 7.5 7 Q 11 4 14 7" stroke="rgba(255,252,255,0.55)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      <svg width={sz} height={sz} viewBox="0 0 26 30" fill="none">
+        <rect x="1" y="1" width="24" height="28" rx="2" fill="rgba(245,241,245,0.90)" />
+        <rect x="3" y="3" width="20" height="19" rx="1" fill="rgba(155,108,125,0.35)" />
+        {/* micro floral no canto da foto */}
+        <circle cx="5" cy="5"  r="1.2" fill="rgba(192,80,108,0.45)" />
+        <circle cx="21" cy="5" r="0.9" fill="rgba(192,80,108,0.38)" />
+        <rect x="7" y="24.5" width="12" height="1.8" rx="0.9" fill="rgba(130,88,100,0.38)" />
+        <rect x="1" y="1" width="24" height="28" rx="2" fill="none"
+          stroke="rgba(165,132,145,0.28)" strokeWidth="0.8" />
+        <path d="M4 4 Q8 3 14 4" stroke="rgba(255,255,255,0.38)" strokeWidth="0.7" fill="none" strokeLinecap="round" />
       </svg>
     );
   }
-  if (type === 3) {
+  if (type === 3) { // Laço/fita tartan
     return (
-      <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none">
-        <path d="M12 0 L13.4 9.4 L21.5 6.0 L14.6 12.0 L21.5 18.0 L13.4 14.6 L12 24 L10.6 14.6 L2.5 18.0 L9.4 12.0 L2.5 6.0 L10.6 9.4 Z" fill="#A8BCCC" opacity="0.88" />
-        <path d="M12 3 L13.0 10.4 L19.5 8.0 L14.0 12 L19.5 16 L13.0 13.6 L12 21 L11.0 13.6 L4.5 16 L10.0 12 L4.5 8.0 L11.0 10.4 Z" fill="rgba(228,236,246,0.65)" />
+      <svg width={sz} height={sz} viewBox="0 0 34 20" fill="none">
+        <path d="M17 10 L4 2 Q1 4 2 6.5 L15 12 Z"  fill="#9B3040" opacity="0.78" />
+        <path d="M17 10 L4 18 Q1 16 2 13.5 L15 8 Z" fill="#7A2030" opacity="0.70" />
+        <path d="M17 10 L30 2 Q33 4 32 6.5 L19 12 Z"  fill="#9B3040" opacity="0.78" />
+        <path d="M17 10 L30 18 Q33 16 32 13.5 L19 8 Z" fill="#7A2030" opacity="0.70" />
+        {/* listras tartan */}
+        <line x1="4" y1="5"  x2="15" y2="11" stroke="rgba(255,220,225,0.28)" strokeWidth="0.9" />
+        <line x1="4" y1="8"  x2="15" y2="11" stroke="rgba(255,220,225,0.22)" strokeWidth="0.6" />
+        <line x1="30" y1="5"  x2="19" y2="11" stroke="rgba(255,220,225,0.28)" strokeWidth="0.9" />
+        <ellipse cx="17" cy="10" rx="3.8" ry="4.2" fill="#C03A50" opacity="0.88" />
+        <ellipse cx="17" cy="10" rx="2.0" ry="2.2" fill="#E06075" opacity="0.65" />
       </svg>
     );
   }
+  // type === 4: Cabine telefônica britânica (Big Red Box)
   return (
-    <svg width={sz} height={sz} viewBox="0 0 22 28" fill="none">
-      <path d="M11 2 L19 9 L11 26 L3 9 Z" fill="#B8C8D6" opacity="0.86" />
-      <path d="M3 9 L11 2 L19 9 Z" fill="rgba(230,238,248,0.78)" />
-      <path d="M7 6 L11 2.5 L15 6" stroke="rgba(255,255,255,0.62)" strokeWidth="0.9" fill="none" />
-      <path d="M3 9 L11 26 L19 9" fill="rgba(175,192,210,0.45)" />
+    <svg width={sz} height={sz} viewBox="0 0 20 30" fill="none">
+      <path d="M2 6 Q2 2 10 1 Q18 2 18 6 Z" fill="#C81C2C" opacity="0.86" />
+      <rect x="2" y="6" width="16" height="22" rx="1" fill="#CC2030" opacity="0.84" />
+      <rect x="4"  y="8"  width="5" height="5" rx="0.5" fill="rgba(195,225,245,0.62)" />
+      <rect x="11" y="8"  width="5" height="5" rx="0.5" fill="rgba(195,225,245,0.62)" />
+      <rect x="4"  y="15" width="5" height="5" rx="0.5" fill="rgba(195,225,245,0.55)" />
+      <rect x="11" y="15" width="5" height="5" rx="0.5" fill="rgba(195,225,245,0.55)" />
+      <rect x="6"  y="22" width="8" height="5" rx="0.5" fill="rgba(175,15,22,0.55)" />
+      <rect x="2" y="6" width="16" height="22" rx="1" fill="none"
+        stroke="rgba(200,100,110,0.30)" strokeWidth="0.6" />
+      <path d="M4 4 Q8 2 14 3" stroke="rgba(255,255,255,0.42)" strokeWidth="0.9" fill="none" strokeLinecap="round" />
     </svg>
   );
 }
 
-/* Floating fashion charms — tema Fancy That (PinkPantheress Y2K editorial) */
+/* Floating fashion charms — tema Fancy That (PinkPantheress Y2K British editorial) */
 function FancyDecor({ theme }) {
   if (theme !== "fancy") return null;
 
   const charms = [
-    { id: 0,  type: 0, left: "5%",  sz: 22, dur: "24s", delay: "0s",    op: 0.26, dx1: "16px",  dx2: "-12px", r1: "32deg",  r2: "68deg"  },
-    { id: 1,  type: 1, left: "16%", sz: 32, dur: "30s", delay: "5.5s",  op: 0.20, dx1: "-22px", dx2: "16px",  r1: "-18deg", r2: "-40deg" },
-    { id: 2,  type: 2, left: "29%", sz: 26, dur: "22s", delay: "9.5s",  op: 0.24, dx1: "13px",  dx2: "-18px", r1: "22deg",  r2: "50deg"  },
-    { id: 3,  type: 3, left: "43%", sz: 20, dur: "27s", delay: "2.5s",  op: 0.22, dx1: "-15px", dx2: "11px",  r1: "44deg",  r2: "90deg"  },
-    { id: 4,  type: 4, left: "57%", sz: 18, dur: "28s", delay: "12.5s", op: 0.24, dx1: "19px",  dx2: "-14px", r1: "28deg",  r2: "62deg"  },
-    { id: 5,  type: 0, left: "70%", sz: 28, dur: "21s", delay: "7.5s",  op: 0.26, dx1: "-16px", dx2: "20px",  r1: "-28deg", r2: "-58deg" },
-    { id: 6,  type: 1, left: "82%", sz: 36, dur: "33s", delay: "16.5s", op: 0.18, dx1: "9px",   dx2: "-16px", r1: "14deg",  r2: "32deg"  },
-    { id: 7,  type: 2, left: "92%", sz: 22, dur: "23s", delay: "4.0s",  op: 0.22, dx1: "-12px", dx2: "18px",  r1: "36deg",  r2: "78deg"  },
-    { id: 8,  type: 3, left: "11%", sz: 24, dur: "26s", delay: "14.0s", op: 0.20, dx1: "18px",  dx2: "-14px", r1: "-22deg", r2: "-52deg" },
-    { id: 9,  type: 4, left: "36%", sz: 16, dur: "19s", delay: "18.5s", op: 0.26, dx1: "15px",  dx2: "-11px", r1: "48deg",  r2: "96deg"  },
-    { id: 10, type: 0, left: "51%", sz: 20, dur: "25s", delay: "8.0s",  op: 0.22, dx1: "-13px", dx2: "17px",  r1: "20deg",  r2: "44deg"  },
-    { id: 11, type: 2, left: "65%", sz: 30, dur: "29s", delay: "11.5s", op: 0.20, dx1: "11px",  dx2: "-19px", r1: "33deg",  r2: "68deg"  },
-    { id: 12, type: 1, left: "78%", sz: 28, dur: "20s", delay: "3.5s",  op: 0.24, dx1: "-20px", dx2: "13px",  r1: "-14deg", r2: "-32deg" },
-    { id: 13, type: 3, left: "23%", sz: 18, dur: "24s", delay: "19.5s", op: 0.22, dx1: "13px",  dx2: "-9px",  r1: "52deg",  r2: "105deg" },
+    { id: 0,  type: 0, left: "5%",  sz: 24, dur: "24s", delay: "0s",    op: 0.34, dx1: "16px",  dx2: "-12px", r1: "18deg",  r2: "38deg"  },
+    { id: 1,  type: 1, left: "16%", sz: 32, dur: "30s", delay: "5.5s",  op: 0.30, dx1: "-20px", dx2: "14px",  r1: "-15deg", r2: "-35deg" },
+    { id: 2,  type: 2, left: "29%", sz: 28, dur: "22s", delay: "9.5s",  op: 0.32, dx1: "12px",  dx2: "-16px", r1: "12deg",  r2: "28deg"  },
+    { id: 3,  type: 3, left: "43%", sz: 30, dur: "27s", delay: "2.5s",  op: 0.28, dx1: "-14px", dx2: "10px",  r1: "20deg",  r2: "45deg"  },
+    { id: 4,  type: 4, left: "57%", sz: 22, dur: "28s", delay: "12.5s", op: 0.36, dx1: "18px",  dx2: "-13px", r1: "10deg",  r2: "22deg"  },
+    { id: 5,  type: 0, left: "70%", sz: 20, dur: "21s", delay: "7.5s",  op: 0.30, dx1: "-15px", dx2: "18px",  r1: "-12deg", r2: "-28deg" },
+    { id: 6,  type: 1, left: "82%", sz: 36, dur: "33s", delay: "16.5s", op: 0.26, dx1: "8px",   dx2: "-14px", r1: "8deg",   r2: "20deg"  },
+    { id: 7,  type: 2, left: "92%", sz: 24, dur: "23s", delay: "4.0s",  op: 0.30, dx1: "-11px", dx2: "16px",  r1: "15deg",  r2: "35deg"  },
+    { id: 8,  type: 3, left: "11%", sz: 28, dur: "26s", delay: "14.0s", op: 0.28, dx1: "16px",  dx2: "-12px", r1: "-10deg", r2: "-25deg" },
+    { id: 9,  type: 4, left: "36%", sz: 20, dur: "19s", delay: "18.5s", op: 0.34, dx1: "14px",  dx2: "-10px", r1: "8deg",   r2: "18deg"  },
+    { id: 10, type: 0, left: "51%", sz: 22, dur: "25s", delay: "8.0s",  op: 0.28, dx1: "-12px", dx2: "15px",  r1: "14deg",  r2: "30deg"  },
+    { id: 11, type: 1, left: "65%", sz: 26, dur: "29s", delay: "11.5s", op: 0.28, dx1: "10px",  dx2: "-17px", r1: "18deg",  r2: "40deg"  },
+    { id: 12, type: 3, left: "78%", sz: 32, dur: "20s", delay: "3.5s",  op: 0.26, dx1: "-18px", dx2: "12px",  r1: "-8deg",  r2: "-20deg" },
+    { id: 13, type: 4, left: "23%", sz: 18, dur: "24s", delay: "19.5s", op: 0.32, dx1: "12px",  dx2: "-8px",  r1: "6deg",   r2: "15deg"  },
   ];
 
   return (
     <>
+      <div className="fancy-grain" />
       {charms.map(c => (
         <div key={c.id} className="fancy-charm" style={{
           left: c.left,

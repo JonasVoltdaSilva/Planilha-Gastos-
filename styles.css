@@ -748,127 +748,138 @@ body.theme-sweet .onb-card {
 }
 
 /* ============================================================
-   FANCY THAT — PinkPantheress · Y2K British editorial fashion
-   Cream base · Baby blue · Sage green · Chrome silver
+   FANCY THAT — PinkPantheress · Y2K British editorial
+   Dusty mauve · London Bus Red · Burgundy tartan · Antique silver
    ============================================================ */
 body.theme-fancy {
-  --accent-blue:      #8AAAC4;
-  --accent-mint:      #A8C088;
-  --accent-blue-soft: rgba(138, 170, 196, 0.13);
-  --accent-mint-soft: rgba(168, 192, 136, 0.12);
-  --blob1-color:      rgba(168, 192, 136, 0.38);
-  --blob2-color:      rgba(138, 170, 196, 0.34);
-  --blob3-color:      rgba(200, 188, 218, 0.28);
-  --btn-primary-fg:   #1c1428;
-  --text-hi:          rgba(30, 22, 42, 0.94);
-  --text-mid:         rgba(72, 62, 88, 0.68);
-  --text-lo:          rgba(128, 118, 144, 0.46);
+  --accent-blue:      #C0344A;
+  --accent-mint:      #9B8FA3;
+  --accent-blue-soft: rgba(192,  52,  74, 0.12);
+  --accent-mint-soft: rgba(155, 143, 163, 0.12);
+  --blob1-color:      rgba(155,  63,  80, 0.40);
+  --blob2-color:      rgba(155, 143, 163, 0.34);
+  --blob3-color:      rgba(173, 164, 156, 0.28);
+  --btn-primary-fg:   #fff;
+  --text-hi:          rgba(46, 28, 33, 0.94);
+  --text-mid:         rgba(92, 68, 76, 0.68);
+  --text-lo:          rgba(148, 122, 130, 0.46);
 }
 
-/* Cream editorial backdrop */
+/* Dusty mauve backdrop — papel de revista envelhecido */
 body.theme-fancy .backdrop {
-  background: linear-gradient(148deg, #F7F4EF 0%, #FDFBF8 35%, #F4F1EC 65%, #F9F6F1 100%);
+  background: linear-gradient(148deg, #EDE8ED 0%, #F2EEF2 35%, #E8E3E8 65%, #EEEAEE 100%);
 }
-/* Very subtle plaid/check grid — nod to tartan aesthetic */
+/* Tartan real — 2 espessuras de linha em borgonha, cruzadas */
 body.theme-fancy .backdrop::before {
   content: '';
   position: absolute; inset: 0;
   background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(138,170,196,0.05) 40px, rgba(138,170,196,0.05) 41px),
-    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(168,192,136,0.04) 40px, rgba(168,192,136,0.04) 41px);
+    repeating-linear-gradient(0deg,
+      transparent,              transparent              22px,
+      rgba(130, 42, 55, 0.072) 22px,  rgba(130, 42, 55, 0.072) 24px,
+      transparent              24px,  transparent              36px,
+      rgba(100, 28, 40, 0.042) 36px,  rgba(100, 28, 40, 0.042) 37px,
+      transparent              37px),
+    repeating-linear-gradient(90deg,
+      transparent,              transparent              22px,
+      rgba(130, 42, 55, 0.072) 22px,  rgba(130, 42, 55, 0.072) 24px,
+      transparent              24px,  transparent              36px,
+      rgba(100, 28, 40, 0.042) 36px,  rgba(100, 28, 40, 0.042) 37px,
+      transparent              37px);
   pointer-events: none;
 }
-/* Soft lavender vignette */
+/* Vinheta borgonha nas bordas */
 body.theme-fancy .backdrop::after {
   content: '';
   position: absolute; inset: 0;
   background: radial-gradient(ellipse 88% 82% at center,
-    transparent 52%, rgba(188,180,205,0.10) 78%, rgba(168,158,188,0.20) 100%);
+    transparent 52%, rgba(130,45,58,0.09) 78%, rgba(100,28,40,0.18) 100%);
   pointer-events: none;
 }
 
-/* Blobs — pastel & diffuse */
+/* Blobs — borgonha + mauve difusos */
 body.theme-fancy .blob {
-  filter: blur(88px) saturate(55%) brightness(1.06) !important;
+  filter: blur(88px) saturate(68%) brightness(1.04) !important;
 }
-body.theme-fancy .blob.b1 { opacity: 0.52 !important; }
-body.theme-fancy .blob.b2 { opacity: 0.42 !important; }
+body.theme-fancy .blob.b1 { opacity: 0.55 !important; }
+body.theme-fancy .blob.b2 { opacity: 0.44 !important; }
 body.theme-fancy .blob.b3 { opacity: 0.30 !important; }
 body.theme-fancy .blob.b4 {
-  background: radial-gradient(circle, rgba(200,188,218,0.35), transparent 68%) !important;
+  background: radial-gradient(circle, rgba(173,155,168,0.38), transparent 68%) !important;
   opacity: 0.28 !important;
 }
 
-/* Glass cards — pearl cream */
+/* Glass cards — mauve pérola */
 body.theme-fancy .glass {
-  background: rgba(252, 250, 247, 0.90) !important;
-  border-color: rgba(196, 188, 212, 0.30) !important;
+  background: rgba(246, 242, 246, 0.90) !important;
+  border-color: rgba(168, 145, 158, 0.28) !important;
   box-shadow:
-    0 4px 28px rgba(100, 88, 128, 0.10),
-    0 1px 6px rgba(100, 88, 128, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    inset 0 -1px 0 rgba(178, 168, 198, 0.12) !important;
-  backdrop-filter: blur(22px) saturate(118%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+    0 4px 28px rgba(100, 60, 72, 0.10),
+    0 1px 6px rgba(100, 60, 72, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    inset 0 -1px 0 rgba(155, 120, 132, 0.10) !important;
+  backdrop-filter: blur(22px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(120%) !important;
 }
 
 /* Bottom nav */
 body.theme-fancy .bottom-nav {
-  background: rgba(248, 246, 242, 0.95) !important;
-  border-top: 1px solid rgba(196, 188, 212, 0.28) !important;
-  box-shadow: 0 -3px 18px rgba(100, 88, 128, 0.10) !important;
+  background: rgba(244, 240, 244, 0.96) !important;
+  border-top: 1px solid rgba(168, 145, 158, 0.25) !important;
+  box-shadow: 0 -3px 18px rgba(100, 60, 72, 0.10) !important;
 }
-body.theme-fancy .bottom-nav-item       { color: rgba(128, 118, 144, 0.50) !important; }
-body.theme-fancy .bottom-nav-item.active { color: #5a7e9a !important; }
+body.theme-fancy .bottom-nav-item       { color: rgba(148, 122, 130, 0.55) !important; }
+body.theme-fancy .bottom-nav-item.active { color: #C0344A !important; }
 
-/* FAB — chrome pearl sphere */
+/* FAB — London Bus Red */
 body.theme-fancy .bottom-nav-fab {
-  background: linear-gradient(148deg, #E2E8F4 0%, #C4D0E0 45%, #B0BED0 100%) !important;
+  background: radial-gradient(circle at 38% 32%,
+    #E83048 0%, #C0283C 45%, #9E1828 100%) !important;
   box-shadow:
-    0 4px 18px rgba(120, 138, 168, 0.25),
-    0 0 0 2px rgba(255, 255, 255, 0.72),
-    inset 0 2px 6px rgba(255, 255, 255, 0.62),
-    inset 0 -1px 4px rgba(88, 108, 138, 0.16) !important;
-  animation: fancyFabPulse 4.2s ease-in-out infinite !important;
+    0 4px 22px rgba(192, 40, 58, 0.48),
+    0 0 0 2px rgba(255, 255, 255, 0.35),
+    inset 0 2px 6px rgba(255, 200, 210, 0.28),
+    inset 0 -1px 4px rgba(100, 10, 20, 0.22) !important;
+  animation: fancyFabPulse 3.8s ease-in-out infinite !important;
 }
-body.theme-fancy .bottom-nav-fab svg { color: #1c1428 !important; }
+body.theme-fancy .bottom-nav-fab svg { color: #fff !important; }
 @keyframes fancyFabPulse {
   0%, 100% {
-    box-shadow: 0 4px 18px rgba(120,138,168,0.25), 0 0 0 2px rgba(255,255,255,0.72),
-                inset 0 2px 6px rgba(255,255,255,0.62), inset 0 -1px 4px rgba(88,108,138,0.16);
+    box-shadow: 0 4px 22px rgba(192,40,58,0.46), 0 0 0 2px rgba(255,255,255,0.32),
+                inset 0 2px 6px rgba(255,200,210,0.26);
   }
   50% {
-    box-shadow: 0 6px 26px rgba(120,138,168,0.35), 0 0 0 4px rgba(255,255,255,0.55),
-                inset 0 2px 8px rgba(255,255,255,0.72), inset 0 -1px 4px rgba(88,108,138,0.16);
+    box-shadow: 0 6px 30px rgba(192,40,58,0.62), 0 0 0 5px rgba(255,255,255,0.14),
+                inset 0 2px 8px rgba(255,200,210,0.36);
   }
 }
 
 /* Nav sidebar */
-body.theme-fancy .nav-item       { color: rgba(72, 62, 88, 0.55) !important; }
+body.theme-fancy .nav-item       { color: rgba(92, 68, 76, 0.55) !important; }
 body.theme-fancy .nav-item.active {
-  background: rgba(138, 170, 196, 0.12) !important;
-  color: #5a7e9a !important;
+  background: rgba(192, 52, 74, 0.09) !important;
+  color: #B02840 !important;
 }
-body.theme-fancy .nav-label { color: rgba(128, 118, 144, 0.50) !important; }
+body.theme-fancy .nav-label { color: rgba(148, 122, 130, 0.52) !important; }
 
 /* Brand */
 body.theme-fancy .brand-mark {
-  background: linear-gradient(135deg, #C4D0E0, #C4BACC) !important;
+  background: linear-gradient(135deg, #C83248, #8B3A52) !important;
 }
-body.theme-fancy .brand-mark svg { color: #1c1428 !important; }
+body.theme-fancy .brand-mark svg { color: #fff !important; }
 body.theme-fancy .avatar {
-  background: linear-gradient(135deg, #C4D0E0, #C4BACC) !important;
-  color: #1c1428 !important;
+  background: linear-gradient(135deg, #C83248, #8B3A52) !important;
+  color: #fff !important;
 }
 
-/* Balance — Cormorant Garamond italic, magazine headline */
+/* Saldo — Cormorant Garamond itálico borgonha — manchete de revista fashion */
 body.theme-fancy .home-balance-value,
 body.theme-fancy .hero-balance {
   font-family: 'Cormorant Garamond', serif !important;
   font-weight: 600 !important;
   font-style: italic !important;
-  color: #1e1630 !important;
-  -webkit-text-fill-color: #1e1630 !important;
+  color: #4a1a28 !important;
+  -webkit-text-fill-color: #4a1a28 !important;
   text-shadow: none !important;
   filter: none !important;
   letter-spacing: 0.01em !important;
@@ -879,55 +890,64 @@ body.theme-fancy h1, body.theme-fancy h2, body.theme-fancy h3,
 body.theme-fancy .page-title, body.theme-fancy .brand-name,
 body.theme-fancy .onb-app-name { color: var(--text-hi) !important; }
 
-/* Progress bars — blue → sage gradient */
+/* Progress bars — borgonha → mauve */
 body.theme-fancy .budget-bar-fill,
 body.theme-fancy [class*="progress"],
 body.theme-fancy [class*="bar-fill"] {
-  background: linear-gradient(90deg, #8AAAC4, #A8C088) !important;
-  box-shadow: 0 0 5px rgba(138,170,196,0.20) !important;
+  background: linear-gradient(90deg, #C0344A, #9B6878) !important;
+  box-shadow: 0 0 6px rgba(192,52,74,0.28) !important;
 }
 
-/* Form inputs (light) */
+/* Form inputs */
 body.theme-fancy .form-input,
 body.theme-fancy .input,
 body.theme-fancy select.select {
-  background: rgba(252, 250, 247, 0.88) !important;
-  border-color: rgba(196, 188, 212, 0.38) !important;
-  color: rgba(30, 22, 42, 0.94) !important;
+  background: rgba(248, 244, 248, 0.88) !important;
+  border-color: rgba(168, 145, 158, 0.38) !important;
+  color: rgba(46, 28, 33, 0.94) !important;
 }
 body.theme-fancy .form-input::placeholder,
-body.theme-fancy .input::placeholder { color: rgba(128, 118, 144, 0.52) !important; }
+body.theme-fancy .input::placeholder { color: rgba(148, 122, 130, 0.52) !important; }
 body.theme-fancy .form-input:focus,
 body.theme-fancy .input:focus {
-  border-color: rgba(138, 170, 196, 0.72) !important;
-  box-shadow: 0 0 0 3px rgba(138, 170, 196, 0.14) !important;
+  border-color: rgba(192, 52, 74, 0.60) !important;
+  box-shadow: 0 0 0 3px rgba(192, 52, 74, 0.12) !important;
 }
-body.theme-fancy select.select option { background: #F7F4EF; color: #1e1630; }
+body.theme-fancy select.select option { background: #EDE8ED; color: #2e1c21; }
 
-/* Btn primary */
+/* Btn primary — vermelho londra */
 body.theme-fancy .btn-primary {
-  background: linear-gradient(135deg, #C4D0E0 0%, #B8C8A4 100%) !important;
-  box-shadow: 0 3px 14px rgba(138,170,196,0.35) !important;
+  background: linear-gradient(135deg, #C83248 0%, #9B2038 100%) !important;
+  box-shadow: 0 3px 14px rgba(192, 52, 74, 0.40) !important;
 }
 
 /* Expense rows */
-body.theme-fancy .expense-row { background: rgba(0,0,0,0.020) !important; }
-body.theme-fancy .expense-row:hover { background: rgba(0,0,0,0.045) !important; border-color: rgba(196,188,212,0.28) !important; }
+body.theme-fancy .expense-row { background: rgba(0,0,0,0.018) !important; }
+body.theme-fancy .expense-row:hover { background: rgba(0,0,0,0.040) !important; border-color: rgba(168,145,158,0.25) !important; }
 
 /* Stat cards */
-body.theme-fancy .home-stat-card { background: rgba(0,0,0,0.030) !important; border-color: rgba(196,188,212,0.22) !important; }
+body.theme-fancy .home-stat-card { background: rgba(0,0,0,0.025) !important; border-color: rgba(168,145,158,0.20) !important; }
 
 /* Scrollbar */
-body.theme-fancy ::-webkit-scrollbar-thumb { background: rgba(196,188,212,0.40) !important; }
-body.theme-fancy ::-webkit-scrollbar-track { background: rgba(248,246,242,0.60) !important; }
+body.theme-fancy ::-webkit-scrollbar-thumb { background: rgba(168,145,158,0.40) !important; }
+body.theme-fancy ::-webkit-scrollbar-track { background: rgba(244,240,244,0.60) !important; }
 
 /* Onboarding card */
 body.theme-fancy .onb-card {
-  background: rgba(253, 251, 248, 0.92) !important;
-  border-color: rgba(196, 188, 212, 0.28) !important;
+  background: rgba(248, 244, 248, 0.92) !important;
+  border-color: rgba(168, 145, 158, 0.25) !important;
 }
 
-/* ---- FancyDecor: floating fashion charms ---- */
+/* ---- FancyDecor: grain de filme Y2K ---- */
+.fancy-grain {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 3;
+  opacity: 0.042;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+}
+
+/* ---- FancyDecor: charms flutuantes ---- */
 .fancy-charm {
   position: fixed;
   pointer-events: none;
@@ -937,9 +957,9 @@ body.theme-fancy .onb-card {
 }
 @keyframes fancyFloat {
   0%   { transform: translateY(0) translateX(0) rotate(0deg);                                           opacity: 0; }
-  8%   { opacity: var(--fc-op, 0.22); }
+  8%   { opacity: var(--fc-op, 0.28); }
   46%  { transform: translateY(-46vh) translateX(var(--fc-dx1, 14px)) rotate(var(--fc-r1, 22deg));  }
-  88%  { opacity: var(--fc-op, 0.22); }
+  88%  { opacity: var(--fc-op, 0.28); }
   100% { transform: translateY(-110vh) translateX(var(--fc-dx2, -10px)) rotate(var(--fc-r2, 48deg)); opacity: 0; }
 }
 
