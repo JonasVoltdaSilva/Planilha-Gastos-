@@ -2467,7 +2467,7 @@ body.light-mode .home-quick-row:active { background: rgba(0,0,0,0.05); }
 /* sheet */
 .ts-sheet {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 1101;
-  height: 87svh; max-height: 87svh;
+  height: 88vh; height: 88svh;
   border-radius: 22px 22px 0 0;
   background: var(--glass-bg-strong);
   border-top: 1px solid var(--glass-border-strong);
@@ -2537,12 +2537,15 @@ body.light-mode .home-quick-row:active { background: rgba(0,0,0,0.05); }
   color: var(--text-hi);
 }
 
-/* scrollable body */
+/* scrollable body — flex: 1 1 0 (base 0) forces definite height so scroll works */
 .ts-body {
-  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  flex: 1 1 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  padding: 0 16px 24px;
+  padding: 0 16px 32px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
 }
@@ -2718,3 +2721,38 @@ body.theme-petal .ts-card-name { color: rgba(0,0,0,0.85); }
 body.theme-sweet .ts-close-btn,
 body.theme-fancy .ts-close-btn,
 body.theme-petal .ts-close-btn { background: rgba(0,0,0,0.07); border-color: rgba(0,0,0,0.1); color: rgba(0,0,0,0.55); }
+
+/* ============================================================
+   FONTES POR TEMA ÁLBUM
+   Pesquisa: tipografia real/próxima de cada álbum de referência
+   ============================================================ */
+
+/* Lemonade (Beyoncé 2016) — Neue Helvetica Pro 85 Heavy
+   Alternativa: Bebas Neue — condensado, bold, urbano, impactante */
+body.theme-acid {
+  --font-display: "Bebas Neue", "Impact", sans-serif;
+}
+
+/* Whiplash (filme 2014 / visual chrome) — Charlotte Sans Bold
+   Alternativa: Space Grotesk Bold — moderno, industrial, clean */
+body.theme-chrome {
+  --font-display: "Space Grotesk", "Sora", sans-serif;
+}
+
+/* Short n' Sweet (Sabrina Carpenter 2024) — Citadel Script + serifado vintage
+   Alternativa: Playfair Display itálico — elegante, retrô, glamouroso */
+body.theme-sweet {
+  --font-display: "Playfair Display", Georgia, serif;
+}
+
+/* Fancy That (teatral, crimson + malva) — provavelmente serifado ornamental
+   Cormorant Garamond já está carregado — elegante, teatral, literário */
+body.theme-fancy {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+}
+
+/* Petal (B&W editorial minimalista) — Cormorant Garamond light
+   Editorial, fashion-forward, limpo */
+body.theme-petal {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+}
