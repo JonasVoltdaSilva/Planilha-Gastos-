@@ -1400,9 +1400,10 @@ function RelatoriosView({ expenses, byCat, total }) {
 const { useEffect: useEffTS, useRef: useRefTS } = React;
 
 const TS_CATS = [
-  { id: "padrao",  label: "Padrão", ids: ["default","dark","rose","orange"] },
-  { id: "neon",    label: "Neon",   ids: ["blue","purple","acid"] },
-  { id: "albuns",  label: "Álbuns", ids: ["petal","chrome","sweet","fancy"] },
+  { id: "padrao", label: "Padrão", ids: ["default","dark","rose","orange"] },
+  { id: "neon",   label: "Neon",   ids: ["blue","purple"] },
+  { id: "albuns", label: "Álbuns", ids: ["petal","chrome","sweet","fancy"] },
+  { id: "kpop",   label: "K-pop",  ids: ["acid"] },
 ];
 
 const LIGHT_THEMES = new Set(["petal","sweet","fancy"]);

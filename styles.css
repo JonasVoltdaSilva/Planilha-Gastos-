@@ -2722,37 +2722,3 @@ body.theme-sweet .ts-close-btn,
 body.theme-fancy .ts-close-btn,
 body.theme-petal .ts-close-btn { background: rgba(0,0,0,0.07); border-color: rgba(0,0,0,0.1); color: rgba(0,0,0,0.55); }
 
-/* ============================================================
-   FONTES POR TEMA ÁLBUM
-   Pesquisa: tipografia real/próxima de cada álbum de referência
-   ============================================================ */
-
-/* Lemonade (Beyoncé 2016) — Neue Helvetica Pro 85 Heavy
-   Alternativa: Bebas Neue — condensado, bold, urbano, impactante */
-body.theme-acid {
-  --font-display: "Bebas Neue", "Impact", sans-serif;
-}
-
-/* Whiplash (filme 2014 / visual chrome) — Charlotte Sans Bold
-   Alternativa: Space Grotesk Bold — moderno, industrial, clean */
-body.theme-chrome {
-  --font-display: "Space Grotesk", "Sora", sans-serif;
-}
-
-/* Short n' Sweet (Sabrina Carpenter 2024) — Citadel Script + serifado vintage
-   Alternativa: Playfair Display itálico — elegante, retrô, glamouroso */
-body.theme-sweet {
-  --font-display: "Playfair Display", Georgia, serif;
-}
-
-/* Fancy That (teatral, crimson + malva) — provavelmente serifado ornamental
-   Cormorant Garamond já está carregado — elegante, teatral, literário */
-body.theme-fancy {
-  --font-display: "Cormorant Garamond", Georgia, serif;
-}
-
-/* Petal (B&W editorial minimalista) — Cormorant Garamond light
-   Editorial, fashion-forward, limpo */
-body.theme-petal {
-  --font-display: "Cormorant Garamond", Georgia, serif;
-}
