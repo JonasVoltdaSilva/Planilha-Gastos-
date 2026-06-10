@@ -2836,3 +2836,38 @@ body.theme-fancy .toast {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   Home — navegador de mês
+   ============================================================ */
+.home-month-nav {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-top: 18px;
+}
+.home-month-arrow {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  color: var(--text-mid); cursor: pointer;
+  display: grid; place-items: center;
+  transition: all var(--dur-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.home-month-arrow:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: var(--text-hi); }
+.home-month-arrow:active:not(:disabled) { transform: scale(0.9); }
+.home-month-arrow:disabled { opacity: 0.28; cursor: default; }
+.home-month-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 14.5px;
+  color: var(--text-hi);
+  background: none; border: none; cursor: pointer;
+  padding: 5px 14px; border-radius: 10px;
+  min-width: 120px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  transition: background var(--dur-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.home-month-label:hover { background: rgba(255,255,255,0.05); }
+.home-month-hoje {
+  font-family: var(--font-body); font-size: 10px; font-weight: 700;
+  color: var(--accent-mint); text-transform: uppercase; letter-spacing: 0.06em;
+}

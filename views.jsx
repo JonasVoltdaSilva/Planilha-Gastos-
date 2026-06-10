@@ -687,8 +687,11 @@ function BankImportModal({ onImport, onClose }) {
    ============================================================ */
 function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, cards, userName, faturaOverrides, onGoToFaturas, fixas, caloteiros, onGoToConfig }) {
   const [showNotifs, setShowNotifs] = useS(false);
+  const [monthOffset, setMonthOffset] = useS(0);
   const now = new Date();
-  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const selDate = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const isCurrentMonth = monthOffset === 0;
+  const monthStr = `${selDate.getFullYear()}-${String(selDate.getMonth() + 1).padStart(2, "0")}`;
   const monthExp = expenses.filter(e => e.data && e.data.startsWith(monthStr));
   const monthGastos = monthExp.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0);
   const monthEntradas = monthExp.filter(e => e.kind === "entrada").reduce((s, e) => s + e.valor, 0);
@@ -701,7 +704,9 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
   const h = now.getHours();
   const greeting = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
   const recent = [...monthExp].filter(e => e.kind !== "entrada").sort((a, b) => b.data.localeCompare(a.data));
-  const monthName = now.toLocaleString("pt-BR", { month: "long" });
+  const monthName = selDate.toLocaleString("pt-BR", { month: "long" });
+  const monthLabel = monthName.charAt(0).toUpperCase() + monthName.slice(1) +
+    (selDate.getFullYear() !== now.getFullYear() ? ` ${selDate.getFullYear()}` : "");
   const todayDay = now.getDate();
 
   const pendingFaturas = useM(() => {
@@ -800,9 +805,25 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
           </div>
         </div>
 
+        {/* Navegador de mês */}
+        <div className="home-month-nav">
+          <button className="home-month-arrow" onClick={() => setMonthOffset(o => o - 1)} title="Mês anterior">
+            <Ic.chevron size={15} style={{ transform: "rotate(90deg)" }} />
+          </button>
+          <button className="home-month-label" onClick={() => setMonthOffset(0)}
+            title={isCurrentMonth ? "Mês atual" : "Voltar para o mês atual"}>
+            {monthLabel}
+            {!isCurrentMonth && <span className="home-month-hoje">voltar a hoje</span>}
+          </button>
+          <button className="home-month-arrow" disabled={isCurrentMonth}
+            onClick={() => setMonthOffset(o => Math.min(0, o + 1))} title="Próximo mês">
+            <Ic.chevron size={15} style={{ transform: "rotate(-90deg)" }} />
+          </button>
+        </div>
+
         {/* Hero balance */}
         <div className="home-balance">
-          <div className="home-balance-label">Saldo disponível</div>
+          <div className="home-balance-label">{isCurrentMonth ? "Saldo disponível" : `Saldo de ${monthLabel}`}</div>
           <div className="home-balance-value" style={{ color: saldo >= 0 ? "var(--accent-mint)" : "#e08a7a" }}>
             {saldo < 0 && "−"}{fmtBRL(Math.abs(saldo))}
           </div>
@@ -842,7 +863,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
       {recent.length > 0 && (
         <div className="panel glass">
           <div className="panel-head">
-            <div className="panel-title">Últimas compras</div>
+            <div className="panel-title">{isCurrentMonth ? "Últimas compras" : `Compras de ${monthLabel}`}</div>
           </div>
           <ExpenseTable rows={recent.slice(0, 5)} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
         </div>
