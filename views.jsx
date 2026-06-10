@@ -900,15 +900,37 @@ function EmprestimosSection({ emprestimos, onAdd, onDelete, onUpdate }) {
 }
 
 function FixasSection({ fixas, onAdd, onDelete, allCats }) {
-  const [form, setForm] = useS({ show: false, nome: "", valor: "", dia: "1", catId: "contas" });
+  const BLANK = { show: false, nome: "", valor: "", catId: "contas",
+                  recType: "fixed_day", day: "1", pos: "1", ref: "5" };
+  const [form, setForm] = useS(BLANK);
   const total = (fixas || []).reduce((s, f) => s + f.valor, 0);
+  const f_ = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = () => {
     const valor = parseFloat(form.valor.replace(",", "."));
     if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
-    onAdd({ nome: form.nome.trim(), valor, dia: parseInt(form.dia) || 1, catId: form.catId });
-    setForm(f => ({ ...f, show: false, nome: "", valor: "", dia: "1" }));
+    let rec;
+    if (form.recType === "nth_biz") {
+      rec = { type: "nth_biz", pos: form.pos === "last" ? "last" : parseInt(form.pos) };
+    } else if (form.recType === "first_biz_after") {
+      rec = { type: "first_biz_after", ref: parseInt(form.ref) || 5 };
+    } else {
+      rec = { type: "fixed_day", day: parseInt(form.day) || 1 };
+    }
+    /* .dia mantido para compatibilidade com outros trechos que lêem f.dia */
+    const dia = rec.type === "fixed_day" ? rec.day : 1;
+    onAdd({ nome: form.nome.trim(), valor, dia, catId: form.catId, rec });
+    setForm(BLANK);
   };
+
+  const recBtnStyle = (type) => ({
+    flex: 1, padding: "7px 4px", borderRadius: "var(--radius-sm)",
+    fontSize: 11, fontWeight: 600, cursor: "pointer",
+    background: form.recType === type ? "var(--accent-mint-soft)" : "rgba(255,255,255,0.05)",
+    border: `1px solid ${form.recType === type ? "var(--accent-mint)" : "var(--glass-border)"}`,
+    color: form.recType === type ? "var(--accent-mint)" : "var(--text-mid)",
+    transition: "all 0.15s",
+  });
 
   return (
     <div className="panel glass">
@@ -917,7 +939,7 @@ function FixasSection({ fixas, onAdd, onDelete, allCats }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {total > 0 && <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--text-mid)" }}>{fmtBRL(total)}/mês</span>}
           <button className="btn btn-ghost" style={{ padding: "7px 12px", minHeight: 0, fontSize: 12 }}
-            onClick={() => setForm(f => ({ ...f, show: !f.show }))}>
+            onClick={() => setForm(p => ({ ...p, show: !p.show }))}>
             {form.show ? "Cancelar" : <><Ic.plus size={14} />Adicionar</>}
           </button>
         </div>
@@ -925,12 +947,48 @@ function FixasSection({ fixas, onAdd, onDelete, allCats }) {
 
       {form.show && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
-          <input className="form-input" placeholder="Nome (ex: Netflix, Aluguel)" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
-          <div style={{ display: "flex", gap: 8 }}>
-            <input className="form-input" placeholder="Valor (R$)" type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} style={{ flex: 2 }} />
-            <input className="form-input" placeholder="Dia" type="number" min="1" max="31" value={form.dia} onChange={e => setForm(f => ({ ...f, dia: e.target.value }))} style={{ flex: 1 }} title="Dia do mês de vencimento" />
+          <input className="form-input" placeholder="Nome (ex: Netflix, Aluguel)"
+            value={form.nome} onChange={e => f_("nome", e.target.value)} />
+          <input className="form-input" placeholder="Valor (R$)" type="number"
+            value={form.valor} onChange={e => f_("valor", e.target.value)} />
+
+          {/* Tipo de recorrência */}
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-lo)", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Recorrência</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {[["fixed_day","Dia fixo"],["nth_biz","N-ésimo útil"],["first_biz_after","Útil após data"]].map(([v,l]) => (
+                <button key={v} type="button" style={recBtnStyle(v)} onClick={() => f_("recType", v)}>{l}</button>
+              ))}
+            </div>
           </div>
-          <select className="select" value={form.catId} onChange={e => setForm(f => ({ ...f, catId: e.target.value }))}>
+
+          {/* Campos condicionais */}
+          {form.recType === "fixed_day" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--text-mid)", flexShrink: 0 }}>Todo dia</span>
+              <input className="form-input" type="number" min="1" max="31" style={{ width: 72 }}
+                value={form.day} onChange={e => f_("day", e.target.value)} placeholder="1–31" />
+              <span style={{ fontSize: 13, color: "var(--text-lo)" }}>do mês</span>
+            </div>
+          )}
+          {form.recType === "nth_biz" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <select className="select" value={form.pos} onChange={e => f_("pos", e.target.value)} style={{ flex: 1 }}>
+                {["1","2","3","4","5"].map(n => <option key={n} value={n}>{n}º dia útil</option>)}
+                <option value="last">Último dia útil</option>
+              </select>
+              <span style={{ fontSize: 13, color: "var(--text-lo)", flexShrink: 0 }}>do mês</span>
+            </div>
+          )}
+          {form.recType === "first_biz_after" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--text-mid)", flexShrink: 0 }}>1º dia útil após o dia</span>
+              <input className="form-input" type="number" min="1" max="31" style={{ width: 72 }}
+                value={form.ref} onChange={e => f_("ref", e.target.value)} placeholder="1–31" />
+            </div>
+          )}
+
+          <select className="select" value={form.catId} onChange={e => f_("catId", e.target.value)}>
             {(allCats || CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
           <button className="btn btn-primary" onClick={submit}>Adicionar conta fixa</button>
@@ -944,13 +1002,15 @@ function FixasSection({ fixas, onAdd, onDelete, allCats }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {(fixas || []).map(f => {
           const cat = CAT_MAP[f.catId] || CAT_MAP["outros"];
+          const recDesc = typeof window.describeRec === "function"
+            ? window.describeRec(f) : `Todo dia ${f.dia}`;
           return (
             <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", borderBottom: "1px solid var(--glass-border)" }}>
               <span className="exp-tag" style={{ background: cat.hex + "22", color: cat.hex, borderColor: cat.hex + "44", flexShrink: 0 }}>{cat.nome}</span>
               <div style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{f.nome}</div>
               <div style={{ flexShrink: 0, textAlign: "right" }}>
                 <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>{fmtBRL(f.valor)}</div>
-                <div style={{ fontSize: 11, color: "var(--text-lo)" }}>todo dia {f.dia}</div>
+                <div style={{ fontSize: 11, color: "var(--text-lo)" }}>{recDesc}</div>
               </div>
               <button className="icon-btn danger" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => onDelete(f.id)}><Ic.trash size={13} /></button>
             </div>

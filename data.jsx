@@ -431,6 +431,74 @@ function exportToJSON(expenses, cards, settings, customCats, fixas, caloteiros, 
   URL.revokeObjectURL(url);
 }
 
+/* ============================================================
+   RECORRÊNCIA DE CONTAS FIXAS — dias úteis
+   ============================================================
+   Tipos de rec:
+     { type: "fixed_day",       day: 1–31 }
+     { type: "nth_biz",         pos: 1–5 | "last" }
+     { type: "first_biz_after", ref: 1–31 }
+
+   Backward-compat: fixas sem .rec usam .dia como fixed_day.
+   Extensível: adicione strings "YYYY-MM-DD" em HOLIDAYS ou chame addHoliday().
+   ============================================================ */
+
+const HOLIDAYS = [];
+function addHoliday(isoDate) { if (!HOLIDAYS.includes(isoDate)) HOLIDAYS.push(isoDate); }
+
+function _daysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
+
+function _isBusinessDay(year, month, day) {
+  const dow = new Date(year, month - 1, day).getDay();
+  if (dow === 0 || dow === 6) return false;
+  const iso = `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  return !HOLIDAYS.includes(iso);
+}
+
+function getNthBusinessDay(year, month, pos) {
+  /* pos = 1–5 ou "last" */
+  const total = _daysInMonth(year, month);
+  if (pos === "last") {
+    for (let d = total; d >= 1; d--) if (_isBusinessDay(year, month, d)) return d;
+    return total;
+  }
+  let count = 0;
+  for (let d = 1; d <= total; d++) {
+    if (_isBusinessDay(year, month, d) && ++count === pos) return d;
+  }
+  return total;
+}
+
+function getFirstBusinessDayOnOrAfter(year, month, refDay) {
+  const total = _daysInMonth(year, month);
+  for (let d = Math.min(refDay, total); d <= total; d++) {
+    if (_isBusinessDay(year, month, d)) return d;
+  }
+  return getNthBusinessDay(year, month, "last");
+}
+
+function resolveFixaDay(fixa, year, month) {
+  const rec = fixa.rec || { type: "fixed_day", day: fixa.dia || 1 };
+  switch (rec.type) {
+    case "nth_biz":         return getNthBusinessDay(year, month, rec.pos);
+    case "first_biz_after": return getFirstBusinessDayOnOrAfter(year, month, rec.ref);
+    default:                return rec.day ?? fixa.dia ?? 1;
+  }
+}
+
+function describeRec(fixa) {
+  const rec = fixa.rec || { type: "fixed_day", day: fixa.dia || 1 };
+  const ord = n => ["1º","2º","3º","4º","5º"][n-1] || `${n}º`;
+  switch (rec.type) {
+    case "nth_biz":
+      return rec.pos === "last" ? "Último dia útil do mês" : `${ord(rec.pos)} dia útil do mês`;
+    case "first_biz_after":
+      return `1º dia útil após o dia ${rec.ref}`;
+    default:
+      return `Todo dia ${rec.day ?? fixa.dia ?? 1}`;
+  }
+}
+
 Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
   FORMAS, addMonths, calcFaturaRef, makeTransaction,
@@ -439,4 +507,7 @@ Object.assign(window, {
   todayISO, addDays, uid, seedData,
   LS_FATURAS, formatMes, computeFaturas,
   exportToCSV, exportToJSON,
+  HOLIDAYS, addHoliday,
+  getNthBusinessDay, getFirstBusinessDayOnOrAfter,
+  resolveFixaDay, describeRec,
 });
