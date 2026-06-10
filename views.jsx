@@ -336,22 +336,81 @@ function FilterBar({ period, setPeriod, cat, setCat, search, setSearch, tipoFilt
   );
 }
 
+/* ---------- RecRuleEditor — seletor genérico de recorrência ---------- */
+function RecRuleEditor({ label, value, onChange }) {
+  const type = (value && value.type) || "fixed_day";
+  const bStyle = (t) => ({
+    flex: 1, padding: "6px 4px", borderRadius: "var(--radius-sm)",
+    fontSize: 11, fontWeight: 600, cursor: "pointer", textAlign: "center",
+    background: type === t ? "var(--accent-mint-soft)" : "rgba(255,255,255,0.05)",
+    border: `1px solid ${type === t ? "var(--accent-mint)" : "var(--glass-border)"}`,
+    color: type === t ? "var(--accent-mint)" : "var(--text-mid)",
+    transition: "all 0.15s",
+  });
+  const merge = (patch) => onChange({ ...(value || {}), type, ...patch });
+  return (
+    <div>
+      {label && (
+        <div style={{ fontSize: 11, color: "var(--text-lo)", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          {label}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 5, marginBottom: 7 }}>
+        {[["fixed_day","Dia fixo"],["nth_biz","N-ésimo útil"],["first_biz_after","Útil após data"]].map(([v,l]) => (
+          <button key={v} type="button" style={bStyle(v)}
+            onClick={() => onChange({ ...(value || {}), type: v })}>{l}</button>
+        ))}
+      </div>
+      {type === "fixed_day" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 13, color: "var(--text-mid)", flexShrink: 0 }}>Todo dia</span>
+          <input className="form-input" type="number" min="1" max="31" style={{ width: 72 }}
+            value={value?.day ?? 1}
+            onChange={e => merge({ day: parseInt(e.target.value) || 1 })} />
+          <span style={{ fontSize: 13, color: "var(--text-lo)" }}>do mês</span>
+        </div>
+      )}
+      {type === "nth_biz" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <select className="select" style={{ flex: 1 }}
+            value={String(value?.pos ?? "1")}
+            onChange={e => merge({ pos: e.target.value === "last" ? "last" : parseInt(e.target.value) })}>
+            {["1","2","3","4","5"].map(n => <option key={n} value={n}>{n}º dia útil</option>)}
+            <option value="last">Último dia útil</option>
+          </select>
+          <span style={{ fontSize: 13, color: "var(--text-lo)", flexShrink: 0 }}>do mês</span>
+        </div>
+      )}
+      {type === "first_biz_after" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 13, color: "var(--text-mid)", flexShrink: 0 }}>1º útil após o dia</span>
+          <input className="form-input" type="number" min="1" max="31" style={{ width: 72 }}
+            value={value?.ref ?? 5}
+            onChange={e => merge({ ref: parseInt(e.target.value) || 1 })} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- CardManager — CRUD de cartões ---------- */
 const CARD_COLORS = ["#a98ae0", "#5aa3e0", "#5ad9a8", "#e0a85a", "#e08a7a", "#e08ac8", "#5ac4d9", "#9aa3b0"];
 
 function CardManager({ cards, onAddCard, onDeleteCard }) {
   const [name, setName] = useS("");
-  const [fechamento, setFechamento] = useS("20");
-  const [vencimento, setVencimento] = useS("5");
+  const [recFechamento, setRecFechamento] = useS({ type: "fixed_day", day: 20 });
+  const [recVencimento, setRecVencimento] = useS({ type: "fixed_day", day: 5 });
   const [cor, setCor] = useS(CARD_COLORS[0]);
 
   const submit = () => {
     const nome = name.trim();
     if (!nome) return;
-    const fech = Math.max(1, Math.min(31, parseInt(fechamento) || 20));
-    const venc = Math.max(1, Math.min(31, parseInt(vencimento) || 5));
-    onAddCard({ id: uid(), nome, diaFechamento: fech, diaVencimento: venc, cor });
+    const diaFech = recFechamento.type === "fixed_day" ? (recFechamento.day || 20) : 1;
+    const diaVenc = recVencimento.type === "fixed_day" ? (recVencimento.day || 5) : 1;
+    onAddCard({ id: uid(), nome, diaFechamento: diaFech, diaVencimento: diaVenc, recFechamento, recVencimento, cor });
     setName("");
+    setRecFechamento({ type: "fixed_day", day: 20 });
+    setRecVencimento({ type: "fixed_day", day: 5 });
   };
 
   return (
@@ -359,47 +418,43 @@ function CardManager({ cards, onAddCard, onDeleteCard }) {
       <div className="panel-head"><div className="panel-title">Cartões de crédito</div></div>
       {cards.length > 0 && (
         <div className="card-list">
-          {cards.map(c => (
-            <div className="card-item" key={c.id}>
-              <span className="card-color-dot" style={{ background: c.cor }} />
-              <Ic.card size={16} style={{ color: c.cor, flexShrink: 0 }} />
-              <span style={{ flex: 1, fontWeight: 600, fontSize: 13.5 }}>{c.nome}</span>
-              <span className="exp-tag" style={{ background: c.cor + "22", color: c.cor, borderColor: c.cor + "44" }}>
-                fecha {c.diaFechamento}
-              </span>
-              <span className="exp-tag" style={{ background: "rgba(255,255,255,0.05)", color: "var(--text-mid)", borderColor: "var(--glass-border)" }}>
-                vence {c.diaVencimento}
-              </span>
-              <button className="icon-btn danger" onClick={() => onDeleteCard(c.id)}><Ic.trash size={14} /></button>
-            </div>
-          ))}
+          {cards.map(c => {
+            const rFech = c.recFechamento || { type: "fixed_day", day: c.diaFechamento || 20 };
+            const rVenc = c.recVencimento || { type: "fixed_day", day: c.diaVencimento || 5 };
+            const dFech = window.describeRecRule ? window.describeRecRule(rFech) : `Dia ${c.diaFechamento || 20}`;
+            const dVenc = window.describeRecRule ? window.describeRecRule(rVenc) : `Dia ${c.diaVencimento || 5}`;
+            return (
+              <div className="card-item" key={c.id}>
+                <span className="card-color-dot" style={{ background: c.cor }} />
+                <Ic.card size={16} style={{ color: c.cor, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontWeight: 600, fontSize: 13.5 }}>{c.nome}</span>
+                <span className="exp-tag" style={{ background: c.cor + "22", color: c.cor, borderColor: c.cor + "44" }}>
+                  fecha {dFech}
+                </span>
+                <span className="exp-tag" style={{ background: "rgba(255,255,255,0.05)", color: "var(--text-mid)", borderColor: "var(--glass-border)" }}>
+                  vence {dVenc}
+                </span>
+                <button className="icon-btn danger" onClick={() => onDeleteCard(c.id)}><Ic.trash size={14} /></button>
+              </div>
+            );
+          })}
         </div>
       )}
       <div className="card-add-form">
         <input className="form-input" value={name} onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === "Enter" && submit()}
           placeholder="Nome do cartão (ex.: Nubank, Inter)" />
-        <div className="card-form-row">
-          <div>
-            <div className="form-label" style={{ marginBottom: 6 }}>Dia fechamento</div>
-            <input className="form-input" inputMode="numeric" value={fechamento}
-              onChange={e => setFechamento(e.target.value.replace(/\D/g, ""))}
-              placeholder="20" />
-          </div>
-          <div>
-            <div className="form-label" style={{ marginBottom: 6 }}>Dia vencimento</div>
-            <input className="form-input" inputMode="numeric" value={vencimento}
-              onChange={e => setVencimento(e.target.value.replace(/\D/g, ""))}
-              placeholder="5" />
-          </div>
-          <div>
-            <div className="form-label" style={{ marginBottom: 6 }}>Cor</div>
-            <div className="color-palette" style={{ paddingTop: 4 }}>
-              {CARD_COLORS.map(hex => (
-                <div key={hex} className={"color-dot" + (cor === hex ? " on" : "")}
-                  style={{ background: hex }} onClick={() => setCor(hex)} />
-              ))}
-            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <RecRuleEditor label="Fechamento" value={recFechamento} onChange={setRecFechamento} />
+          <RecRuleEditor label="Vencimento" value={recVencimento} onChange={setRecVencimento} />
+        </div>
+        <div>
+          <div className="form-label" style={{ marginBottom: 6 }}>Cor</div>
+          <div className="color-palette" style={{ paddingTop: 4 }}>
+            {CARD_COLORS.map(hex => (
+              <div key={hex} className={"color-dot" + (cor === hex ? " on" : "")}
+                style={{ background: hex }} onClick={() => setCor(hex)} />
+            ))}
           </div>
         </div>
         <button className="btn btn-primary" onClick={submit}><Ic.plus size={16} />Adicionar cartão</button>
@@ -900,37 +955,18 @@ function EmprestimosSection({ emprestimos, onAdd, onDelete, onUpdate }) {
 }
 
 function FixasSection({ fixas, onAdd, onDelete, allCats }) {
-  const BLANK = { show: false, nome: "", valor: "", catId: "contas",
-                  recType: "fixed_day", day: "1", pos: "1", ref: "5" };
+  const BLANK = { show: false, nome: "", valor: "", catId: "contas", rec: { type: "fixed_day", day: 1 } };
   const [form, setForm] = useS(BLANK);
   const total = (fixas || []).reduce((s, f) => s + f.valor, 0);
-  const f_ = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = () => {
     const valor = parseFloat(form.valor.replace(",", "."));
     if (!form.nome.trim() || isNaN(valor) || valor <= 0) return;
-    let rec;
-    if (form.recType === "nth_biz") {
-      rec = { type: "nth_biz", pos: form.pos === "last" ? "last" : parseInt(form.pos) };
-    } else if (form.recType === "first_biz_after") {
-      rec = { type: "first_biz_after", ref: parseInt(form.ref) || 5 };
-    } else {
-      rec = { type: "fixed_day", day: parseInt(form.day) || 1 };
-    }
-    /* .dia mantido para compatibilidade com outros trechos que lêem f.dia */
-    const dia = rec.type === "fixed_day" ? rec.day : 1;
+    const rec = form.rec;
+    const dia = rec.type === "fixed_day" ? (rec.day || 1) : 1;
     onAdd({ nome: form.nome.trim(), valor, dia, catId: form.catId, rec });
     setForm(BLANK);
   };
-
-  const recBtnStyle = (type) => ({
-    flex: 1, padding: "7px 4px", borderRadius: "var(--radius-sm)",
-    fontSize: 11, fontWeight: 600, cursor: "pointer",
-    background: form.recType === type ? "var(--accent-mint-soft)" : "rgba(255,255,255,0.05)",
-    border: `1px solid ${form.recType === type ? "var(--accent-mint)" : "var(--glass-border)"}`,
-    color: form.recType === type ? "var(--accent-mint)" : "var(--text-mid)",
-    transition: "all 0.15s",
-  });
 
   return (
     <div className="panel glass">
@@ -948,47 +984,12 @@ function FixasSection({ fixas, onAdd, onDelete, allCats }) {
       {form.show && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, padding: 14, background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)", border: "1px solid var(--glass-border)" }}>
           <input className="form-input" placeholder="Nome (ex: Netflix, Aluguel)"
-            value={form.nome} onChange={e => f_("nome", e.target.value)} />
+            value={form.nome} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))} />
           <input className="form-input" placeholder="Valor (R$)" type="number"
-            value={form.valor} onChange={e => f_("valor", e.target.value)} />
-
-          {/* Tipo de recorrência */}
-          <div>
-            <div style={{ fontSize: 11, color: "var(--text-lo)", marginBottom: 5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Recorrência</div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {[["fixed_day","Dia fixo"],["nth_biz","N-ésimo útil"],["first_biz_after","Útil após data"]].map(([v,l]) => (
-                <button key={v} type="button" style={recBtnStyle(v)} onClick={() => f_("recType", v)}>{l}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* Campos condicionais */}
-          {form.recType === "fixed_day" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 13, color: "var(--text-mid)", flexShrink: 0 }}>Todo dia</span>
-              <input className="form-input" type="number" min="1" max="31" style={{ width: 72 }}
-                value={form.day} onChange={e => f_("day", e.target.value)} placeholder="1–31" />
-              <span style={{ fontSize: 13, color: "var(--text-lo)" }}>do mês</span>
-            </div>
-          )}
-          {form.recType === "nth_biz" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <select className="select" value={form.pos} onChange={e => f_("pos", e.target.value)} style={{ flex: 1 }}>
-                {["1","2","3","4","5"].map(n => <option key={n} value={n}>{n}º dia útil</option>)}
-                <option value="last">Último dia útil</option>
-              </select>
-              <span style={{ fontSize: 13, color: "var(--text-lo)", flexShrink: 0 }}>do mês</span>
-            </div>
-          )}
-          {form.recType === "first_biz_after" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 13, color: "var(--text-mid)", flexShrink: 0 }}>1º dia útil após o dia</span>
-              <input className="form-input" type="number" min="1" max="31" style={{ width: 72 }}
-                value={form.ref} onChange={e => f_("ref", e.target.value)} placeholder="1–31" />
-            </div>
-          )}
-
-          <select className="select" value={form.catId} onChange={e => f_("catId", e.target.value)}>
+            value={form.valor} onChange={e => setForm(p => ({ ...p, valor: e.target.value }))} />
+          <RecRuleEditor label="Recorrência" value={form.rec}
+            onChange={rec => setForm(p => ({ ...p, rec }))} />
+          <select className="select" value={form.catId} onChange={e => setForm(p => ({ ...p, catId: e.target.value }))}>
             {(allCats || CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
           <button className="btn btn-primary" onClick={submit}>Adicionar conta fixa</button>
@@ -1939,12 +1940,20 @@ function FaturasView({ cards, expenses, faturaOverrides, onMarkPaid, onUnmarkPai
         {selectedCard && (
           <div style={{ display: "flex", gap: 24, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--glass-border)", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Dia fechamento</div>
-              <div style={{ fontWeight: 700, fontSize: 17 }}>{selectedCard.diaFechamento}</div>
+              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Fechamento</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>
+                {window.describeRecRule
+                  ? window.describeRecRule(selectedCard.recFechamento || { type: "fixed_day", day: selectedCard.diaFechamento || 20 })
+                  : selectedCard.diaFechamento}
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Dia vencimento</div>
-              <div style={{ fontWeight: 700, fontSize: 17 }}>{selectedCard.diaVencimento}</div>
+              <div style={{ fontSize: 11, color: "var(--text-lo)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Vencimento</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>
+                {window.describeRecRule
+                  ? window.describeRecRule(selectedCard.recVencimento || { type: "fixed_day", day: selectedCard.diaVencimento || 5 })
+                  : selectedCard.diaVencimento}
+              </div>
             </div>
             {totalAberto > 0 && (
               <div>

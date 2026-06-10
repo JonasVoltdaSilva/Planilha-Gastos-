@@ -304,13 +304,16 @@ function parseStatement(text) {
 function calcFaturaRef(dataISO, card) {
   if (!card) return null;
   const d = new Date(dataISO + "T12:00:00");
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
   const day = d.getDate();
-  const closing = card.diaFechamento || 20;
+  const recFech = card.recFechamento || { type: "fixed_day", day: card.diaFechamento || 20 };
+  const closing = resolveRecDay(recFech, year, month);
   if (day > closing) {
-    const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const next = new Date(year, month, 1);
     return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
   }
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${year}-${String(month).padStart(2, "0")}`;
 }
 
 function seedData() {
@@ -381,10 +384,14 @@ function computeFaturas(cards, expenses, faturaOverrides) {
     if (!byMes[nextMes]) byMes[nextMes] = [];
     for (const [mes, transacoes] of Object.entries(byMes)) {
       const [y, m] = mes.split("-").map(Number);
-      const closingDay = card.diaFechamento || 20;
-      const dataFechamento = `${mes}-${String(closingDay).padStart(2, "0")}`;
-      const vencDate = new Date(y, m, card.diaVencimento || 5);
-      const dataVencimento = vencDate.toISOString().slice(0, 10);
+      const recFech = card.recFechamento || { type: "fixed_day", day: card.diaFechamento || 20 };
+      const recVenc = card.recVencimento || { type: "fixed_day", day: card.diaVencimento || 5 };
+      const closingDay = resolveRecDay(recFech, y, m);
+      const dataFechamento = `${y}-${String(m).padStart(2, "0")}-${String(closingDay).padStart(2, "0")}`;
+      const vencYear = m === 12 ? y + 1 : y;
+      const vencMonth = m === 12 ? 1 : m + 1;
+      const vencDay = resolveRecDay(recVenc, vencYear, vencMonth);
+      const dataVencimento = `${vencYear}-${String(vencMonth).padStart(2, "0")}-${String(vencDay).padStart(2, "0")}`;
       const key = `${card.id}:${mes}`;
       const override = faturaOverrides?.[key];
       const status = override?.status === "paga" ? "paga"
@@ -477,15 +484,32 @@ function getFirstBusinessDayOnOrAfter(year, month, refDay) {
   return getNthBusinessDay(year, month, "last");
 }
 
-function resolveFixaDay(fixa, year, month) {
-  const rec = fixa.rec || { type: "fixed_day", day: fixa.dia || 1 };
+/* resolveRecDay — engine genérica usada por fixas E cartões */
+function resolveRecDay(rec, year, month) {
+  if (!rec) return 1;
   switch (rec.type) {
     case "nth_biz":         return getNthBusinessDay(year, month, rec.pos);
     case "first_biz_after": return getFirstBusinessDayOnOrAfter(year, month, rec.ref);
-    default:                return rec.day ?? fixa.dia ?? 1;
+    default:                return rec.day ?? 1;
   }
 }
 
+function resolveFixaDay(fixa, year, month) {
+  return resolveRecDay(fixa.rec || { type: "fixed_day", day: fixa.dia || 1 }, year, month);
+}
+
+/* describeRecRule — label curto para exibição (ex.: "Dia 20", "1º dia útil") */
+function describeRecRule(rec) {
+  if (!rec || rec.type === "fixed_day") return `Dia ${rec?.day ?? 1}`;
+  const ord = n => ["1º","2º","3º","4º","5º"][n-1] || `${n}º`;
+  if (rec.type === "nth_biz")
+    return rec.pos === "last" ? "Último dia útil" : `${ord(rec.pos)} dia útil`;
+  if (rec.type === "first_biz_after")
+    return `Útil após dia ${rec.ref}`;
+  return `Dia ${rec.day ?? 1}`;
+}
+
+/* describeRec — label longo para fixas (mantido para compat.) */
 function describeRec(fixa) {
   const rec = fixa.rec || { type: "fixed_day", day: fixa.dia || 1 };
   const ord = n => ["1º","2º","3º","4º","5º"][n-1] || `${n}º`;
@@ -509,5 +533,6 @@ Object.assign(window, {
   exportToCSV, exportToJSON,
   HOLIDAYS, addHoliday,
   getNthBusinessDay, getFirstBusinessDayOnOrAfter,
-  resolveFixaDay, describeRec,
+  resolveRecDay, resolveFixaDay,
+  describeRecRule, describeRec,
 });
