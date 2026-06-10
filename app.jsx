@@ -821,6 +821,11 @@ function App() {
   const importExpenses = (list) => {
     if (!list.length) return;
     setExpenses(prev => [...list, ...prev]);
+    // Extrato de meses anteriores ficaria oculto pelo filtro "Este mês" —
+    // amplia o período para que tudo que acabou de entrar fique visível
+    const now = new Date();
+    const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    if (list.some(e => e.data < firstOfMonth)) setPeriod("all");
     showToast(`${list.length} lançamento${list.length > 1 ? "s" : ""} importado${list.length > 1 ? "s" : ""}`);
     setPage("gastos");
   };
