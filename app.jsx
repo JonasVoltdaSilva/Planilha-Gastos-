@@ -821,7 +821,7 @@ function App() {
   const importExpenses = (list) => {
     if (!list.length) return;
     setExpenses(prev => [...list, ...prev]);
-    showToast(`${list.length} gasto${list.length > 1 ? "s" : ""} importado${list.length > 1 ? "s" : ""}`);
+    showToast(`${list.length} lançamento${list.length > 1 ? "s" : ""} importado${list.length > 1 ? "s" : ""}`);
     setPage("gastos");
   };
 

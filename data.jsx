@@ -257,12 +257,20 @@ function parseStatement(text) {
     let chosenAmt = null;
     for (const m of allAmts) {
       const v = parseFloat(m[1].replace(/\./g, "").replace(",", "."));
-      if (!isNaN(v) && v > 0 && v <= 100000) { chosenAmt = { match: m[0], valor: v }; break; }
+      if (!isNaN(v) && v > 0 && v <= 100000) {
+        const prev = line.slice(Math.max(0, m.index - 2), m.index);
+        chosenAmt = { match: m[0], valor: v, neg: /-\s?$/.test(prev) };
+        break;
+      }
     }
     if (!chosenAmt) continue;
 
-    // Skip clear income/credit lines
-    if (/\bcr\b|\bcrédito\b|\bcredito\b|recebimento pix|pix recebido|transferência recebida|ted recebida|salário recebido|crédito em conta/i.test(line)) continue;
+    // Linha de entrada (crédito) — importa como entrada em vez de pular.
+    // Sinal negativo no valor força gasto, mesmo com palavra-chave de crédito na linha.
+    const isEntradaLine =
+      /recebimento pix|pix recebido|transfer[êe]ncia recebida|ted recebida|doc recebido|sal[áa]rio|dep[óo]sito|rendimento|estorno|cr[ée]dito em conta|juros recebidos/i.test(line) ||
+      /\d,\d{2}\s*C\b/i.test(line);
+    const isEntrada = isEntradaLine && !chosenAmt.neg;
 
     // Parse date — supports DD/MM, DD/MM/YY, DD/MM/YYYY, DD-MM, "DD JAN", "04 JUN"
     let iso = todayISO();
@@ -285,20 +293,167 @@ function parseStatement(text) {
       .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/, "")
       .replace(/\b\d{1,2}\s+(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i, "")
       .replace(/\bR\$\s*/gi, "")
-      .replace(/\s{2,}/g, " ").trim();
-    if (!desc || desc.length < 2) desc = "Gasto importado";
+      .replace(/\s[DC]\s*$/i, "")
+      .replace(/\s{2,}/g, " ").trim()
+      .replace(/[-–]+$/, "").trim();
+    if (!desc || desc.length < 2) desc = isEntrada ? "Entrada importada" : "Gasto importado";
     if (desc.length > 80) desc = desc.slice(0, 80);
 
     results.push(makeTransaction({
       data: iso,
       descricao: desc,
-      categoria: detectCategory(desc),
+      categoria: isEntrada ? "outros" : detectCategory(desc),
       valor: chosenAmt.valor,
       tipo: detectTipo(line),
+      kind: isEntrada ? "entrada" : "gasto",
     }));
   }
 
   return results;
+}
+
+/* ============================================================
+   IMPORTAÇÃO INTELIGENTE — OFX · CSV · texto/PDF
+   OFX é estruturado (leitura 100% precisa); CSV detecta
+   delimitador, cabeçalho e colunas; PDF/texto usa parseStatement.
+   ============================================================ */
+
+/* Número em formato brasileiro ("1.234,56", "-50,00", "R$ 12,00") ou US */
+function _brNum(s) {
+  if (s == null) return NaN;
+  let t = String(s).trim().replace(/R\$\s*/i, "");
+  const neg = /^-|^\(.*\)$/.test(t) || /-$/.test(t);
+  t = t.replace(/[()+\-]/g, "").trim();
+  if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, "").replace(",", ".");
+  else t = t.replace(/,/g, "");
+  const v = parseFloat(t);
+  return neg ? -v : v;
+}
+
+function _splitCSV(line, d) {
+  const out = []; let cur = ""; let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { q = !q; continue; }
+    if (ch === d && !q) { out.push(cur); cur = ""; } else cur += ch;
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+
+function _brDateToISO(s) {
+  const mIso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (mIso) return `${mIso[1]}-${mIso[2]}-${mIso[3]}`;
+  const m = s.match(/(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/);
+  if (!m) return todayISO();
+  const yr = m[3] ? (m[3].length === 2 ? "20" + m[3] : m[3]) : String(new Date().getFullYear());
+  return `${yr}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+}
+
+/* ---- OFX — formato estruturado dos bancos (Santander, Itaú, BB...) ---- */
+function parseOFX(text) {
+  const results = [];
+  const blocks = text.match(/<STMTTRN>[\s\S]*?(?:<\/STMTTRN>|(?=<STMTTRN>))/gi) || [];
+  for (const b of blocks) {
+    const get = (tag) => {
+      const m = b.match(new RegExp(`<${tag}>([^<\\r\\n]*)`, "i"));
+      return m ? m[1].trim() : "";
+    };
+    const valor0 = _brNum(get("TRNAMT"));
+    if (isNaN(valor0) || valor0 === 0) continue;
+    const trnType = get("TRNTYPE").toUpperCase();
+    let isEntrada;
+    if (/DEBIT|PAYMENT|FEE|ATM|POS/.test(trnType)) isEntrada = false;
+    else if (/CREDIT|DEP|DIRECTDEP|INT\b/.test(trnType)) isEntrada = true;
+    else isEntrada = valor0 > 0;
+    const valor = Math.abs(valor0);
+    const dt = get("DTPOSTED").replace(/[^\d].*$/, "");
+    const iso = dt.length >= 8 ? `${dt.slice(0, 4)}-${dt.slice(4, 6)}-${dt.slice(6, 8)}` : todayISO();
+    let desc = (get("MEMO") || get("NAME") || "").replace(/\s{2,}/g, " ").slice(0, 80);
+    if (!desc) desc = isEntrada ? "Entrada importada" : "Gasto importado";
+    results.push(makeTransaction({
+      data: iso, valor, descricao: desc,
+      kind: isEntrada ? "entrada" : "gasto",
+      categoria: isEntrada ? "outros" : detectCategory(desc),
+      tipo: detectTipo(desc),
+    }));
+  }
+  return results;
+}
+
+/* ---- CSV — detecta delimitador, cabeçalho e mapeia colunas ---- */
+function parseCSV(text) {
+  const rawLines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!rawLines.length) return [];
+  const sample = rawLines.slice(0, 6).join("\n");
+  const delim = sample.includes(";") ? ";" : sample.includes("\t") ? "\t" : ",";
+
+  const rows = rawLines.map(l => _splitCSV(l, delim));
+  const isDate = s => /^\d{1,2}[\/\-.]\d{1,2}([\/\-.]\d{2,4})?$|^\d{4}-\d{2}-\d{2}/.test((s || "").trim());
+  const isMoney = s => /^-?\s*(R\$\s*)?\d{1,3}(\.\d{3})*,\d{2}\s*[DC]?$|^-?\d+\.\d{2}$/.test((s || "").trim());
+
+  // Cabeçalho: mapeia colunas pelo nome (ignorando coluna de saldo)
+  let dateCol = -1, valCol = -1, descCol = -1, start = 0;
+  const head = rows[0].map(c => c.toLowerCase());
+  if (!head.some(isDate)) {
+    dateCol = head.findIndex(c => /\bdata\b|date/.test(c));
+    valCol  = head.findIndex(c => /valor|montante|amount|quantia/.test(c) && !/saldo/.test(c));
+    descCol = head.findIndex(c => /hist|descri|lan[çc]|memo|estabelecimento|t[íi]tulo/.test(c));
+    if (dateCol >= 0 || valCol >= 0) start = 1;
+  }
+
+  const parsed = [];
+  for (let r = start; r < rows.length; r++) {
+    const cells = rows[r];
+    if (cells.length < 2) continue;
+    if (/saldo (anterior|final|do dia)/i.test(cells.join(" "))) continue;
+    const dIdx = dateCol >= 0 && isDate(cells[dateCol]) ? dateCol : cells.findIndex(isDate);
+    if (dIdx < 0) continue;
+    let vIdx = valCol >= 0 && isMoney(cells[valCol]) ? valCol : -1;
+    if (vIdx < 0) vIdx = cells.findIndex((c, i) => i !== dIdx && isMoney(c));
+    if (vIdx < 0) continue;
+    let desc = "";
+    if (descCol >= 0 && descCol !== dIdx && descCol !== vIdx && cells[descCol]) desc = cells[descCol];
+    else desc = cells.filter((c, i) => i !== dIdx && i !== vIdx && c && !isMoney(c) && !isDate(c))
+      .sort((a, b) => b.length - a.length)[0] || "";
+    const cell = cells[vIdx].trim();
+    const valor = _brNum(cell.replace(/\s*[DC]$/i, ""));
+    if (isNaN(valor) || valor === 0) continue;
+    parsed.push({
+      data: cells[dIdx].trim(),
+      desc: desc.replace(/\s{2,}/g, " ").slice(0, 80),
+      valor: Math.abs(valor),
+      neg: valor < 0 || /D$/i.test(cell),
+      credMark: /C$/i.test(cell),
+    });
+  }
+
+  // Sinais: se o arquivo tem valores negativos/marca D, os positivos são entradas.
+  // Se tudo positivo e sem marcas, assume extrato de gastos.
+  const hasNeg = parsed.some(p => p.neg);
+  return parsed.map(p => {
+    const isEntrada = p.credMark || (hasNeg && !p.neg);
+    const desc = p.desc || (isEntrada ? "Entrada importada" : "Gasto importado");
+    return makeTransaction({
+      data: _brDateToISO(p.data), valor: p.valor, descricao: desc,
+      kind: isEntrada ? "entrada" : "gasto",
+      categoria: isEntrada ? "outros" : detectCategory(desc),
+      tipo: detectTipo(desc),
+    });
+  });
+}
+
+/* ---- Dispatcher — escolhe o parser pelo arquivo/conteúdo ---- */
+function parseImportFile(filename, content) {
+  const ext = ((filename || "").split(".").pop() || "").toLowerCase();
+  if (ext === "ofx" || /<OFX|<STMTTRN/i.test(content)) return parseOFX(content);
+  if (ext === "csv") {
+    const r = parseCSV(content);
+    return r.length ? r : parseStatement(content);
+  }
+  const byCsv = parseCSV(content);
+  const byTxt = parseStatement(content);
+  return byCsv.length >= byTxt.length ? byCsv : byTxt;
 }
 
 function calcFaturaRef(dataISO, card) {
@@ -527,6 +682,7 @@ Object.assign(window, {
   CATEGORIES, CAT_MAP, TIPOS, TIPO_MAP, CAT_PRESET_COLORS,
   FORMAS, addMonths, calcFaturaRef, makeTransaction,
   parseQuick, parseStatement, detectCategory, detectTipo,
+  parseOFX, parseCSV, parseImportFile,
   fmtBRL, fmtBRLshort, fmtDate, fmtDateLong,
   todayISO, addDays, uid, seedData,
   LS_FATURAS, formatMes, computeFaturas,

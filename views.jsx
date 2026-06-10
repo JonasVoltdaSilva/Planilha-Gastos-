@@ -491,30 +491,56 @@ function BankImportModal({ onImport, onClose }) {
   const [pdfName, setPdfName] = useS("");
 
   const runAnalysis = (raw) => {
-    const results = parseStatement(raw);
+    /* detecta OFX/CSV colado como texto também */
+    const results = window.parseImportFile("", raw);
     setPreview(results);
     setSelected(new Set(results.map((_, i) => i)));
   };
 
-  const handlePdfUpload = async (e) => {
+  const setResults = (results) => {
+    setPreview(results);
+    setSelected(new Set(results.map((_, i) => i)));
+  };
+
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setPdfName(file.name);
     setPdfLoading(true);
     try {
-      const lib = window.pdfjsLib;
-      if (!lib) throw new Error("PDF.js não carregado");
-      const buf = await file.arrayBuffer();
-      const pdf = await lib.getDocument({ data: buf }).promise;
-      let full = "";
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const pg = await pdf.getPage(i);
-        const ct = await pg.getTextContent();
-        full += ct.items.map(it => it.str).join(" ") + "\n";
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (ext === "pdf") {
+        const lib = window.pdfjsLib;
+        if (!lib) throw new Error("PDF.js não carregado");
+        const buf = await file.arrayBuffer();
+        const pdf = await lib.getDocument({ data: buf }).promise;
+        let full = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const pg = await pdf.getPage(i);
+          const ct = await pg.getTextContent();
+          /* Reconstrói as linhas reais pela coordenada Y de cada fragmento.
+             Antes a página inteira virava uma linha só — o parser não achava nada. */
+          const rowsByY = new Map();
+          for (const it of ct.items) {
+            if (!it.str || !it.str.trim()) continue;
+            const y = Math.round(it.transform[5] / 3) * 3;
+            if (!rowsByY.has(y)) rowsByY.set(y, []);
+            rowsByY.get(y).push(it);
+          }
+          const lines = [...rowsByY.entries()]
+            .sort((a, b) => b[0] - a[0])
+            .map(([, items]) => items
+              .sort((a, b) => a.transform[4] - b.transform[4])
+              .map(i2 => i2.str).join(" "));
+          full += lines.join("\n") + "\n";
+        }
+        setResults(parseStatement(full));
+      } else {
+        const txt = await file.text();
+        setResults(window.parseImportFile(file.name, txt));
       }
-      runAnalysis(full);
     } catch (err) {
-      alert("Não foi possível ler o PDF. Tente colar o texto manualmente.");
+      alert("Não foi possível ler o arquivo. Tente colar o texto manualmente.");
       setPdfName("");
     }
     setPdfLoading(false);
@@ -540,7 +566,7 @@ function BankImportModal({ onImport, onClose }) {
                 <Ic.edit size={15} />Colar texto
               </div>
               <div className={"import-tab" + (tab === "pdf" ? " on" : "")} onClick={() => setTab("pdf")}>
-                <Ic.upload size={15} />Enviar PDF
+                <Ic.upload size={15} />Arquivo
               </div>
             </div>
 
@@ -562,10 +588,11 @@ function BankImportModal({ onImport, onClose }) {
             ) : (
               <>
                 <p style={{ color: "var(--text-mid)", fontSize: 13.5, marginBottom: 16 }}>
-                  Envie o PDF do extrato bancário. O app extrai e categoriza as transações automaticamente.
+                  Envie o extrato em <strong>OFX</strong>, <strong>CSV</strong> ou <strong>PDF</strong>.
+                  O OFX é o mais preciso — escolha esse formato no app do banco se disponível.
                 </p>
                 <label className="pdf-upload-area">
-                  <input type="file" accept="application/pdf" onChange={handlePdfUpload} style={{ display: "none" }} />
+                  <input type="file" accept=".pdf,.ofx,.csv,.txt,application/pdf" onChange={handleFileUpload} style={{ display: "none" }} />
                   {pdfLoading ? (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                       <div className="pdf-spinner" />
@@ -580,8 +607,8 @@ function BankImportModal({ onImport, onClose }) {
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                       <Ic.upload size={34} style={{ color: "var(--text-lo)" }} />
-                      <span style={{ color: "var(--text-mid)", fontSize: 14, fontWeight: 600 }}>Selecionar PDF do extrato</span>
-                      <span style={{ color: "var(--text-lo)", fontSize: 12 }}>Toque para escolher o arquivo</span>
+                      <span style={{ color: "var(--text-mid)", fontSize: 14, fontWeight: 600 }}>Selecionar arquivo do extrato</span>
+                      <span style={{ color: "var(--text-lo)", fontSize: 12 }}>OFX · CSV · PDF · TXT</span>
                     </div>
                   )}
                 </label>
@@ -610,6 +637,7 @@ function BankImportModal({ onImport, onClose }) {
             </p>
             <div className="import-preview">
               {preview.map((e, i) => {
+                const isEnt = e.kind === "entrada";
                 const c = CAT_MAP[e.categoria] || CAT_MAP["outros"];
                 const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
                 const on = selected.has(i);
@@ -619,10 +647,14 @@ function BankImportModal({ onImport, onClose }) {
                     <div className="import-date">{fmtDate(e.data)}</div>
                     <div className="import-desc">{e.descricao}</div>
                     <div className="import-tags">
-                      <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>{c.nome}</span>
-                      <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>{t.nome}</span>
+                      {isEnt ? (
+                        <span className="exp-tag" style={{ background: "rgba(90,217,168,0.15)", color: "var(--accent-mint)", borderColor: "rgba(90,217,168,0.3)" }}>Entrada</span>
+                      ) : (
+                        <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>{c.nome}</span>
+                      )}
+                      {!isEnt && <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>{t.nome}</span>}
                     </div>
-                    <div className="import-val">{fmtBRL(e.valor)}</div>
+                    <div className="import-val" style={isEnt ? { color: "var(--accent-mint)" } : {}}>{isEnt ? "+" : ""}{fmtBRL(e.valor)}</div>
                   </div>
                 );
               })}
