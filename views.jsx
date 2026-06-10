@@ -519,7 +519,8 @@ function BankImportModal({ onImport, onClose }) {
           const pg = await pdf.getPage(i);
           const ct = await pg.getTextContent();
           /* Reconstrói as linhas reais pela coordenada Y de cada fragmento.
-             Antes a página inteira virava uma linha só — o parser não achava nada. */
+             Junta os fragmentos pela posição X: só insere espaço quando há vão real —
+             PDFs como o do Santander fragmentam o texto letra a letra ("P I X"). */
           const rowsByY = new Map();
           for (const it of ct.items) {
             if (!it.str || !it.str.trim()) continue;
@@ -529,9 +530,17 @@ function BankImportModal({ onImport, onClose }) {
           }
           const lines = [...rowsByY.entries()]
             .sort((a, b) => b[0] - a[0])
-            .map(([, items]) => items
-              .sort((a, b) => a.transform[4] - b.transform[4])
-              .map(i2 => i2.str).join(" "));
+            .map(([, items]) => {
+              items.sort((a, b) => a.transform[4] - b.transform[4]);
+              let ln = "", endX = null;
+              for (const it of items) {
+                const x = it.transform[4];
+                if (endX !== null && x - endX > 1.0) ln += " ";
+                ln += it.str;
+                endX = x + (it.width || 0);
+              }
+              return ln;
+            });
           full += lines.join("\n") + "\n";
         }
         setResults(parseStatement(full));
@@ -592,7 +601,8 @@ function BankImportModal({ onImport, onClose }) {
                   O OFX é o mais preciso — escolha esse formato no app do banco se disponível.
                 </p>
                 <label className="pdf-upload-area">
-                  <input type="file" accept=".pdf,.ofx,.csv,.txt,application/pdf" onChange={handleFileUpload} style={{ display: "none" }} />
+                  {/* sem accept: o iOS acinzenta OFX/CSV quando o filtro usa extensões não registradas */}
+                  <input type="file" onChange={handleFileUpload} style={{ display: "none" }} />
                   {pdfLoading ? (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                       <div className="pdf-spinner" />

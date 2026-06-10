@@ -242,60 +242,126 @@ const MONTH_PT = { jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,
 function parseStatement(text) {
   if (!text || !text.trim()) return [];
   const results = [];
+  const meta = []; // { ownDate, appended } por resultado — controle do carry-over
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
   const currYear = new Date().getFullYear();
+  let lastDate = null; // carry-over: extratos (ex.: Santander) omitem a data em linhas seguidas do mesmo dia
+
+  const SKIP = new RegExp([
+    // cabeçalhos, rodapés e metadados
+    "^\\s*$", "saldo anterior", "saldo final", "saldo dispon[íi]vel", "extrato",
+    "per[íi]odo", "limite dispon[íi]vel", "ag[êe]ncia", "agencia", "cpf", "cnpj",
+    "conta corrente", "data\\s+desc", "valor\\s+saldo", "hist[óo]rico",
+    "agina\\s*:", "_a4_", "\\.pim", "movimenta[çc][ãa]o",
+    // bloco de resumo (totais por categoria)
+    "^dep[óo]sitos\\s*\\/", "^sal[áa]rio e proventos", "^outros cr[ée]ditos",
+    "^compras com cart[ãa]o", "^pagamentos\\s*\\/", "^outros d[ée]bitos",
+    // contato/atendimento
+    "central de atendimento", "ouvidoria", "sac\\b", "atendimento",
+    // tabelas de DETALHAMENTO — duplicam transações já listadas na movimentação
+    "internet banking", "n[úu]mero do cart[ãa]o", "comprovante",
+    "c[óo]digo de barras", "favorecido", "ispb", "\\d{4}\\.\\d{4}", "\\d{6,}-\\d{6,}",
+    // investimentos e pacote de serviços
+    "reservas", "^cdb", "\\brdb\\b", "aplica[çc]", "resgate", "liquidez",
+    "vencimento", "pacote", "tarifa", "mensalidade", "%",
+    // indicadores econômicos
+    "^poupan[çc]a", "^d[óo]lar", "^euro\\b", "sal[áa]rio m[íi]nimo",
+    "^cdi\\b", "^selic", "^ipca", "^igp", "^ibovespa", "^incc", "^inpc",
+    "^tr\\b", "rentabilidade", "indicador",
+  ].join("|"), "i");
+
+  const dateToISO = (d, m, y) =>
+    `${y || currYear}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
   for (const line of lines) {
-    // Skip metadata/header lines
-    if (/^\s*$|saldo anterior|saldo final|saldo disponível|extrato|período|limite disponível|agência|agencia|cpf|cnpj|conta corrente|data\s+desc|valor\s+saldo|histórico/i.test(line)) continue;
+    if (SKIP.test(line)) continue;
 
-    // Find all monetary amounts in the line (Brazilian format: 1.234,56 or 234,56)
     const allAmts = [...line.matchAll(/(?<![,\d])(\d{1,3}(?:\.\d{3})*,\d{2})(?![,\d])/g)];
-    if (!allAmts.length) continue;
+    const ddmm = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+    const ddmon = line.match(/\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i);
 
-    // Take the first amount that's not obviously a balance (prefer leftmost)
+    /* ---- Linha SEM valor: continuação (contraparte/estabelecimento) ou só data ---- */
+    if (!allAmts.length) {
+      const prev = results[results.length - 1];
+      const pm = meta[meta.length - 1];
+      if (ddmm) {
+        const yr = ddmm[3] ? (ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3]) : null;
+        lastDate = { d: ddmm[1], m: ddmm[2], y: yr };
+        // Layout Santander: "DEBITO VISA ... 30,00-" vem ANTES da linha "11/04 ESTABELECIMENTO".
+        // Corrige a data da transação anterior e anexa o nome do estabelecimento.
+        if (prev && pm && !pm.ownDate) {
+          prev.data = dateToISO(lastDate.d, lastDate.m, lastDate.y);
+          pm.ownDate = true;
+          const rest = line.replace(ddmm[0], "").replace(/\b\d{5,}\b/g, "").replace(/\s{2,}/g, " ").trim();
+          if (!pm.appended && rest.length >= 3 && rest.length <= 48 && /[a-zà-ú]{3,}/i.test(rest)) {
+            prev.descricao = (prev.descricao + " · " + rest).slice(0, 80);
+            prev.categoria = prev.kind === "entrada" ? "outros" : detectCategory(prev.descricao);
+            pm.appended = true;
+          }
+        }
+      } else if (prev && pm && !pm.appended &&
+                 line.length >= 4 && line.length <= 40 &&
+                 /[a-zà-ú]{3,}/i.test(line) && !/\d{4}/.test(line)) {
+        prev.descricao = (prev.descricao + " · " + line).slice(0, 80);
+        prev.categoria = prev.kind === "entrada" ? "outros" : detectCategory(prev.descricao);
+        pm.appended = true;
+      }
+      continue;
+    }
+
+    /* Linha só de números (tabela "Saldos por Período") — transação real tem descrição */
+    if (!/[a-zà-ú]{2,}/i.test(line)) continue;
+
+    /* ---- Escolhe o primeiro valor válido (saldo costuma vir depois) ---- */
     let chosenAmt = null;
     for (const m of allAmts) {
       const v = parseFloat(m[1].replace(/\./g, "").replace(",", "."));
       if (!isNaN(v) && v > 0 && v <= 100000) {
-        const prev = line.slice(Math.max(0, m.index - 2), m.index);
-        chosenAmt = { match: m[0], valor: v, neg: /-\s?$/.test(prev) };
+        const before = line.slice(Math.max(0, m.index - 1), m.index);
+        const after = line.slice(m.index + m[0].length, m.index + m[0].length + 2);
+        // Negativo: "-" COLADO antes ("-50,00") ou logo após ("50,00-" / "50,00 -").
+        // "- 50,00" com espaço é coluna vazia de documento, não sinal.
+        chosenAmt = { match: m[0], valor: v, neg: before === "-" || /^\s?-/.test(after) };
         break;
       }
     }
     if (!chosenAmt) continue;
 
-    // Linha de entrada (crédito) — importa como entrada em vez de pular.
-    // Sinal negativo no valor força gasto, mesmo com palavra-chave de crédito na linha.
+    /* ---- Data: própria da linha ou carregada do dia anterior ---- */
+    let iso, ownDate = false;
+    if (ddmm) {
+      const yr = ddmm[3] ? (ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3]) : null;
+      lastDate = { d: ddmm[1], m: ddmm[2], y: yr };
+      iso = dateToISO(lastDate.d, lastDate.m, lastDate.y);
+      ownDate = true;
+    } else if (ddmon) {
+      iso = dateToISO(ddmon[1], MONTH_PT[ddmon[2].toLowerCase()]);
+      ownDate = true;
+    } else if (lastDate) {
+      iso = dateToISO(lastDate.d, lastDate.m, lastDate.y);
+    } else {
+      // Sem contexto de data (ex.: bloco de resumo no topo do extrato) — não é transação
+      continue;
+    }
+
+    /* ---- Entrada × gasto ---- */
     const isEntradaLine =
-      /recebimento pix|pix recebido|transfer[êe]ncia recebida|ted recebida|doc recebido|sal[áa]rio|dep[óo]sito|rendimento|estorno|cr[ée]dito em conta|juros recebidos/i.test(line) ||
+      /recebimento pix|pix recebido|transfer[êe]ncia recebida|ted recebida|doc recebido|sal[áa]rio|provento|dep[óo]sito|rendimento|estorno|cr[ée]dito (em conta|liberado)|juros recebidos/i.test(line) ||
       /\d,\d{2}\s*C\b/i.test(line);
     const isEntrada = isEntradaLine && !chosenAmt.neg;
 
-    // Parse date — supports DD/MM, DD/MM/YY, DD/MM/YYYY, DD-MM, "DD JAN", "04 JUN"
-    let iso = todayISO();
-    const ddmm = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
-    const ddmon = line.match(/\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i);
-    if (ddmm) {
-      const day = ddmm[1].padStart(2, "0");
-      const mon = ddmm[2].padStart(2, "0");
-      const yr = ddmm[3] ? (ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3]) : String(currYear);
-      iso = `${yr}-${mon}-${day}`;
-    } else if (ddmon) {
-      const day = ddmon[1].padStart(2, "0");
-      const mon = String(MONTH_PT[ddmon[2].toLowerCase()]).padStart(2, "0");
-      iso = `${currYear}-${mon}-${day}`;
-    }
-
-    // Clean description
+    /* ---- Descrição ---- */
     let desc = line
       .replace(chosenAmt.match, "")
+      .replace(/(?<![,\d])\d{1,3}(?:\.\d{3})*,\d{2}(?![,\d])/g, "") // demais valores (saldo)
       .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/, "")
       .replace(/\b\d{1,2}\s+(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i, "")
       .replace(/\bR\$\s*/gi, "")
+      .replace(/\b\d{5,}\b/g, "")
       .replace(/\s[DC]\s*$/i, "")
+      .replace(/\s[-–]+(\s|$)/g, " ")
       .replace(/\s{2,}/g, " ").trim()
-      .replace(/[-–]+$/, "").trim();
+      .replace(/^[-–\s]+|[-–\s]+$/g, "").trim();
     if (!desc || desc.length < 2) desc = isEntrada ? "Entrada importada" : "Gasto importado";
     if (desc.length > 80) desc = desc.slice(0, 80);
 
@@ -307,6 +373,7 @@ function parseStatement(text) {
       tipo: detectTipo(line),
       kind: isEntrada ? "entrada" : "gasto",
     }));
+    meta.push({ ownDate, appended: false });
   }
 
   return results;
