@@ -808,7 +808,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
         {/* Navegador de mês */}
         <div className="home-month-nav">
           <button className="home-month-arrow" onClick={() => setMonthOffset(o => o - 1)} title="Mês anterior">
-            <Ic.chevron size={15} style={{ transform: "rotate(90deg)" }} />
+            ‹
           </button>
           <button className="home-month-label" onClick={() => setMonthOffset(0)}
             title={isCurrentMonth ? "Mês atual" : "Voltar para o mês atual"}>
@@ -817,7 +817,7 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
           </button>
           <button className="home-month-arrow" disabled={isCurrentMonth}
             onClick={() => setMonthOffset(o => Math.min(0, o + 1))} title="Próximo mês">
-            <Ic.chevron size={15} style={{ transform: "rotate(-90deg)" }} />
+            ›
           </button>
         </div>
 
