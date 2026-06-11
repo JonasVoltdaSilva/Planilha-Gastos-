@@ -25,6 +25,21 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
     initial?.tipo !== "outros" || initial?.cardId || initial?.forma === "parcelado" || initial?.data !== todayISO()
   );
   const [showAdv, setShowAdv] = useStateM(hasAdvancedData);
+  const advRef = useRefM(null);
+
+  const toggleAdv = () => {
+    setShowAdv(v => {
+      const next = !v;
+      if (next) {
+        setTimeout(() => {
+          if (advRef.current && modalBodyRef.current) {
+            advRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }, 60);
+      }
+      return next;
+    });
+  };
 
   const [swipeY, setSwipeY] = useStateM(0);
   const swipeStart = useRefM(null);
@@ -146,7 +161,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
 
           {/* ── AVANÇADO (colapsável) ── */}
           <button type="button" className={"modal-adv-toggle" + (advDot ? " has-data" : "")}
-            onClick={() => setShowAdv(v => !v)}>
+            onClick={toggleAdv}>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                 style={{ transform: showAdv ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
@@ -159,7 +174,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
 
           {showAdv && (
             <>
-              <div className="form-row">
+              <div ref={advRef} className="form-row">
                 <label className="form-label">Data</label>
                 <input className="form-input form-input-date" type="date" value={data}
                   onChange={(e) => setData(e.target.value)} />
