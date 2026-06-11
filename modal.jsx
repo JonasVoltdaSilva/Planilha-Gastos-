@@ -32,9 +32,11 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
   const onDragStart = (e) => { swipeStart.current = e.touches[0].clientY; };
   const onDragMove = (e) => {
     if (swipeStart.current === null) return;
-    if (modalBodyRef.current && modalBodyRef.current.scrollTop > 4) return;
+    const scrollTop = modalBodyRef.current ? modalBodyRef.current.scrollTop : 0;
+    if (scrollTop > 4) return;
     const diff = e.touches[0].clientY - swipeStart.current;
-    if (diff > 0) setSwipeY(diff);
+    if (diff <= 0) return; // scrolling down = let native scroll work
+    setSwipeY(diff);
   };
   const onDragEnd = () => {
     if (swipeY > 80) onClose();
