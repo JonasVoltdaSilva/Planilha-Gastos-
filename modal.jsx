@@ -47,11 +47,8 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
   const onDragStart = (e) => { swipeStart.current = e.touches[0].clientY; };
   const onDragMove = (e) => {
     if (swipeStart.current === null) return;
-    const scrollTop = modalBodyRef.current ? modalBodyRef.current.scrollTop : 0;
-    if (scrollTop > 4) return;
     const diff = e.touches[0].clientY - swipeStart.current;
-    if (diff <= 0) return; // scrolling down = let native scroll work
-    setSwipeY(diff);
+    if (diff > 0) setSwipeY(diff);
   };
   const onDragEnd = () => {
     if (swipeY > 80) onClose();
@@ -111,9 +108,9 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div ref={modalBodyRef} className="modal glass"
-        style={swipeY > 0 ? { transform: `translateY(${swipeY}px)`, transition: "none" } : undefined}
-        onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd}>
-        <div className="modal-handle" />
+        style={swipeY > 0 ? { transform: `translateY(${swipeY}px)`, transition: "none" } : undefined}>
+        <div className="modal-handle"
+          onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd} />
 
         <h3>{isEdit ? (kind === "entrada" ? "Editar entrada" : "Editar gasto") : "Novo lançamento"}</h3>
 
