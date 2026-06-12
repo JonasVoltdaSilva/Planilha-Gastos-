@@ -107,11 +107,15 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={modalBodyRef} className="modal glass"
+      <div className="modal glass"
         style={swipeY > 0 ? { transform: `translateY(${swipeY}px)`, transition: "none" } : undefined}>
+
+        {/* Handle: único ponto de drag-to-dismiss, fora do scroll */}
         <div className="modal-handle"
           onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd} />
 
+        {/* Container scrollável — ref aqui para o scrollIntoView funcionar */}
+        <div ref={modalBodyRef} className="modal-inner-scroll">
         <h3>{isEdit ? (kind === "entrada" ? "Editar entrada" : "Editar gasto") : "Novo lançamento"}</h3>
 
         {!isEdit && (
@@ -254,6 +258,7 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
             {isEdit ? "Salvar" : kind === "entrada" ? "Adicionar entrada" : "Adicionar"}
           </button>
         </div>
+        </div>{/* fim modal-inner-scroll */}
       </div>
     </div>
   );
