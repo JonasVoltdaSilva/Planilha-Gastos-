@@ -1526,6 +1526,7 @@ function App() {
           animations: true,
           confirmDelete: false,
           budget: 2000,
+          perfLite: false,
           ...parsed
         };
       }
@@ -1536,7 +1537,8 @@ function App() {
       animations: true,
       confirmDelete: false,
       budget: 2000,
-      lightMode: false
+      lightMode: false,
+      perfLite: false
     };
   });
   const [cards, setCards] = useState(() => {
@@ -1771,8 +1773,9 @@ function App() {
   settingsRef.current = settings;
   useEffect(() => {
     const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
-    document.body.classList.toggle("perf-lite", expenses.length > 250 || lowEnd);
-  }, [expenses.length]);
+    const auto = expenses.length > 250 || lowEnd;
+    document.body.classList.toggle("perf-lite", auto || !!settings.perfLite || !settings.animations);
+  }, [expenses.length, settings.perfLite, settings.animations]);
   const debouncedSearch = useDebouncedValue(search, 200);
   const filtered = useMemo(() => {
     let arr = [...expenses];

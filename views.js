@@ -3096,7 +3096,7 @@ function ConfigView({
       budget: isNaN(v) ? 0 : v
     }));
   };
-  const rows = [["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."], ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."], ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."], ["animations", "Animações de fundo", "Movimento suave do gradiente ambiente."], ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."]];
+  const rows = [["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."], ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."], ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."], ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."]];
   return React.createElement("div", {
     style: {
       display: "flex",
@@ -3251,6 +3251,36 @@ function ConfigView({
     },
     onClick: onResetProfile
   }, "Redefinir")))), React.createElement("div", {
+    className: "panel glass"
+  }, React.createElement("div", {
+    className: "panel-head"
+  }, React.createElement("div", {
+    className: "panel-title"
+  }, "Anima\xE7\xF5es & Performance")), React.createElement("div", {
+    className: "set-list"
+  }, React.createElement("div", {
+    className: "set-row"
+  }, React.createElement("div", {
+    className: "set-info"
+  }, React.createElement("div", {
+    className: "t"
+  }, "Ativar anima\xE7\xF5es"), React.createElement("div", {
+    className: "d"
+  }, "Efeitos de movimento, gradiente ambiente e decora\xE7\xF5es tem\xE1ticas")), React.createElement("div", {
+    className: "switch" + (settings.animations ? " on" : ""),
+    onClick: () => toggle("animations")
+  })), React.createElement("div", {
+    className: "set-row"
+  }, React.createElement("div", {
+    className: "set-info"
+  }, React.createElement("div", {
+    className: "t"
+  }, "Modo econ\xF4mico"), React.createElement("div", {
+    className: "d"
+  }, "Reduz efeitos visuais pesados para melhorar o desempenho em aparelhos mais simples")), React.createElement("div", {
+    className: "switch" + (settings.perfLite ? " on" : ""),
+    onClick: () => toggle("perfLite")
+  })))), React.createElement("div", {
     className: "panel glass"
   }, React.createElement("div", {
     className: "panel-head"

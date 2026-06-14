@@ -1732,7 +1732,6 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
     ["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."],
     ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."],
     ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."],
-    ["animations", "Animações de fundo", "Movimento suave do gradiente ambiente."],
     ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."],
   ];
 
@@ -1810,6 +1809,27 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
           <div className="set-row">
             <div className="set-info"><div className="t">Redefinir perfil</div><div className="d">Volta à tela de personalização inicial</div></div>
             <button className="btn btn-ghost" style={{ padding: "10px 14px", color: "var(--cat-saude)" }} onClick={onResetProfile}>Redefinir</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Animações & Performance */}
+      <div className="panel glass">
+        <div className="panel-head"><div className="panel-title">Animações & Performance</div></div>
+        <div className="set-list">
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Ativar animações</div>
+              <div className="d">Efeitos de movimento, gradiente ambiente e decorações temáticas</div>
+            </div>
+            <div className={"switch" + (settings.animations ? " on" : "")} onClick={() => toggle("animations")} />
+          </div>
+          <div className="set-row">
+            <div className="set-info">
+              <div className="t">Modo econômico</div>
+              <div className="d">Reduz efeitos visuais pesados para melhorar o desempenho em aparelhos mais simples</div>
+            </div>
+            <div className={"switch" + (settings.perfLite ? " on" : "")} onClick={() => toggle("perfLite")} />
           </div>
         </div>
       </div>

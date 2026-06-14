@@ -614,10 +614,10 @@ function App() {
       const s = localStorage.getItem(LS_SET);
       if (s) {
         const parsed = JSON.parse(s);
-        return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, ...parsed };
+        return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, perfLite: false, ...parsed };
       }
     } catch (e) {}
-    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, lightMode: false };
+    return { autoCat: true, glow: true, animations: true, confirmDelete: false, budget: 2000, lightMode: false, perfLite: false };
   });
 
   // ---------- Cartões ----------
@@ -756,12 +756,13 @@ function App() {
   const expensesRef = useRef(expenses); expensesRef.current = expenses;
   const settingsRef = useRef(settings); settingsRef.current = settings;
 
-  // Modo leve automático: corta animações pesadas (grão de filme, blobs, decoração)
-  // quando há muitos dados OU em aparelhos mais fracos — prioriza fluidez sobre efeito.
+  // Modo leve: auto (muitos dados ou aparelho fraco) OU manual (settings.perfLite)
+  // Desativar animações também força modo leve para suprimir todas as decorações temáticas.
   useEffect(() => {
     const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
-    document.body.classList.toggle("perf-lite", expenses.length > 250 || lowEnd);
-  }, [expenses.length]);
+    const auto = expenses.length > 250 || lowEnd;
+    document.body.classList.toggle("perf-lite", auto || !!settings.perfLite || !settings.animations);
+  }, [expenses.length, settings.perfLite, settings.animations]);
 
   // Busca com debounce — a lista só refiltra quando o usuário para de digitar
   const debouncedSearch = useDebouncedValue(search, 200);
