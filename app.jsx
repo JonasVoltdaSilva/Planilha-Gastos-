@@ -691,15 +691,24 @@ function App() {
 
   const deleteCard = (id) => {
     const linked = expenses.filter(e => e.cardId === id).length;
-    if (linked > 0 && !window.confirm(`Este cartão tem ${linked} lançamento${linked > 1 ? "s" : ""} vinculado${linked > 1 ? "s" : ""}. Excluí-lo não remove os lançamentos, mas eles perderão o vínculo. Continuar?`)) return;
-    const updated = cards.filter(c => c.id !== id);
-    setCards(updated);
-    try { localStorage.setItem(LS_CARDS, JSON.stringify(updated)); } catch (e) {}
-    showToast("Cartão excluído", "trash");
+    const doDelete = () => {
+      const updated = cards.filter(c => c.id !== id);
+      setCards(updated);
+      try { localStorage.setItem(LS_CARDS, JSON.stringify(updated)); } catch (e) {}
+      showToast("Cartão excluído", "trash");
+    };
+    if (linked > 0) {
+      askConfirm({
+        title: "Excluir cartão?",
+        message: `Há ${linked} lançamento${linked > 1 ? "s" : ""} vinculado${linked > 1 ? "s" : ""}. Eles não serão removidos, mas perderão o vínculo com este cartão.`,
+        confirmLabel: "Excluir mesmo assim", danger: true, onConfirm: doDelete,
+      });
+    } else doDelete();
   };
 
   const [modal, setModal] = useState(null);
   const [toast, setToast] = useState({ msg: "", icon: "check" });
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const [quick, setQuick] = useState("");
 
   // filtros globais (período, categoria, busca)
@@ -725,6 +734,9 @@ function App() {
     setToast({ msg, icon });
     setTimeout(() => setToast({ msg: "", icon: "check" }), 2400);
   };
+
+  // Confirmação elegante (substitui window.confirm). Uso: askConfirm({ title, message, onConfirm })
+  const askConfirm = (opts) => setConfirmDialog(opts);
 
   // ---------- Filtragem global (sem tipo/cartão — esses ficam em GastosView) ----------
   const filtered = useMemo(() => {
@@ -805,17 +817,33 @@ function App() {
 
   const deleteExpense = (id) => {
     const exp = expenses.find(e => e.id === id);
-    if (settings.confirmDelete && !window.confirm("Excluir este lançamento?")) return;
-    setExpenses(prev => prev.filter(e => e.id !== id));
-    showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído", "trash");
+    const doDelete = () => {
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído", "trash");
+    };
+    if (settings.confirmDelete) {
+      askConfirm({
+        title: exp?.kind === "entrada" ? "Excluir entrada?" : "Excluir gasto?",
+        message: exp?.descricao ? `"${exp.descricao}" será removido permanentemente.` : "Esta ação não pode ser desfeita.",
+        confirmLabel: "Excluir", danger: true, onConfirm: doDelete,
+      });
+    } else doDelete();
   };
 
   const deleteExpenseGroup = (parcGrupo) => {
     const group = expenses.filter(e => e.parcGrupo === parcGrupo);
     if (!group.length) return;
-    if (settings.confirmDelete && !window.confirm(`Excluir todas as ${group.length} parcelas?`)) return;
-    setExpenses(prev => prev.filter(e => e.parcGrupo !== parcGrupo));
-    showToast(`${group.length} parcelas excluídas`, "trash");
+    const doDelete = () => {
+      setExpenses(prev => prev.filter(e => e.parcGrupo !== parcGrupo));
+      showToast(`${group.length} parcelas excluídas`, "trash");
+    };
+    if (settings.confirmDelete) {
+      askConfirm({
+        title: "Excluir parcelamento?",
+        message: `Todas as ${group.length} parcelas deste lançamento serão removidas.`,
+        confirmLabel: "Excluir tudo", danger: true, onConfirm: doDelete,
+      });
+    } else doDelete();
   };
 
   const importExpenses = (list) => {
@@ -957,7 +985,7 @@ function App() {
                 currentTheme={profile?.theme || "default"} onThemeChange={handleThemeChange}
                 onResetProfile={resetProfile}
                 expenses={expenses} customCats={customCats}
-                onRestoreBackup={restoreBackup}
+                onRestoreBackup={restoreBackup} askConfirm={askConfirm} showToast={showToast}
                 fixas={fixas} onAddFixa={addFixa} onDeleteFixa={deleteFixa}
                 caloteiros={caloteiros} onAddCaloteiro={addCaloteiro} onToggleCaloteiro={toggleCaloteiro} onDeleteCaloteiro={deleteCaloteiro}
                 emprestimos={emprestimos} />
@@ -987,6 +1015,13 @@ function App() {
       <ChromeDecor theme={profile?.theme} />
       <SweetDecor  theme={profile?.theme} />
       <FancyDecor  theme={profile?.theme} />
+      {confirmDialog && (
+        <ConfirmDialog
+          {...confirmDialog}
+          onConfirm={() => { confirmDialog.onConfirm?.(); setConfirmDialog(null); }}
+          onClose={() => setConfirmDialog(null)}
+        />
+      )}
       <Toast msg={toast.msg} icon={toast.icon} />
     </div>
   );

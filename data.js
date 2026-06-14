@@ -1,0 +1,673 @@
+/* GERADO AUTOMATICAMENTE a partir de data.jsx — não edite à mão. Rode: npm run build */
+(function () {
+const CATEGORIES = [{
+  id: "comida",
+  nome: "Comida",
+  cor: "var(--cat-comida)",
+  hex: "#e0a85a"
+}, {
+  id: "transporte",
+  nome: "Transporte",
+  cor: "var(--cat-transporte)",
+  hex: "#5aa3e0"
+}, {
+  id: "moradia",
+  nome: "Moradia",
+  cor: "var(--cat-moradia)",
+  hex: "#a98ae0"
+}, {
+  id: "lazer",
+  nome: "Lazer",
+  cor: "var(--cat-lazer)",
+  hex: "#5ad9a8"
+}, {
+  id: "saude",
+  nome: "Saúde",
+  cor: "var(--cat-saude)",
+  hex: "#e08a7a"
+}, {
+  id: "compras",
+  nome: "Compras",
+  cor: "var(--cat-compras)",
+  hex: "#e08ac8"
+}, {
+  id: "contas",
+  nome: "Contas",
+  cor: "var(--cat-contas)",
+  hex: "#5ac4d9"
+}, {
+  id: "outros",
+  nome: "Outros",
+  cor: "var(--cat-outros)",
+  hex: "#9aa3b0"
+}];
+const CAT_MAP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
+const TIPOS = [{
+  id: "pix",
+  nome: "PIX",
+  hex: "#5ad9a8"
+}, {
+  id: "debito",
+  nome: "Débito",
+  hex: "#5aa3e0"
+}, {
+  id: "credito",
+  nome: "Crédito",
+  hex: "#a98ae0"
+}, {
+  id: "outros",
+  nome: "Outros",
+  hex: "#9aa3b0"
+}];
+const TIPO_MAP = Object.fromEntries(TIPOS.map(t => [t.id, t]));
+const CAT_PRESET_COLORS = ["#e05a5a", "#e09a5a", "#e0d05a", "#8ae05a", "#5ae0a0", "#5ab5e0", "#a05ae0", "#e05ab0"];
+const KEYWORDS = {
+  comida: ["comida", "almoço", "almoco", "jantar", "lanche", "café", "cafe", "restaurante", "ifood", "rappi", "james delivery", "99food", "ze delivery", "zé delivery", "aiqfome", "uber eats", "mercado", "supermercado", "hortifruti", "feira", "mercearia", "sacolão", "padaria", "padoca", "confeitaria", "sorveteria", "sorvete", "açaí", "acai", "pizza", "hambúrguer", "hamburguer", "sushi", "temaki", "churrascaria", "churrasco", "lanchonete", "cantina", "bistrô", "bistro", "boteco", "bar", "cerveja", "marmita", "quentinha", "buffet", "self service", "mcdonalds", "mc donalds", "burger king", "bob's", "bobs", "subway", "kfc", "giraffas", "habibs", "habib's", "outback", "madero", "spoleto", "dominos", "domino's", "pizza hut", "papa johns", "cacau show", "kopenhagen", "starbucks", "rei do mate", "casa do pão", "carrefour", "extra", "pão de açúcar", "panificadora"],
+  transporte: ["transporte", "uber", "99", "99pop", "cabify", "blabucar", "gasolina", "combustível", "combustivel", "etanol", "álcool", "alcool", "diesel", "shell", "petrobras", "ipiranga", "br mania", "ale", "repsol", "posto", "ônibus", "onibus", "metrô", "metro", "trem", "cptm", "sptrans", "brt", "vlt", "passagem", "bilhete", "cartão vt", "vale transporte", "estacionamento", "pedágio", "pedagio", "multa trânsito", "táxi", "taxi", "mototaxi", "bicicleta", "patinete", "scooter", "azul", "latam", "gol", "passagem aérea", "avião", "aeroporto", "detran", "emplacamento", "ipva", "seguro auto", "denatran"],
+  moradia: ["aluguel", "moradia", "condomínio", "condominio", "casa", "apartamento", "reforma", "construção", "tinta", "material", "cimento", "tijolo", "telha", "leroy merlin", "leroy", "sodimac", "cassol", "c&c", "telhanorte", "quinto andar", "loft", "zap imoveis", "aluguel.com", "eletricista", "encanador", "pedreiro", "dedetização", "faxina", "limpeza", "jardineiro", "jardinagem", "porteiro", "zelador", "iptu", "condominio", "taxa condominio"],
+  lazer: ["lazer", "cinema", "show", "viagem", "passeio", "clube", "academia", "netflix", "spotify", "amazon prime", "disney", "hbo", "star+", "globoplay", "paramount", "apple tv", "youtube premium", "deezer", "tidal", "crunchyroll", "steam", "epic games", "playstation", "xbox", "nintendo", "twitch", "ingresso", "sympla", "eventim", "ticketmaster", "bilheteria", "teatro", "musical", "exposição", "expo", "bienal", "museu", "zoológico", "parque", "crossfit", "yoga", "pilates", "boxe", "natação", "boliche", "karting", "paintball", "laser tag", "escape room", "adventure", "trilha", "hotel", "pousada", "hostel", "airbnb", "booking", "trivago", "jogo", "game", "dlc", "assinatura gamer", "psn", "xbox live", "gamepass"],
+  saude: ["saúde", "saude", "remédio", "remedio", "medicamento", "farmácia", "farmacia", "drogasil", "droga raia", "panvel", "pacheco", "ultrafarma", "biopharma", "pague menos", "são joão", "sao joao", "genix", "nisfarma", "hospital", "clínica", "clinica", "upa", "pronto socorro", "emergência", "médico", "medico", "consulta", "dentista", "ortodontista", "pediatra", "fisioterapia", "psicólogo", "psicologo", "psiquiatra", "terapia", "nutricionista", "nutrição", "ortopedista", "dermatologista", "oftalmologista", "exame", "raio x", "ultrassom", "ressonância", "tomografia", "mamografia", "unimed", "amil", "bradesco saude", "sulamerica", "notre dame", "intermédica", "hapvida", "gndi", "careplus", "plano de saude", "academia", "pilates", "musculação", "crossfit", "vacina", "vacinação", "posto de saude"],
+  compras: ["compras", "roupa", "roupas", "vestuário", "moda", "acessório", "tênis", "tenis", "sapato", "sandália", "bota", "chinelo", "renner", "c&a", "riachuelo", "marisa", "zara", "h&m", "forever 21", "hering", "malwee", "puma", "nike", "adidas", "mizuno", "asics", "arezzo", "schutz", "melissa", "anacapri", "vans", "converse", "mercado livre", "shopee", "shein", "aliexpress", "amazon", "aliexpress", "americanas", "casas bahia", "magazine luiza", "magalu", "extra", "samsung", "apple", "lg", "sony", "positivo", "vaio", "philips", "multilaser", "notebook", "computador", "monitor", "tablet", "celular", "smartphone", "fone", "presente", "gift card", "vale presente", "loja", "shopping", "ikea", "tok&stok", "leroy", "casa show", "camicado", "mobly"],
+  contas: ["conta", "contas", "boleto", "fatura", "cobrança", "débito automático", "luz", "energia", "enel", "cpfl", "cemig", "coelba", "celpe", "eletropaulo", "água", "agua", "sabesp", "cedae", "saneago", "embasa", "copasa", "internet", "fibra", "claro", "vivo", "tim", "oi", "net", "sky", "directv", "telefone", "celular", "chip", "plano", "mensalidade telefone", "gás", "gas", "comgás", "ceg", "copergás", "condominio", "aluguel", "iptu", "ipva", "darf", "ir", "simples", "mei", "cartão", "cartao", "anuidade", "taxa", "tarifa bancária", "adobe", "canva", "dropbox", "google workspace", "microsoft 365", "icloud", "assinatura", "plano", "mensalidade", "anuidade", "seguro", "previdência", "investimento", "poupança"]
+};
+const fmtBRL = n => n.toLocaleString("pt-BR", {
+  style: "currency",
+  currency: "BRL"
+});
+const fmtBRLshort = n => {
+  if (n >= 1000) return "R$ " + (n / 1000).toFixed(1).replace(".", ",") + "k";
+  return fmtBRL(n);
+};
+const fmtDate = iso => {
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short"
+  }).replace(".", "");
+};
+const fmtDateLong = iso => {
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+};
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const addDays = (iso, n) => {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const uid = () => Math.random().toString(36).slice(2, 10);
+const addMonths = (iso, n) => {
+  const d = new Date(iso + "T12:00:00");
+  const origDay = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const maxDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(origDay, maxDay));
+  return d.toISOString().slice(0, 10);
+};
+const FORMAS = [{
+  id: "avista",
+  nome: "À vista"
+}, {
+  id: "parcelado",
+  nome: "Parcelado"
+}];
+function makeTransaction(fields) {
+  return {
+    id: uid(),
+    data: todayISO(),
+    kind: "gasto",
+    forma: "avista",
+    parcTotal: 1,
+    parcNum: 1,
+    cardId: null,
+    faturaRef: null,
+    categoria: "outros",
+    tipo: "outros",
+    descricao: "",
+    valor: 0,
+    ...fields
+  };
+}
+function detectCategory(text) {
+  const t = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9\s]/g, " ");
+  const scores = {};
+  for (const [catId, kws] of Object.entries(KEYWORDS)) {
+    let score = 0;
+    for (const kw of kws) {
+      const kwNorm = kw.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9\s]/g, " ");
+      if (t.includes(kwNorm)) score += kwNorm.length > 5 ? 2 : 1;
+    }
+    if (score > 0) scores[catId] = score;
+  }
+  if (Object.keys(scores).length === 0) return "outros";
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+}
+function detectTipo(text) {
+  const t = text.toLowerCase();
+  if (t.includes("pix")) return "pix";
+  if (t.includes("débito") || t.includes("debito") || / deb /i.test(text)) return "debito";
+  if (t.includes("crédito") || t.includes("credito") || t.includes("cartão") || t.includes("cartao") || / cred /i.test(text)) return "credito";
+  return "outros";
+}
+function parseQuick(text) {
+  if (!text || !text.trim()) return null;
+  const raw = text.trim();
+  const m = raw.match(/(?:r\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)/i);
+  if (!m) return null;
+  let numStr = m[1];
+  if (numStr.includes(",")) numStr = numStr.replace(/\./g, "").replace(",", ".");
+  const valor = parseFloat(numStr);
+  if (isNaN(valor) || valor <= 0) return null;
+  const isEntrada = /\b(recebi|ganhei|recebei|recebimento|renda|salário|salario|freelance|dividendo|bônus|bonus)\b/i.test(raw);
+  if (isEntrada) {
+    let desc = raw.replace(/recebi|ganhei|recebei|recebimento|renda|salário|salario|freelance|dividendo|bônus|bonus/gi, "").replace(/r\$\s*[\d.,]+/i, "").replace(/\b[\d.,]+\b/, "").replace(/^\s*(de|do|da|em)\s+/i, "").trim().replace(/\s{2,}/g, " ").trim();
+    if (!desc) desc = "Entrada";
+    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+    return makeTransaction({
+      valor,
+      descricao: desc,
+      kind: "entrada",
+      tipo: "outros"
+    });
+  }
+  const categoria = detectCategory(raw);
+  const tipo = detectTipo(raw);
+  let desc = raw.replace(/gastei|paguei|comprei|gasto|fui no|fui na|fui em/gi, "").replace(/r\$\s*[\d.,]+/i, "").replace(/\b[\d.,]+\b/, "").replace(/^\s*(com|no|na|de|em|para|pra|reais?)\s+/i, " ").replace(/\s+(com|no|na|de|em)\s+/i, " ").trim();
+  desc = desc.replace(/\s{2,}/g, " ").trim();
+  if (!desc) desc = CAT_MAP[categoria]?.nome || "Gasto";
+  desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+  return makeTransaction({
+    valor,
+    categoria,
+    descricao: desc,
+    tipo
+  });
+}
+const MONTH_PT = {
+  jan: 1,
+  fev: 2,
+  mar: 3,
+  abr: 4,
+  mai: 5,
+  jun: 6,
+  jul: 7,
+  ago: 8,
+  set: 9,
+  out: 10,
+  nov: 11,
+  dez: 12
+};
+function parseStatement(text) {
+  if (!text || !text.trim()) return [];
+  const results = [];
+  const meta = [];
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const currYear = new Date().getFullYear();
+  let lastDate = null;
+  const SKIP = new RegExp(["^\\s*$", "saldo anterior", "saldo final", "saldo dispon[íi]vel", "extrato", "per[íi]odo", "limite dispon[íi]vel", "ag[êe]ncia", "agencia", "cpf", "cnpj", "conta corrente", "data\\s+desc", "valor\\s+saldo", "hist[óo]rico", "agina\\s*:", "_a4_", "\\.pim", "movimenta[çc][ãa]o", "^dep[óo]sitos\\s*\\/", "^sal[áa]rio e proventos", "^outros cr[ée]ditos", "^compras com cart[ãa]o", "^pagamentos\\s*\\/", "^outros d[ée]bitos", "central de atendimento", "ouvidoria", "sac\\b", "atendimento", "internet banking", "n[úu]mero do cart[ãa]o", "comprovante", "c[óo]digo de barras", "favorecido", "ispb", "\\d{4}\\.\\d{4}", "\\d{6,}-\\d{6,}", "reservas", "^cdb", "\\brdb\\b", "aplica[çc]", "resgate", "liquidez", "vencimento", "pacote", "tarifa", "mensalidade", "%", "^poupan[çc]a", "^d[óo]lar", "^euro\\b", "sal[áa]rio m[íi]nimo", "^cdi\\b", "^selic", "^ipca", "^igp", "^ibovespa", "^incc", "^inpc", "^tr\\b", "rentabilidade", "indicador"].join("|"), "i");
+  const dateToISO = (d, m, y) => `${y || currYear}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  for (const line of lines) {
+    if (SKIP.test(line)) continue;
+    const allAmts = [...line.matchAll(/(?<![,\d])(\d{1,3}(?:\.\d{3})*,\d{2})(?![,\d])/g)];
+    const ddmm = line.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+    const ddmon = line.match(/\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i);
+    if (!allAmts.length) {
+      const prev = results[results.length - 1];
+      const pm = meta[meta.length - 1];
+      if (ddmm) {
+        const yr = ddmm[3] ? ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3] : null;
+        lastDate = {
+          d: ddmm[1],
+          m: ddmm[2],
+          y: yr
+        };
+        if (prev && pm && !pm.ownDate) {
+          prev.data = dateToISO(lastDate.d, lastDate.m, lastDate.y);
+          pm.ownDate = true;
+          const rest = line.replace(ddmm[0], "").replace(/\b\d{5,}\b/g, "").replace(/\s{2,}/g, " ").trim();
+          if (!pm.appended && rest.length >= 3 && rest.length <= 48 && /[a-zà-ú]{3,}/i.test(rest)) {
+            prev.descricao = (prev.descricao + " · " + rest).slice(0, 80);
+            prev.categoria = prev.kind === "entrada" ? "outros" : detectCategory(prev.descricao);
+            pm.appended = true;
+          }
+        }
+      } else if (prev && pm && !pm.appended && line.length >= 4 && line.length <= 40 && /[a-zà-ú]{3,}/i.test(line) && !/\d{4}/.test(line)) {
+        prev.descricao = (prev.descricao + " · " + line).slice(0, 80);
+        prev.categoria = prev.kind === "entrada" ? "outros" : detectCategory(prev.descricao);
+        pm.appended = true;
+      }
+      continue;
+    }
+    if (!/[a-zà-ú]{2,}/i.test(line)) continue;
+    let chosenAmt = null;
+    for (const m of allAmts) {
+      const v = parseFloat(m[1].replace(/\./g, "").replace(",", "."));
+      if (!isNaN(v) && v > 0 && v <= 100000) {
+        const before = line.slice(Math.max(0, m.index - 1), m.index);
+        const after = line.slice(m.index + m[0].length, m.index + m[0].length + 2);
+        chosenAmt = {
+          match: m[0],
+          valor: v,
+          neg: before === "-" || /^\s?-/.test(after)
+        };
+        break;
+      }
+    }
+    if (!chosenAmt) continue;
+    let iso,
+      ownDate = false;
+    if (ddmm) {
+      const yr = ddmm[3] ? ddmm[3].length === 2 ? "20" + ddmm[3] : ddmm[3] : null;
+      lastDate = {
+        d: ddmm[1],
+        m: ddmm[2],
+        y: yr
+      };
+      iso = dateToISO(lastDate.d, lastDate.m, lastDate.y);
+      ownDate = true;
+    } else if (ddmon) {
+      iso = dateToISO(ddmon[1], MONTH_PT[ddmon[2].toLowerCase()]);
+      ownDate = true;
+    } else if (lastDate) {
+      iso = dateToISO(lastDate.d, lastDate.m, lastDate.y);
+    } else {
+      continue;
+    }
+    const isEntradaLine = /recebimento pix|pix recebido|transfer[êe]ncia recebida|ted recebida|doc recebido|sal[áa]rio|provento|dep[óo]sito|rendimento|estorno|cr[ée]dito (em conta|liberado)|juros recebidos/i.test(line) || /\d,\d{2}\s*C\b/i.test(line);
+    const isEntrada = isEntradaLine && !chosenAmt.neg;
+    let desc = line.replace(chosenAmt.match, "").replace(/(?<![,\d])\d{1,3}(?:\.\d{3})*,\d{2}(?![,\d])/g, "").replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/, "").replace(/\b\d{1,2}\s+(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i, "").replace(/\bR\$\s*/gi, "").replace(/\b\d{5,}\b/g, "").replace(/\s[DC]\s*$/i, "").replace(/\s[-–]+(\s|$)/g, " ").replace(/\s{2,}/g, " ").trim().replace(/^[-–\s]+|[-–\s]+$/g, "").trim();
+    if (!desc || desc.length < 2) desc = isEntrada ? "Entrada importada" : "Gasto importado";
+    if (desc.length > 80) desc = desc.slice(0, 80);
+    results.push(makeTransaction({
+      data: iso,
+      descricao: desc,
+      categoria: isEntrada ? "outros" : detectCategory(desc),
+      valor: chosenAmt.valor,
+      tipo: detectTipo(line),
+      kind: isEntrada ? "entrada" : "gasto"
+    }));
+    meta.push({
+      ownDate,
+      appended: false
+    });
+  }
+  return results;
+}
+function _brNum(s) {
+  if (s == null) return NaN;
+  let t = String(s).trim().replace(/R\$\s*/i, "");
+  const neg = /^-|^\(.*\)$/.test(t) || /-$/.test(t);
+  t = t.replace(/[()+\-]/g, "").trim();
+  if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, "").replace(",", ".");else t = t.replace(/,/g, "");
+  const v = parseFloat(t);
+  return neg ? -v : v;
+}
+function _splitCSV(line, d) {
+  const out = [];
+  let cur = "";
+  let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      q = !q;
+      continue;
+    }
+    if (ch === d && !q) {
+      out.push(cur);
+      cur = "";
+    } else cur += ch;
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+function _brDateToISO(s) {
+  const mIso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (mIso) return `${mIso[1]}-${mIso[2]}-${mIso[3]}`;
+  const m = s.match(/(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/);
+  if (!m) return todayISO();
+  const yr = m[3] ? m[3].length === 2 ? "20" + m[3] : m[3] : String(new Date().getFullYear());
+  return `${yr}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+}
+function parseOFX(text) {
+  const results = [];
+  const blocks = text.match(/<STMTTRN>[\s\S]*?(?:<\/STMTTRN>|(?=<STMTTRN>))/gi) || [];
+  for (const b of blocks) {
+    const get = tag => {
+      const m = b.match(new RegExp(`<${tag}>([^<\\r\\n]*)`, "i"));
+      return m ? m[1].trim() : "";
+    };
+    const valor0 = _brNum(get("TRNAMT"));
+    if (isNaN(valor0) || valor0 === 0) continue;
+    const trnType = get("TRNTYPE").toUpperCase();
+    let isEntrada;
+    if (/DEBIT|PAYMENT|FEE|ATM|POS/.test(trnType)) isEntrada = false;else if (/CREDIT|DEP|DIRECTDEP|INT\b/.test(trnType)) isEntrada = true;else isEntrada = valor0 > 0;
+    const valor = Math.abs(valor0);
+    const dt = get("DTPOSTED").replace(/[^\d].*$/, "");
+    const iso = dt.length >= 8 ? `${dt.slice(0, 4)}-${dt.slice(4, 6)}-${dt.slice(6, 8)}` : todayISO();
+    let desc = (get("MEMO") || get("NAME") || "").replace(/\s{2,}/g, " ").slice(0, 80);
+    if (!desc) desc = isEntrada ? "Entrada importada" : "Gasto importado";
+    results.push(makeTransaction({
+      data: iso,
+      valor,
+      descricao: desc,
+      kind: isEntrada ? "entrada" : "gasto",
+      categoria: isEntrada ? "outros" : detectCategory(desc),
+      tipo: detectTipo(desc)
+    }));
+  }
+  return results;
+}
+function parseCSV(text) {
+  const rawLines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!rawLines.length) return [];
+  const sample = rawLines.slice(0, 6).join("\n");
+  const delim = sample.includes(";") ? ";" : sample.includes("\t") ? "\t" : ",";
+  const rows = rawLines.map(l => _splitCSV(l, delim));
+  const isDate = s => /^\d{1,2}[\/\-.]\d{1,2}([\/\-.]\d{2,4})?$|^\d{4}-\d{2}-\d{2}/.test((s || "").trim());
+  const isMoney = s => /^-?\s*(R\$\s*)?\d{1,3}(\.\d{3})*,\d{2}\s*[DC]?$|^-?\d+\.\d{2}$/.test((s || "").trim());
+  let dateCol = -1,
+    valCol = -1,
+    descCol = -1,
+    start = 0;
+  const head = rows[0].map(c => c.toLowerCase());
+  if (!head.some(isDate)) {
+    dateCol = head.findIndex(c => /\bdata\b|date/.test(c));
+    valCol = head.findIndex(c => /valor|montante|amount|quantia/.test(c) && !/saldo/.test(c));
+    descCol = head.findIndex(c => /hist|descri|lan[çc]|memo|estabelecimento|t[íi]tulo/.test(c));
+    if (dateCol >= 0 || valCol >= 0) start = 1;
+  }
+  const parsed = [];
+  for (let r = start; r < rows.length; r++) {
+    const cells = rows[r];
+    if (cells.length < 2) continue;
+    if (/saldo (anterior|final|do dia)/i.test(cells.join(" "))) continue;
+    const dIdx = dateCol >= 0 && isDate(cells[dateCol]) ? dateCol : cells.findIndex(isDate);
+    if (dIdx < 0) continue;
+    let vIdx = valCol >= 0 && isMoney(cells[valCol]) ? valCol : -1;
+    if (vIdx < 0) vIdx = cells.findIndex((c, i) => i !== dIdx && isMoney(c));
+    if (vIdx < 0) continue;
+    let desc = "";
+    if (descCol >= 0 && descCol !== dIdx && descCol !== vIdx && cells[descCol]) desc = cells[descCol];else desc = cells.filter((c, i) => i !== dIdx && i !== vIdx && c && !isMoney(c) && !isDate(c)).sort((a, b) => b.length - a.length)[0] || "";
+    const cell = cells[vIdx].trim();
+    const valor = _brNum(cell.replace(/\s*[DC]$/i, ""));
+    if (isNaN(valor) || valor === 0) continue;
+    parsed.push({
+      data: cells[dIdx].trim(),
+      desc: desc.replace(/\s{2,}/g, " ").slice(0, 80),
+      valor: Math.abs(valor),
+      neg: valor < 0 || /D$/i.test(cell),
+      credMark: /C$/i.test(cell)
+    });
+  }
+  const hasNeg = parsed.some(p => p.neg);
+  return parsed.map(p => {
+    const isEntrada = p.credMark || hasNeg && !p.neg;
+    const desc = p.desc || (isEntrada ? "Entrada importada" : "Gasto importado");
+    return makeTransaction({
+      data: _brDateToISO(p.data),
+      valor: p.valor,
+      descricao: desc,
+      kind: isEntrada ? "entrada" : "gasto",
+      categoria: isEntrada ? "outros" : detectCategory(desc),
+      tipo: detectTipo(desc)
+    });
+  });
+}
+function parseImportFile(filename, content) {
+  const ext = ((filename || "").split(".").pop() || "").toLowerCase();
+  if (ext === "ofx" || /<OFX|<STMTTRN/i.test(content)) return parseOFX(content);
+  if (ext === "csv") {
+    const r = parseCSV(content);
+    return r.length ? r : parseStatement(content);
+  }
+  const byCsv = parseCSV(content);
+  const byTxt = parseStatement(content);
+  return byCsv.length >= byTxt.length ? byCsv : byTxt;
+}
+function calcFaturaRef(dataISO, card) {
+  if (!card) return null;
+  const d = new Date(dataISO + "T12:00:00");
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const recFech = card.recFechamento || {
+    type: "fixed_day",
+    day: card.diaFechamento || 20
+  };
+  const closing = resolveRecDay(recFech, year, month);
+  if (day > closing) {
+    const next = new Date(year, month, 1);
+    return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+  }
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+function seedData() {
+  const t = todayISO();
+  const raw = [[0, "Almoço no restaurante", "comida", 38.5, "pix"], [0, "Uber para o trabalho", "transporte", 22.9, "debito"], [1, "Supermercado da semana", "comida", 247.8, "debito"], [1, "Netflix", "lazer", 44.9, "credito"], [2, "Farmácia — remédios", "saude", 89.3, "debito"], [3, "Gasolina", "transporte", 180.0, "credito"], [4, "Café da manhã", "comida", 18.0, "pix"], [5, "Conta de luz", "contas", 156.4, "pix"], [6, "Cinema com amigos", "lazer", 64.0, "credito"], [7, "Tênis novo", "compras", 329.9, "credito"], [8, "Internet fibra", "contas", 99.9, "debito"], [9, "Jantar fora", "comida", 112.5, "credito"], [10, "Estacionamento", "transporte", 25.0, "pix"], [12, "Aluguel", "moradia", 1450.0, "pix"], [13, "Consulta dentista", "saude", 220.0, "pix"], [14, "Spotify", "lazer", 21.9, "credito"], [15, "iFood", "comida", 56.7, "pix"], [17, "Roupas", "compras", 198.0, "credito"], [18, "Água", "contas", 78.2, "pix"], [20, "Padaria", "comida", 32.4, "pix"], [22, "Presente aniversário", "compras", 145.0, "credito"], [24, "Academia", "lazer", 119.9, "debito"]];
+  return raw.map(([ago, desc, cat, val, tipo]) => ({
+    id: uid(),
+    data: addDays(t, -ago),
+    descricao: desc,
+    categoria: cat,
+    valor: val,
+    tipo: tipo || "outros",
+    kind: "gasto",
+    forma: "avista",
+    parcTotal: 1,
+    parcNum: 1,
+    cardId: null,
+    faturaRef: null
+  })).sort((a, b) => b.data.localeCompare(a.data));
+}
+const LS_FATURAS = "planilha_gastos_faturas_v1";
+function formatMes(mesISO) {
+  const [y, m] = mesISO.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleString("pt-BR", {
+    month: "long",
+    year: "numeric"
+  });
+}
+function computeFaturas(cards, expenses, faturaOverrides) {
+  const today = new Date();
+  const results = [];
+  for (const card of cards) {
+    const cardExps = expenses.filter(e => e.cardId === card.id && e.tipo === "credito" && e.kind !== "entrada");
+    const byMes = {};
+    for (const exp of cardExps) {
+      const ref = exp.faturaRef || calcFaturaRef(exp.data, card);
+      if (!ref) continue;
+      if (!byMes[ref]) byMes[ref] = [];
+      byMes[ref].push(exp);
+    }
+    const currMes = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    const nd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMes = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}`;
+    if (!byMes[currMes]) byMes[currMes] = [];
+    if (!byMes[nextMes]) byMes[nextMes] = [];
+    for (const [mes, transacoes] of Object.entries(byMes)) {
+      const [y, m] = mes.split("-").map(Number);
+      const recFech = card.recFechamento || {
+        type: "fixed_day",
+        day: card.diaFechamento || 20
+      };
+      const recVenc = card.recVencimento || {
+        type: "fixed_day",
+        day: card.diaVencimento || 5
+      };
+      const closingDay = resolveRecDay(recFech, y, m);
+      const dataFechamento = `${y}-${String(m).padStart(2, "0")}-${String(closingDay).padStart(2, "0")}`;
+      const vencYear = m === 12 ? y + 1 : y;
+      const vencMonth = m === 12 ? 1 : m + 1;
+      const vencDay = resolveRecDay(recVenc, vencYear, vencMonth);
+      const dataVencimento = `${vencYear}-${String(vencMonth).padStart(2, "0")}-${String(vencDay).padStart(2, "0")}`;
+      const key = `${card.id}:${mes}`;
+      const override = faturaOverrides?.[key];
+      const status = override?.status === "paga" ? "paga" : today > new Date(dataFechamento + "T23:59:59") ? "fechada" : "aberta";
+      results.push({
+        id: key,
+        cardId: card.id,
+        card,
+        mes,
+        dataFechamento,
+        dataVencimento,
+        status,
+        total: transacoes.reduce((s, e) => s + e.valor, 0),
+        transacoes: [...transacoes].sort((a, b) => b.data.localeCompare(a.data)),
+        paidAt: override?.paidAt || null
+      });
+    }
+  }
+  return results.sort((a, b) => b.mes.localeCompare(a.mes) || a.cardId.localeCompare(b.cardId));
+}
+function exportToCSV(expenses) {
+  const headers = ["Data", "Descrição", "Categoria", "Tipo Pagamento", "Valor", "Forma", "Parcela", "Lançamento"];
+  const rows = expenses.map(e => [e.data, `"${(e.descricao || "").replace(/"/g, '""')}"`, e.kind === "entrada" ? "Entrada" : CAT_MAP[e.categoria]?.nome || e.categoria, TIPO_MAP[e.tipo]?.nome || e.tipo || "Outros", e.valor.toFixed(2).replace(".", ","), e.forma === "parcelado" ? "Parcelado" : "À vista", e.parcTotal > 1 ? `${e.parcNum}/${e.parcTotal}` : "—", e.kind === "entrada" ? "Entrada" : "Gasto"]);
+  const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+  const blob = new Blob(["﻿" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cofrinho_${todayISO()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function exportToJSON(expenses, cards, settings, customCats, fixas, caloteiros, emprestimos) {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    expenses,
+    cards,
+    settings,
+    customCats,
+    fixas,
+    caloteiros,
+    emprestimos
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `backup_cofrinho_${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+const HOLIDAYS = [];
+function addHoliday(isoDate) {
+  if (!HOLIDAYS.includes(isoDate)) HOLIDAYS.push(isoDate);
+}
+function _daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+function _isBusinessDay(year, month, day) {
+  const dow = new Date(year, month - 1, day).getDay();
+  if (dow === 0 || dow === 6) return false;
+  const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return !HOLIDAYS.includes(iso);
+}
+function getNthBusinessDay(year, month, pos) {
+  const total = _daysInMonth(year, month);
+  if (pos === "last") {
+    for (let d = total; d >= 1; d--) if (_isBusinessDay(year, month, d)) return d;
+    return total;
+  }
+  let count = 0;
+  for (let d = 1; d <= total; d++) {
+    if (_isBusinessDay(year, month, d) && ++count === pos) return d;
+  }
+  return total;
+}
+function getFirstBusinessDayOnOrAfter(year, month, refDay) {
+  const total = _daysInMonth(year, month);
+  for (let d = Math.min(refDay, total); d <= total; d++) {
+    if (_isBusinessDay(year, month, d)) return d;
+  }
+  return getNthBusinessDay(year, month, "last");
+}
+function resolveRecDay(rec, year, month) {
+  if (!rec) return 1;
+  switch (rec.type) {
+    case "nth_biz":
+      return getNthBusinessDay(year, month, rec.pos);
+    case "first_biz_after":
+      return getFirstBusinessDayOnOrAfter(year, month, rec.ref);
+    default:
+      return rec.day ?? 1;
+  }
+}
+function resolveFixaDay(fixa, year, month) {
+  return resolveRecDay(fixa.rec || {
+    type: "fixed_day",
+    day: fixa.dia || 1
+  }, year, month);
+}
+function describeRecRule(rec) {
+  if (!rec || rec.type === "fixed_day") return `Dia ${rec?.day ?? 1}`;
+  const ord = n => ["1º", "2º", "3º", "4º", "5º"][n - 1] || `${n}º`;
+  if (rec.type === "nth_biz") return rec.pos === "last" ? "Último dia útil" : `${ord(rec.pos)} dia útil`;
+  if (rec.type === "first_biz_after") return `Útil após dia ${rec.ref}`;
+  return `Dia ${rec.day ?? 1}`;
+}
+function describeRec(fixa) {
+  const rec = fixa.rec || {
+    type: "fixed_day",
+    day: fixa.dia || 1
+  };
+  const ord = n => ["1º", "2º", "3º", "4º", "5º"][n - 1] || `${n}º`;
+  switch (rec.type) {
+    case "nth_biz":
+      return rec.pos === "last" ? "Último dia útil do mês" : `${ord(rec.pos)} dia útil do mês`;
+    case "first_biz_after":
+      return `1º dia útil após o dia ${rec.ref}`;
+    default:
+      return `Todo dia ${rec.day ?? fixa.dia ?? 1}`;
+  }
+}
+Object.assign(window, {
+  CATEGORIES,
+  CAT_MAP,
+  TIPOS,
+  TIPO_MAP,
+  CAT_PRESET_COLORS,
+  FORMAS,
+  addMonths,
+  calcFaturaRef,
+  makeTransaction,
+  parseQuick,
+  parseStatement,
+  detectCategory,
+  detectTipo,
+  parseOFX,
+  parseCSV,
+  parseImportFile,
+  fmtBRL,
+  fmtBRLshort,
+  fmtDate,
+  fmtDateLong,
+  todayISO,
+  addDays,
+  uid,
+  seedData,
+  LS_FATURAS,
+  formatMes,
+  computeFaturas,
+  exportToCSV,
+  exportToJSON,
+  HOLIDAYS,
+  addHoliday,
+  getNthBusinessDay,
+  getFirstBusinessDayOnOrAfter,
+  resolveRecDay,
+  resolveFixaDay,
+  describeRecRule,
+  describeRec
+});
+})();

@@ -266,8 +266,47 @@ function ExpenseModal({ initial, initKind, onSave, onClose, allCats, cards }) {
 
 function Toast({ msg, icon }) {
   if (!msg) return null;
-  const I = icon === "trash" ? Ic.trash : Ic.check;
-  return <div className="toast"><I size={18} />{msg}</div>;
+  const MAP = {
+    check: { I: Ic.check, cls: "toast-success" },
+    trash: { I: Ic.trash, cls: "toast-neutral" },
+    error: { I: Ic.close, cls: "toast-error" },
+    info:  { I: Ic.bell,  cls: "toast-info" },
+  };
+  const { I, cls } = MAP[icon] || MAP.check;
+  return (
+    <div className={"toast " + cls} role="status" aria-live="polite">
+      <span className="toast-icon"><I size={17} /></span>
+      <span className="toast-msg">{msg}</span>
+    </div>
+  );
 }
 
-Object.assign(window, { ExpenseModal, Toast });
+/* Diálogo de confirmação elegante — substitui window.confirm nativo */
+function ConfirmDialog({ title, message, confirmLabel = "Confirmar", cancelLabel = "Cancelar", danger = false, onConfirm, onClose }) {
+  useEffectM(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "Enter") onConfirm();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const I = danger ? Ic.trash : Ic.check;
+  return (
+    <div className="modal-overlay confirm-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="confirm-dialog glass" role="alertdialog" aria-modal="true">
+        <div className={"confirm-icon" + (danger ? " danger" : "")}><I size={24} /></div>
+        <h3 className="confirm-title">{title}</h3>
+        {message && <p className="confirm-message">{message}</p>}
+        <div className="confirm-actions">
+          <button className="btn btn-ghost" onClick={onClose}>{cancelLabel}</button>
+          <button className={"btn " + (danger ? "btn-danger" : "btn-primary")} onClick={onConfirm} autoFocus>
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { ExpenseModal, Toast, ConfirmDialog });

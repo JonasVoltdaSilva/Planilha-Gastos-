@@ -489,6 +489,7 @@ function BankImportModal({ onImport, onClose }) {
   const [selected, setSelected] = useS(new Set());
   const [pdfLoading, setPdfLoading] = useS(false);
   const [pdfName, setPdfName] = useS("");
+  const [importErr, setImportErr] = useS("");
 
   const runAnalysis = (raw) => {
     /* detecta OFX/CSV colado como texto também */
@@ -505,6 +506,7 @@ function BankImportModal({ onImport, onClose }) {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setImportErr("");
     setPdfName(file.name);
     setPdfLoading(true);
     try {
@@ -549,7 +551,7 @@ function BankImportModal({ onImport, onClose }) {
         setResults(window.parseImportFile(file.name, txt));
       }
     } catch (err) {
-      alert("Não foi possível ler o arquivo. Tente colar o texto manualmente.");
+      setImportErr("Não foi possível ler o arquivo. Tente outro formato ou cole o texto manualmente.");
       setPdfName("");
     }
     setPdfLoading(false);
@@ -622,6 +624,7 @@ function BankImportModal({ onImport, onClose }) {
                     </div>
                   )}
                 </label>
+                {importErr && <div className="import-err"><Ic.close size={14} />{importErr}</div>}
                 <div className="modal-actions">
                   <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
                 </div>
@@ -1685,7 +1688,7 @@ function ThemeSheet({ open, onClose, currentTheme, onSelect }) {
 /* ============================================================
    CONFIGURAÇÕES
    ============================================================ */
-function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro, emprestimos }) {
+function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDeleteCat, cards, onAddCard, onDeleteCard, currentTheme, onThemeChange, onResetProfile, expenses, customCats, onRestoreBackup, askConfirm, showToast, fixas, onAddFixa, onDeleteFixa, caloteiros, onAddCaloteiro, onToggleCaloteiro, onDeleteCaloteiro, emprestimos }) {
   const toggle = (k) => setSettings(s => ({ ...s, [k]: !s[k] }));
   const baseCatIds = new Set(["comida","transporte","moradia","lazer","saude","compras","contas","outros"]);
 
@@ -1833,10 +1836,13 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
                     try {
                       const data = JSON.parse(ev.target.result);
                       if (!Array.isArray(data.expenses)) throw new Error("Formato inválido");
-                      if (window.confirm(`Restaurar ${data.expenses.length} lançamentos? Isso substituirá todos os dados atuais.`)) {
-                        onRestoreBackup(data);
-                      }
-                    } catch { alert("Arquivo inválido ou corrompido."); }
+                      askConfirm({
+                        title: "Restaurar backup?",
+                        message: `${data.expenses.length} lançamentos serão importados e substituirão todos os dados atuais. Esta ação não pode ser desfeita.`,
+                        confirmLabel: "Restaurar", danger: true,
+                        onConfirm: () => onRestoreBackup(data),
+                      });
+                    } catch { showToast("Arquivo inválido ou corrompido", "error"); }
                   };
                   reader.readAsText(file);
                   e.target.value = "";
