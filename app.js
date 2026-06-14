@@ -1774,7 +1774,8 @@ function App() {
   useEffect(() => {
     const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
     const auto = expenses.length > 250 || lowEnd;
-    document.body.classList.toggle("perf-lite", auto || !!settings.perfLite || !settings.animations);
+    document.body.classList.toggle("perf-lite", auto || !!settings.perfLite);
+    document.body.classList.toggle("no-decor", !!settings.perfLite || !settings.animations);
   }, [expenses.length, settings.perfLite, settings.animations]);
   const debouncedSearch = useDebouncedValue(search, 200);
   const filtered = useMemo(() => {

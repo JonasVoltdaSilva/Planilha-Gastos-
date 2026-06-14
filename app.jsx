@@ -757,11 +757,13 @@ function App() {
   const settingsRef = useRef(settings); settingsRef.current = settings;
 
   // Modo leve: auto (muitos dados ou aparelho fraco) OU manual (settings.perfLite)
-  // Desativar animações também força modo leve para suprimir todas as decorações temáticas.
+  // perf-lite: para animações de blob/grain, reduz backdrop-filter, ativa content-visibility
+  // no-decor: esconde decorações temáticas (pétalas, partículas, etc.) — SOMENTE no manual
   useEffect(() => {
     const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
     const auto = expenses.length > 250 || lowEnd;
-    document.body.classList.toggle("perf-lite", auto || !!settings.perfLite || !settings.animations);
+    document.body.classList.toggle("perf-lite", auto || !!settings.perfLite);
+    document.body.classList.toggle("no-decor", !!settings.perfLite || !settings.animations);
   }, [expenses.length, settings.perfLite, settings.animations]);
 
   // Busca com debounce — a lista só refiltra quando o usuário para de digitar

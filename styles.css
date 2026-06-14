@@ -2959,12 +2959,6 @@ body.theme-fancy .toast {
 body.perf-lite .ariana-grain { animation: none !important; }
 body.perf-lite .blob { animation: none !important; }
 body.perf-lite .glass::before { animation: none !important; }
-body.perf-lite .ariana-petal,
-body.perf-lite .chrome-streak,
-body.perf-lite .chrome-spark,
-body.perf-lite .sweet-sparkle,
-body.perf-lite .sweet-kiss-wrap,
-body.perf-lite .fancy-charm { display: none !important; }
 /* blur de fundo mais leve → rolagem fluida mesmo com muitos cards de vidro */
 body.perf-lite .glass {
   backdrop-filter: blur(12px) saturate(118%) !important;
@@ -2976,6 +2970,17 @@ body.perf-lite .expense-row {
   content-visibility: auto;
   contain-intrinsic-size: auto 72px;
 }
+
+/* Modo econômico manual OU animações desativadas:
+   esconde as decorações temáticas flutuantes (pétalas, partículas, etc.)
+   O auto perf-lite NÃO esconde decorações — só o no-decor esconde. */
+body.no-decor .ariana-petal,
+body.no-decor .chrome-streak,
+body.no-decor .chrome-spark,
+body.no-decor .sweet-sparkle,
+body.no-decor .sweet-kiss-wrap,
+body.no-decor .fancy-charm { display: none !important; }
+body.no-decor .ariana-grain { animation: none !important; }
 
 /* Botão "carregar mais" da renderização progressiva */
 .load-more-btn { width: 100%; justify-content: center; margin-top: 10px; }
