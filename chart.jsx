@@ -3,7 +3,7 @@
    ============================================================ */
 const { useMemo } = React;
 
-function Donut({ data, total, budget }) {
+const Donut = React.memo(function Donut({ data, total, budget }) {
   const R = 80, SW = 26, C = 2 * Math.PI * R;
   let offset = 0;
   const segs = data.filter(d => d.valor > 0);
@@ -63,9 +63,9 @@ function Donut({ data, total, budget }) {
       </div>
     </div>
   );
-}
+});
 
-function WeekBars({ expenses }) {
+const WeekBars = React.memo(function WeekBars({ expenses }) {
   const days = useMemo(() => {
     const arr = [];
     const t = todayISO();
@@ -93,6 +93,6 @@ function WeekBars({ expenses }) {
       ))}
     </div>
   );
-}
+});
 
 Object.assign(window, { Donut, WeekBars });

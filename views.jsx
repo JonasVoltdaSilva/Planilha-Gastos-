@@ -93,8 +93,66 @@ function BudgetBar({ total, budget }) {
   );
 }
 
-/* ---------- Tabela de gastos ---------- */
-function ExpenseTable({ rows, onEdit, onDelete, onDeleteGroup, cards, emptyText }) {
+/* ---------- Linha de lançamento (memoizada — só re-renderiza se a transação mudar) ---------- */
+const ExpenseRow = React.memo(function ExpenseRow({ e, onEdit, onDelete, onDeleteGroup, cards }) {
+  const isEntrada = e.kind === "entrada";
+  const c = isEntrada
+    ? { hex: "#5ad9a8", nome: "Entrada" }
+    : (CAT_MAP[e.categoria] || CAT_MAP["outros"]);
+  const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
+  const linkedCard = e.cardId && cards ? cards.find(cd => cd.id === e.cardId) : null;
+  return (
+    <div className="expense-row" style={{ "--row-accent": c.hex }}>
+      <div className="expense-accent" />
+      <div className="expense-main">
+        <div className="expense-info">
+          <span className="expense-desc">{e.descricao}</span>
+          <div className="expense-meta">
+            <span className="expense-date">{fmtDate(e.data)}</span>
+            {isEntrada ? (
+              <span className="exp-tag" style={{ background: "rgba(90,217,168,0.15)", color: "var(--accent-mint)", borderColor: "rgba(90,217,168,0.3)" }}>
+                Entrada
+              </span>
+            ) : (
+              <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>
+                {c.nome}
+              </span>
+            )}
+            {!isEntrada && (
+              <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
+                {t.nome}
+              </span>
+            )}
+            {linkedCard && (
+              <span className="exp-tag" style={{ background: linkedCard.cor + "22", color: linkedCard.cor, borderColor: linkedCard.cor + "44" }}>
+                <Ic.card size={10} />{linkedCard.nome}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="expense-right">
+          <span className="expense-val" style={isEntrada ? { color: "var(--accent-mint)" } : {}}>
+            {isEntrada ? "+" : ""}{fmtBRL(e.valor)}
+          </span>
+          <div className="row-actions">
+            <button className="icon-btn" title="Editar" onClick={() => onEdit(e)}><Ic.edit size={15} /></button>
+            {e.parcGrupo && onDeleteGroup && (
+              <button className="icon-btn" title={`Excluir todas as ${e.parcTotal} parcelas`}
+                style={{ fontSize: 9, gap: 2 }}
+                onClick={() => onDeleteGroup(e.parcGrupo)}>
+                <Ic.trash size={13} /><span style={{ fontSize: 9, lineHeight: 1 }}>×{e.parcTotal}</span>
+              </button>
+            )}
+            <button className="icon-btn danger" title="Excluir" onClick={() => onDelete(e.id)}><Ic.trash size={15} /></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+/* ---------- Tabela de gastos (memoizada) ---------- */
+const ExpenseTable = React.memo(function ExpenseTable({ rows, onEdit, onDelete, onDeleteGroup, cards, emptyText }) {
   if (rows.length === 0) {
     return (
       <div className="empty">
@@ -106,65 +164,12 @@ function ExpenseTable({ rows, onEdit, onDelete, onDeleteGroup, cards, emptyText 
   }
   return (
     <div className="expense-list">
-      {rows.map(e => {
-        const isEntrada = e.kind === "entrada";
-        const c = isEntrada
-          ? { hex: "#5ad9a8", nome: "Entrada" }
-          : (CAT_MAP[e.categoria] || CAT_MAP["outros"]);
-        const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
-        const linkedCard = e.cardId && cards ? cards.find(cd => cd.id === e.cardId) : null;
-        return (
-          <div className="expense-row" key={e.id} style={{ "--row-accent": c.hex }}>
-            <div className="expense-accent" />
-            <div className="expense-main">
-              <div className="expense-info">
-                <span className="expense-desc">{e.descricao}</span>
-                <div className="expense-meta">
-                  <span className="expense-date">{fmtDate(e.data)}</span>
-                  {isEntrada ? (
-                    <span className="exp-tag" style={{ background: "rgba(90,217,168,0.15)", color: "var(--accent-mint)", borderColor: "rgba(90,217,168,0.3)" }}>
-                      Entrada
-                    </span>
-                  ) : (
-                    <span className="exp-tag" style={{ background: c.hex + "22", color: c.hex, borderColor: c.hex + "44" }}>
-                      {c.nome}
-                    </span>
-                  )}
-                  {!isEntrada && (
-                    <span className="exp-tag" style={{ background: t.hex + "22", color: t.hex, borderColor: t.hex + "44" }}>
-                      {t.nome}
-                    </span>
-                  )}
-                  {linkedCard && (
-                    <span className="exp-tag" style={{ background: linkedCard.cor + "22", color: linkedCard.cor, borderColor: linkedCard.cor + "44" }}>
-                      <Ic.card size={10} />{linkedCard.nome}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="expense-right">
-                <span className="expense-val" style={isEntrada ? { color: "var(--accent-mint)" } : {}}>
-                  {isEntrada ? "+" : ""}{fmtBRL(e.valor)}
-                </span>
-                <div className="row-actions">
-                  <button className="icon-btn" title="Editar" onClick={() => onEdit(e)}><Ic.edit size={15} /></button>
-                  {e.parcGrupo && onDeleteGroup && (
-                    <button className="icon-btn" title={`Excluir todas as ${e.parcTotal} parcelas`}
-                      style={{ fontSize: 9, gap: 2 }}
-                      onClick={() => onDeleteGroup(e.parcGrupo)}>
-                      <Ic.trash size={13} /><span style={{ fontSize: 9, lineHeight: 1 }}>×{e.parcTotal}</span>
-                    </button>
-                  )}
-                  <button className="icon-btn danger" title="Excluir" onClick={() => onDelete(e.id)}><Ic.trash size={15} /></button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      {rows.map(e => (
+        <ExpenseRow key={e.id} e={e} onEdit={onEdit} onDelete={onDelete} onDeleteGroup={onDeleteGroup} cards={cards} />
+      ))}
     </div>
   );
-}
+});
 
 /* ---------- Filtros (legado, mantido para compatibilidade) ---------- */
 function Filters({ period, setPeriod, cat, setCat, search, setSearch, allCats }) {
@@ -1241,6 +1246,12 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
     return localFiltered;
   }, [localFiltered, kindFilter]);
 
+  // Renderização progressiva — monta só os primeiros N e oferece "carregar mais"
+  // (evita criar milhares de nós no DOM de uma vez com históricos longos)
+  const STEP = 80;
+  const [visible, setVisible] = useS(STEP);
+  const shownRows = displayRows.length > visible ? displayRows.slice(0, visible) : displayRows;
+
   return (
     <>
       {showImport && ReactDOM.createPortal(
@@ -1317,8 +1328,15 @@ function GastosView({ filtered, total, byCat, onEdit, onDelete, onDeleteGroup, o
               text={search || cat !== "all" ? "Tente ajustar os filtros." : "Toque no + para registrar sua primeira transação."}
             />
           ) : (
-            <GroupedExpenseList rows={displayRows} onEdit={onEdit} onDelete={onDelete}
-              onDeleteGroup={onDeleteGroup} cards={cards} />
+            <>
+              <GroupedExpenseList rows={shownRows} onEdit={onEdit} onDelete={onDelete}
+                onDeleteGroup={onDeleteGroup} cards={cards} />
+              {displayRows.length > visible && (
+                <button className="btn btn-ghost load-more-btn" onClick={() => setVisible(v => v + STEP * 2)}>
+                  Carregar mais · {displayRows.length - visible} restantes
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

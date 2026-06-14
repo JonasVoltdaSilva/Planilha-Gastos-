@@ -3,7 +3,7 @@
 const {
   useMemo
 } = React;
-function Donut({
+const Donut = React.memo(function Donut({
   data,
   total,
   budget
@@ -89,8 +89,8 @@ function Donut({
   }, fmtBRL(d.valor)), React.createElement("span", {
     className: "pc"
   }, Math.round(d.valor / total * 100), "%")))));
-}
-function WeekBars({
+});
+const WeekBars = React.memo(function WeekBars({
   expenses
 }) {
   const days = useMemo(() => {
@@ -126,7 +126,7 @@ function WeekBars({
   }), React.createElement("div", {
     className: "bar-lab"
   }, d.lab))));
-}
+});
 Object.assign(window, {
   Donut,
   WeekBars

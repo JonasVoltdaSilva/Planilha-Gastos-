@@ -2947,3 +2947,35 @@ body.theme-fancy .toast {
   font-family: var(--font-body); font-size: 10px; font-weight: 700;
   color: var(--accent-mint); text-transform: uppercase; letter-spacing: 0.06em;
 }
+
+/* ============================================================
+   MODO LEVE (perf-lite) — ativado automaticamente com muitos
+   dados (>250 lançamentos) ou em aparelhos fracos. Corta as
+   animações contínuas mais caras (grão de filme repintando a
+   cada 0,14s, blobs com blur de 140px, shimmer em todo glass,
+   partículas flutuantes) preservando as cores do tema.
+   Prioriza fluidez sobre efeito — conforme pedido.
+   ============================================================ */
+body.perf-lite .ariana-grain { animation: none !important; }
+body.perf-lite .blob { animation: none !important; }
+body.perf-lite .glass::before { animation: none !important; }
+body.perf-lite .ariana-petal,
+body.perf-lite .chrome-streak,
+body.perf-lite .chrome-spark,
+body.perf-lite .sweet-sparkle,
+body.perf-lite .sweet-kiss-wrap,
+body.perf-lite .fancy-charm { display: none !important; }
+/* blur de fundo mais leve → rolagem fluida mesmo com muitos cards de vidro */
+body.perf-lite .glass {
+  backdrop-filter: blur(12px) saturate(118%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(118%) !important;
+}
+/* o navegador pula layout/paint das linhas fora da tela em listas longas
+   (progressive enhancement: navegadores sem suporte renderizam normal) */
+body.perf-lite .expense-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
+}
+
+/* Botão "carregar mais" da renderização progressiva */
+.load-more-btn { width: 100%; justify-content: center; margin-top: 10px; }

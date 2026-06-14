@@ -4,8 +4,18 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 const {
   useState,
   useMemo,
-  useEffect
+  useEffect,
+  useRef,
+  useCallback
 } = React;
+function useDebouncedValue(value, delay = 200) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
+}
 const NAV = [{
   id: "home",
   nome: "Início",
@@ -1742,7 +1752,7 @@ function App() {
     document.body.classList.toggle("no-glow", !settings.glow);
     document.body.classList.toggle("light-mode", !!settings.lightMode);
   }, [settings.animations, settings.glow, settings.lightMode]);
-  const showToast = (msg, icon = "check") => {
+  const showToast = useCallback((msg, icon = "check") => {
     setToast({
       msg,
       icon
@@ -1751,8 +1761,19 @@ function App() {
       msg: "",
       icon: "check"
     }), 2400);
-  };
-  const askConfirm = opts => setConfirmDialog(opts);
+  }, []);
+  const askConfirm = useCallback(opts => setConfirmDialog(opts), []);
+  const openAdd = useCallback(() => setModal({}), []);
+  const openEdit = useCallback(e => setModal(e), []);
+  const expensesRef = useRef(expenses);
+  expensesRef.current = expenses;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+  useEffect(() => {
+    const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+    document.body.classList.toggle("perf-lite", expenses.length > 250 || lowEnd);
+  }, [expenses.length]);
+  const debouncedSearch = useDebouncedValue(search, 200);
   const filtered = useMemo(() => {
     let arr = [...expenses];
     if (period === "mes-atual") {
@@ -1770,12 +1791,12 @@ function App() {
       arr = arr.filter(e => e.data >= min);
     }
     if (cat !== "all") arr = arr.filter(e => e.categoria === cat);
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       arr = arr.filter(e => e.descricao.toLowerCase().includes(q));
     }
     return arr.sort((a, b) => b.data.localeCompare(a.data) || b.valor - a.valor);
-  }, [expenses, period, cat, search]);
+  }, [expenses, period, cat, debouncedSearch]);
   const total = useMemo(() => filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0), [filtered]);
   const byCat = useMemo(() => {
     const map = {};
@@ -1824,13 +1845,13 @@ function App() {
       showToast(isEditing ? exp.kind === "entrada" ? "Entrada atualizada" : "Gasto atualizado" : exp.kind === "entrada" ? "Entrada adicionada!" : "Gasto adicionado!");
     }
   };
-  const deleteExpense = id => {
-    const exp = expenses.find(e => e.id === id);
+  const deleteExpense = useCallback(id => {
+    const exp = expensesRef.current.find(e => e.id === id);
     const doDelete = () => {
       setExpenses(prev => prev.filter(e => e.id !== id));
       showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído", "trash");
     };
-    if (settings.confirmDelete) {
+    if (settingsRef.current.confirmDelete) {
       askConfirm({
         title: exp?.kind === "entrada" ? "Excluir entrada?" : "Excluir gasto?",
         message: exp?.descricao ? `"${exp.descricao}" será removido permanentemente.` : "Esta ação não pode ser desfeita.",
@@ -1839,15 +1860,15 @@ function App() {
         onConfirm: doDelete
       });
     } else doDelete();
-  };
-  const deleteExpenseGroup = parcGrupo => {
-    const group = expenses.filter(e => e.parcGrupo === parcGrupo);
+  }, [showToast, askConfirm]);
+  const deleteExpenseGroup = useCallback(parcGrupo => {
+    const group = expensesRef.current.filter(e => e.parcGrupo === parcGrupo);
     if (!group.length) return;
     const doDelete = () => {
       setExpenses(prev => prev.filter(e => e.parcGrupo !== parcGrupo));
       showToast(`${group.length} parcelas excluídas`, "trash");
     };
-    if (settings.confirmDelete) {
+    if (settingsRef.current.confirmDelete) {
       askConfirm({
         title: "Excluir parcelamento?",
         message: `Todas as ${group.length} parcelas deste lançamento serão removidas.`,
@@ -1856,7 +1877,7 @@ function App() {
         onConfirm: doDelete
       });
     } else doDelete();
-  };
+  }, [showToast, askConfirm]);
   const importExpenses = list => {
     if (!list.length) return;
     setExpenses(prev => [...list, ...prev]);
@@ -1981,8 +2002,8 @@ function App() {
     cards: cards,
     userName: userName,
     faturaOverrides: faturaOverrides,
-    onAdd: () => setModal({}),
-    onEdit: e => setModal(e),
+    onAdd: openAdd,
+    onEdit: openEdit,
     onDelete: deleteExpense,
     onDeleteGroup: deleteExpenseGroup,
     onGoToFaturas: () => setPage("faturas"),
@@ -1997,20 +2018,20 @@ function App() {
     filtered: filtered,
     byCat: byCat,
     total: total,
-    onEdit: e => setModal(e),
+    onEdit: openEdit,
     onDelete: deleteExpense,
     onDeleteGroup: deleteExpenseGroup,
-    onAdd: () => setModal({}),
+    onAdd: openAdd,
     budget: settings.budget,
     cards: cards
   }), page === "gastos" && React.createElement(GastosView, {
     filtered: filtered,
     total: total,
     byCat: byCat,
-    onEdit: e => setModal(e),
+    onEdit: openEdit,
     onDelete: deleteExpense,
     onDeleteGroup: deleteExpenseGroup,
-    onAdd: () => setModal({}),
+    onAdd: openAdd,
     onImport: importExpenses,
     allCats: allCats,
     cards: cards,
@@ -2049,7 +2070,7 @@ function App() {
     faturaOverrides: faturaOverrides,
     onMarkPaid: markFaturaPaid,
     onUnmarkPaid: unmarkFaturaPaid,
-    onEdit: e => setModal(e),
+    onEdit: openEdit,
     onDelete: deleteExpense,
     onDeleteGroup: deleteExpenseGroup
   }), page === "relatorios" && React.createElement(RelatoriosView, {
@@ -2088,7 +2109,7 @@ function App() {
       if (p === "gastos") setGastosInitialTab("lancamentos");
       setPage(p);
     },
-    onAdd: () => setModal({})
+    onAdd: openAdd
   }), showFilterSheet && React.createElement(FilterSheet, {
     allCats: allCats,
     cards: cards,

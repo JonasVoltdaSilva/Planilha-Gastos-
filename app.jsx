@@ -1,7 +1,17 @@
 /* ============================================================
    App raiz — estado, navegação, quick-add, filtros
    ============================================================ */
-const { useState, useMemo, useEffect } = React;
+const { useState, useMemo, useEffect, useRef, useCallback } = React;
+
+// Debounce — evita refiltrar e re-renderizar a lista a cada tecla digitada na busca
+function useDebouncedValue(value, delay = 200) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
+}
 
 const NAV = [
   { id: "home",      nome: "Início",    icon: Ic.home },
@@ -730,13 +740,31 @@ function App() {
     document.body.classList.toggle("light-mode", !!settings.lightMode);
   }, [settings.animations, settings.glow, settings.lightMode]);
 
-  const showToast = (msg, icon = "check") => {
+  const showToast = useCallback((msg, icon = "check") => {
     setToast({ msg, icon });
     setTimeout(() => setToast({ msg: "", icon: "check" }), 2400);
-  };
+  }, []);
 
   // Confirmação elegante (substitui window.confirm). Uso: askConfirm({ title, message, onConfirm })
-  const askConfirm = (opts) => setConfirmDialog(opts);
+  const askConfirm = useCallback((opts) => setConfirmDialog(opts), []);
+
+  // Handlers estáveis do modal — permitem React.memo nas linhas da lista (não recriam a cada render)
+  const openAdd = useCallback(() => setModal({}), []);
+  const openEdit = useCallback((e) => setModal(e), []);
+
+  // Refs com os valores mais recentes — mantêm callbacks estáveis sem depender de expenses/settings
+  const expensesRef = useRef(expenses); expensesRef.current = expenses;
+  const settingsRef = useRef(settings); settingsRef.current = settings;
+
+  // Modo leve automático: corta animações pesadas (grão de filme, blobs, decoração)
+  // quando há muitos dados OU em aparelhos mais fracos — prioriza fluidez sobre efeito.
+  useEffect(() => {
+    const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+    document.body.classList.toggle("perf-lite", expenses.length > 250 || lowEnd);
+  }, [expenses.length]);
+
+  // Busca com debounce — a lista só refiltra quando o usuário para de digitar
+  const debouncedSearch = useDebouncedValue(search, 200);
 
   // ---------- Filtragem global (sem tipo/cartão — esses ficam em GastosView) ----------
   const filtered = useMemo(() => {
@@ -756,12 +784,12 @@ function App() {
       arr = arr.filter(e => e.data >= min);
     }
     if (cat !== "all") arr = arr.filter(e => e.categoria === cat);
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       arr = arr.filter(e => e.descricao.toLowerCase().includes(q));
     }
     return arr.sort((a, b) => b.data.localeCompare(a.data) || b.valor - a.valor);
-  }, [expenses, period, cat, search]);
+  }, [expenses, period, cat, debouncedSearch]);
 
   const total = useMemo(() =>
     filtered.filter(e => e.kind !== "entrada").reduce((s, e) => s + e.valor, 0),
@@ -815,36 +843,36 @@ function App() {
     }
   };
 
-  const deleteExpense = (id) => {
-    const exp = expenses.find(e => e.id === id);
+  const deleteExpense = useCallback((id) => {
+    const exp = expensesRef.current.find(e => e.id === id);
     const doDelete = () => {
       setExpenses(prev => prev.filter(e => e.id !== id));
       showToast(exp?.kind === "entrada" ? "Entrada excluída" : "Gasto excluído", "trash");
     };
-    if (settings.confirmDelete) {
+    if (settingsRef.current.confirmDelete) {
       askConfirm({
         title: exp?.kind === "entrada" ? "Excluir entrada?" : "Excluir gasto?",
         message: exp?.descricao ? `"${exp.descricao}" será removido permanentemente.` : "Esta ação não pode ser desfeita.",
         confirmLabel: "Excluir", danger: true, onConfirm: doDelete,
       });
     } else doDelete();
-  };
+  }, [showToast, askConfirm]);
 
-  const deleteExpenseGroup = (parcGrupo) => {
-    const group = expenses.filter(e => e.parcGrupo === parcGrupo);
+  const deleteExpenseGroup = useCallback((parcGrupo) => {
+    const group = expensesRef.current.filter(e => e.parcGrupo === parcGrupo);
     if (!group.length) return;
     const doDelete = () => {
       setExpenses(prev => prev.filter(e => e.parcGrupo !== parcGrupo));
       showToast(`${group.length} parcelas excluídas`, "trash");
     };
-    if (settings.confirmDelete) {
+    if (settingsRef.current.confirmDelete) {
       askConfirm({
         title: "Excluir parcelamento?",
         message: `Todas as ${group.length} parcelas deste lançamento serão removidas.`,
         confirmLabel: "Excluir tudo", danger: true, onConfirm: doDelete,
       });
     } else doDelete();
-  };
+  }, [showToast, askConfirm]);
 
   const importExpenses = (list) => {
     if (!list.length) return;
@@ -937,7 +965,7 @@ function App() {
 {page === "home" && (
               <HomeView expenses={expenses} budget={settings.budget} cards={cards} userName={userName}
                 faturaOverrides={faturaOverrides}
-                onAdd={() => setModal({})} onEdit={(e) => setModal(e)}
+                onAdd={openAdd} onEdit={openEdit}
                 onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
                 onGoToFaturas={() => setPage("faturas")}
                 fixas={fixas} caloteiros={caloteiros}
@@ -945,13 +973,13 @@ function App() {
             )}
             {page === "dashboard" && (
               <DashboardView expenses={expenses} filtered={filtered} byCat={byCat} total={total}
-                onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-                onAdd={() => setModal({})} budget={settings.budget} cards={cards} />
+                onEdit={openEdit} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onAdd={openAdd} budget={settings.budget} cards={cards} />
             )}
             {page === "gastos" && (
               <GastosView filtered={filtered} total={total} byCat={byCat}
-                onEdit={(e) => setModal(e)} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
-                onAdd={() => setModal({})} onImport={importExpenses} allCats={allCats} cards={cards}
+                onEdit={openEdit} onDelete={deleteExpense} onDeleteGroup={deleteExpenseGroup}
+                onAdd={openAdd} onImport={importExpenses} allCats={allCats} cards={cards}
                 tipoFilter={tipoFilter} setTipoFilter={setTipoFilter}
                 cardIdFilter={cardIdFilter} setCardIdFilter={setCardIdFilter}
                 onOpenFilterSheet={() => setShowFilterSheet(true)}
@@ -970,7 +998,7 @@ function App() {
                 faturaOverrides={faturaOverrides}
                 onMarkPaid={markFaturaPaid}
                 onUnmarkPaid={unmarkFaturaPaid}
-                onEdit={(e) => setModal(e)}
+                onEdit={openEdit}
                 onDelete={deleteExpense}
                 onDeleteGroup={deleteExpenseGroup}
               />
@@ -994,7 +1022,7 @@ function App() {
         </div>
       </main>
 
-      <BottomNav page={page} setPage={(p) => { if (p === "gastos") setGastosInitialTab("lancamentos"); setPage(p); }} onAdd={() => setModal({})} />
+      <BottomNav page={page} setPage={(p) => { if (p === "gastos") setGastosInitialTab("lancamentos"); setPage(p); }} onAdd={openAdd} />
 
       {showFilterSheet && (
         <FilterSheet

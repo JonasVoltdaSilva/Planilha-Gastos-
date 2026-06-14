@@ -141,7 +141,106 @@ function BudgetBar({
     }
   }, status));
 }
-function ExpenseTable({
+const ExpenseRow = React.memo(function ExpenseRow({
+  e,
+  onEdit,
+  onDelete,
+  onDeleteGroup,
+  cards
+}) {
+  const isEntrada = e.kind === "entrada";
+  const c = isEntrada ? {
+    hex: "#5ad9a8",
+    nome: "Entrada"
+  } : CAT_MAP[e.categoria] || CAT_MAP["outros"];
+  const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
+  const linkedCard = e.cardId && cards ? cards.find(cd => cd.id === e.cardId) : null;
+  return React.createElement("div", {
+    className: "expense-row",
+    style: {
+      "--row-accent": c.hex
+    }
+  }, React.createElement("div", {
+    className: "expense-accent"
+  }), React.createElement("div", {
+    className: "expense-main"
+  }, React.createElement("div", {
+    className: "expense-info"
+  }, React.createElement("span", {
+    className: "expense-desc"
+  }, e.descricao), React.createElement("div", {
+    className: "expense-meta"
+  }, React.createElement("span", {
+    className: "expense-date"
+  }, fmtDate(e.data)), isEntrada ? React.createElement("span", {
+    className: "exp-tag",
+    style: {
+      background: "rgba(90,217,168,0.15)",
+      color: "var(--accent-mint)",
+      borderColor: "rgba(90,217,168,0.3)"
+    }
+  }, "Entrada") : React.createElement("span", {
+    className: "exp-tag",
+    style: {
+      background: c.hex + "22",
+      color: c.hex,
+      borderColor: c.hex + "44"
+    }
+  }, c.nome), !isEntrada && React.createElement("span", {
+    className: "exp-tag",
+    style: {
+      background: t.hex + "22",
+      color: t.hex,
+      borderColor: t.hex + "44"
+    }
+  }, t.nome), linkedCard && React.createElement("span", {
+    className: "exp-tag",
+    style: {
+      background: linkedCard.cor + "22",
+      color: linkedCard.cor,
+      borderColor: linkedCard.cor + "44"
+    }
+  }, React.createElement(Ic.card, {
+    size: 10
+  }), linkedCard.nome))), React.createElement("div", {
+    className: "expense-right"
+  }, React.createElement("span", {
+    className: "expense-val",
+    style: isEntrada ? {
+      color: "var(--accent-mint)"
+    } : {}
+  }, isEntrada ? "+" : "", fmtBRL(e.valor)), React.createElement("div", {
+    className: "row-actions"
+  }, React.createElement("button", {
+    className: "icon-btn",
+    title: "Editar",
+    onClick: () => onEdit(e)
+  }, React.createElement(Ic.edit, {
+    size: 15
+  })), e.parcGrupo && onDeleteGroup && React.createElement("button", {
+    className: "icon-btn",
+    title: `Excluir todas as ${e.parcTotal} parcelas`,
+    style: {
+      fontSize: 9,
+      gap: 2
+    },
+    onClick: () => onDeleteGroup(e.parcGrupo)
+  }, React.createElement(Ic.trash, {
+    size: 13
+  }), React.createElement("span", {
+    style: {
+      fontSize: 9,
+      lineHeight: 1
+    }
+  }, "\xD7", e.parcTotal)), React.createElement("button", {
+    className: "icon-btn danger",
+    title: "Excluir",
+    onClick: () => onDelete(e.id)
+  }, React.createElement(Ic.trash, {
+    size: 15
+  }))))));
+});
+const ExpenseTable = React.memo(function ExpenseTable({
   rows,
   onEdit,
   onDelete,
@@ -168,101 +267,15 @@ function ExpenseTable({
   }
   return React.createElement("div", {
     className: "expense-list"
-  }, rows.map(e => {
-    const isEntrada = e.kind === "entrada";
-    const c = isEntrada ? {
-      hex: "#5ad9a8",
-      nome: "Entrada"
-    } : CAT_MAP[e.categoria] || CAT_MAP["outros"];
-    const t = TIPO_MAP[e.tipo] || TIPO_MAP["outros"];
-    const linkedCard = e.cardId && cards ? cards.find(cd => cd.id === e.cardId) : null;
-    return React.createElement("div", {
-      className: "expense-row",
-      key: e.id,
-      style: {
-        "--row-accent": c.hex
-      }
-    }, React.createElement("div", {
-      className: "expense-accent"
-    }), React.createElement("div", {
-      className: "expense-main"
-    }, React.createElement("div", {
-      className: "expense-info"
-    }, React.createElement("span", {
-      className: "expense-desc"
-    }, e.descricao), React.createElement("div", {
-      className: "expense-meta"
-    }, React.createElement("span", {
-      className: "expense-date"
-    }, fmtDate(e.data)), isEntrada ? React.createElement("span", {
-      className: "exp-tag",
-      style: {
-        background: "rgba(90,217,168,0.15)",
-        color: "var(--accent-mint)",
-        borderColor: "rgba(90,217,168,0.3)"
-      }
-    }, "Entrada") : React.createElement("span", {
-      className: "exp-tag",
-      style: {
-        background: c.hex + "22",
-        color: c.hex,
-        borderColor: c.hex + "44"
-      }
-    }, c.nome), !isEntrada && React.createElement("span", {
-      className: "exp-tag",
-      style: {
-        background: t.hex + "22",
-        color: t.hex,
-        borderColor: t.hex + "44"
-      }
-    }, t.nome), linkedCard && React.createElement("span", {
-      className: "exp-tag",
-      style: {
-        background: linkedCard.cor + "22",
-        color: linkedCard.cor,
-        borderColor: linkedCard.cor + "44"
-      }
-    }, React.createElement(Ic.card, {
-      size: 10
-    }), linkedCard.nome))), React.createElement("div", {
-      className: "expense-right"
-    }, React.createElement("span", {
-      className: "expense-val",
-      style: isEntrada ? {
-        color: "var(--accent-mint)"
-      } : {}
-    }, isEntrada ? "+" : "", fmtBRL(e.valor)), React.createElement("div", {
-      className: "row-actions"
-    }, React.createElement("button", {
-      className: "icon-btn",
-      title: "Editar",
-      onClick: () => onEdit(e)
-    }, React.createElement(Ic.edit, {
-      size: 15
-    })), e.parcGrupo && onDeleteGroup && React.createElement("button", {
-      className: "icon-btn",
-      title: `Excluir todas as ${e.parcTotal} parcelas`,
-      style: {
-        fontSize: 9,
-        gap: 2
-      },
-      onClick: () => onDeleteGroup(e.parcGrupo)
-    }, React.createElement(Ic.trash, {
-      size: 13
-    }), React.createElement("span", {
-      style: {
-        fontSize: 9,
-        lineHeight: 1
-      }
-    }, "\xD7", e.parcTotal)), React.createElement("button", {
-      className: "icon-btn danger",
-      title: "Excluir",
-      onClick: () => onDelete(e.id)
-    }, React.createElement(Ic.trash, {
-      size: 15
-    }))))));
-  }));
-}
+  }, rows.map(e => React.createElement(ExpenseRow, {
+    key: e.id,
+    e: e,
+    onEdit: onEdit,
+    onDelete: onDelete,
+    onDeleteGroup: onDeleteGroup,
+    cards: cards
+  })));
+});
 function Filters({
   period,
   setPeriod,
@@ -2321,6 +2334,9 @@ function GastosView({
     if (kindFilter === "entradas") return localFiltered.filter(e => e.kind === "entrada");
     return localFiltered;
   }, [localFiltered, kindFilter]);
+  const STEP = 80;
+  const [visible, setVisible] = useS(STEP);
+  const shownRows = displayRows.length > visible ? displayRows.slice(0, visible) : displayRows;
   return React.createElement(React.Fragment, null, showImport && ReactDOM.createPortal(React.createElement(BankImportModal, {
     onImport: onImport,
     onClose: () => setShowImport(false)
@@ -2460,13 +2476,16 @@ function GastosView({
   }, "\xB7 ", displayRows.length, " lan\xE7amentos")), displayRows.length === 0 ? React.createElement(EmptyState, {
     title: kindFilter === "entradas" ? "Nenhuma entrada" : kindFilter === "gastos" ? "Nenhum gasto" : "Histórico vazio",
     text: search || cat !== "all" ? "Tente ajustar os filtros." : "Toque no + para registrar sua primeira transação."
-  }) : React.createElement(GroupedExpenseList, {
-    rows: displayRows,
+  }) : React.createElement(React.Fragment, null, React.createElement(GroupedExpenseList, {
+    rows: shownRows,
     onEdit: onEdit,
     onDelete: onDelete,
     onDeleteGroup: onDeleteGroup,
     cards: cards
-  })), tab === "cartoes" && React.createElement(CardManager, {
+  }), displayRows.length > visible && React.createElement("button", {
+    className: "btn btn-ghost load-more-btn",
+    onClick: () => setVisible(v => v + STEP * 2)
+  }, "Carregar mais \xB7 ", displayRows.length - visible, " restantes"))), tab === "cartoes" && React.createElement(CardManager, {
     cards: cards || [],
     onAddCard: onAddCard,
     onDeleteCard: onDeleteCard
