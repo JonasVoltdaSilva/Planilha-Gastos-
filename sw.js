@@ -18,3 +18,17 @@ self.addEventListener('fetch', e => {
   }
   // CDN externos (React, Babel, etc.): deixa o browser gerenciar normalmente
 });
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body } = e.data;
+    e.waitUntil(
+      self.registration.showNotification(title, {
+        body,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        vibrate: [200, 100, 200],
+      })
+    );
+  }
+});

@@ -650,6 +650,14 @@ function HomeView({ expenses, budget, onAdd, onEdit, onDelete, onDeleteGroup, ca
           detalhe: `${detalhe} · ${fmtBRL(c.valor)}` });
       }
     });
+    // Fatura que fecha hoje
+    (cards || []).forEach(c => {
+      if (c.diaFechamento === todayDay) {
+        list.push({ id: `fech-${c.id}`, urgente: false,
+          texto: `Fatura do ${c.nome} fecha hoje`,
+          detalhe: `Dia ${c.diaFechamento} — período de compras encerrado` });
+      }
+    });
     return list;
   }, [cards, expenses, faturaOverrides, caloteiros, monthStr, todayDay]);
 
@@ -1424,6 +1432,7 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
     ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."],
     ["animations", "Animações de fundo", "Movimento suave do gradiente ambiente."],
     ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."],
+    ["notificacoes", "Notificações diárias", "Avisa sobre faturas e cobranças do dia ao abrir o app."],
   ];
 
   return (
@@ -1458,6 +1467,24 @@ function ConfigView({ settings, setSettings, onReset, allCats, onAddCat, onDelet
                 <div className={"switch" + (settings[k] ? " on" : "")} onClick={() => toggle(k)} />
               </div>
             ))}
+            {settings.notificacoes && "Notification" in window && (
+              <div className="set-row">
+                <div className="set-info">
+                  <div className="t">Permissão do navegador</div>
+                  <div className="d" style={{ color: Notification.permission === "granted" ? "var(--accent-mint)" : Notification.permission === "denied" ? "var(--cat-saude)" : "var(--text-lo)" }}>
+                    {Notification.permission === "granted" ? "✓ Notificações ativas"
+                      : Notification.permission === "denied" ? "✗ Bloqueado — ative nas configurações do navegador"
+                      : "Clique em Ativar para autorizar"}
+                  </div>
+                </div>
+                {Notification.permission === "default" && (
+                  <button className="btn btn-ghost" style={{ padding: "10px 14px", whiteSpace: "nowrap" }}
+                    onClick={() => Notification.requestPermission()}>
+                    Ativar
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
