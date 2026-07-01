@@ -1527,6 +1527,7 @@ function App() {
           confirmDelete: false,
           budget: 2000,
           perfLite: false,
+          notificacoes: true,
           ...parsed
         };
       }
@@ -1538,7 +1539,8 @@ function App() {
       confirmDelete: false,
       budget: 2000,
       lightMode: false,
-      perfLite: false
+      perfLite: false,
+      notificacoes: true
     };
   });
   const [cards, setCards] = useState(() => {
@@ -1754,6 +1756,62 @@ function App() {
     document.body.classList.toggle("no-glow", !settings.glow);
     document.body.classList.toggle("light-mode", !!settings.lightMode);
   }, [settings.animations, settings.glow, settings.lightMode]);
+  useEffect(() => {
+    if (!profile || settings.notificacoes === false) return;
+    if (!('Notification' in window)) return;
+    const today = new Date();
+    const todayDay = today.getDate();
+    const todayKey = todayISO();
+    const dispararNotifs = () => {
+      if (Notification.permission !== 'granted') return;
+      if (localStorage.getItem('cofrinho_notif_day') === todayKey) return;
+      const notifs = [];
+      (cards || []).forEach(card => {
+        if (card.diaFechamento === todayDay) notifs.push({
+          title: String.fromCodePoint(0x1F4B3) + ' Fatura fecha hoje — ' + card.nome,
+          body: 'O período de compras do ' + card.nome + ' fecha hoje.'
+        });
+      });
+      (cards || []).forEach(card => {
+        const fatura = (computeFaturas([card], expenses, faturaOverrides) || []).find(f => f.total > 0 && f.status !== 'paga');
+        if (!fatura) return;
+        const [fy, fm] = fatura.mes.split('-').map(Number);
+        const dueDate = new Date(fy, fm, card.diaVencimento);
+        const diff = Math.ceil((dueDate - today) / 86400000);
+        if (diff === 0) notifs.push({
+          title: '⚠️ Fatura vence HOJE — ' + card.nome,
+          body: fmtBRL(fatura.total) + ' — pague hoje para evitar juros!'
+        });else if (diff === 1) notifs.push({
+          title: '📅 Fatura vence amanhã — ' + card.nome,
+          body: fmtBRL(fatura.total) + ' — último dia amanhã'
+        });
+      });
+      (caloteiros || []).filter(c => !c.pago && c.alertaDia === todayDay).forEach(c => {
+        notifs.push({
+          title: '🔔 Cobrar ' + c.nome + ' hoje!',
+          body: 'Não esqueça de cobrar ' + c.nome + ' — ' + fmtBRL(c.valor)
+        });
+      });
+      if (!notifs.length) return;
+      localStorage.setItem('cofrinho_notif_day', todayKey);
+      const sw = navigator.serviceWorker && navigator.serviceWorker.controller;
+      notifs.forEach((n, i) => setTimeout(() => {
+        try {
+          if (sw) sw.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title: n.title,
+            body: n.body
+          });else new Notification(n.title, {
+            body: n.body,
+            icon: '/icon-192.png'
+          });
+        } catch (_) {}
+      }, i * 800));
+    };
+    if (Notification.permission === 'granted') dispararNotifs();else if (Notification.permission === 'default') Notification.requestPermission().then(p => {
+      if (p === 'granted') dispararNotifs();
+    });
+  }, [profile, settings.notificacoes]);
   const showToast = useCallback((msg, icon = "check") => {
     setToast({
       msg,

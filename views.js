@@ -3096,7 +3096,7 @@ function ConfigView({
       budget: isNaN(v) ? 0 : v
     }));
   };
-  const rows = [["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."], ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."], ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."], ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."]];
+  const rows = [["lightMode", "Tema claro", "Alterna para fundo branco com maior luminosidade."], ["autoCat", "Categorização automática", "Detecta a categoria pela descrição do gasto."], ["glow", "Efeitos de iluminação", "Brilho sutil em cards e inputs (glassmorphism)."], ["confirmDelete", "Confirmar exclusão", "Pede confirmação antes de excluir um gasto."], ["notificacoes", "Notificações diárias", "Avisa sobre faturas e cobranças do dia ao abrir o app."]];
   return React.createElement("div", {
     style: {
       display: "flex",

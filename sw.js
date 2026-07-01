@@ -18,3 +18,18 @@ self.addEventListener('fetch', e => {
   }
   // CDN externos (React, Babel, etc.): deixa o browser gerenciar normalmente
 });
+
+// Notificações: recebe pedido do app e exibe via registration (funciona mesmo com o SW no controle)
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body } = e.data;
+    e.waitUntil(
+      self.registration.showNotification(title, {
+        body,
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
+        vibrate: [200, 100, 200],
+      })
+    );
+  }
+});
