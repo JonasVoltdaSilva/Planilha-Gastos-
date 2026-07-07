@@ -1107,6 +1107,8 @@ body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
   z-index: 0;
   pointer-events: none;
   opacity: 0.42;
+  /* fallback: arte estática aparece mesmo com o vídeo bloqueado/carregando */
+  background: url("jump-art.jpg") center / cover no-repeat;
   /* fade radial — a arte se dissolve no preto nas bordas */
   -webkit-mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
   mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
