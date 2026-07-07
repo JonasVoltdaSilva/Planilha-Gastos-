@@ -1022,12 +1022,12 @@ body.theme-jump {
 body.theme-jump .backdrop {
   background: linear-gradient(175deg, #0a0106 0%, #0c0208 50%, #070104 100%);
 }
-/* Vinheta discreta */
+/* Vinheta bem leve — o vídeo domina o fundo */
 body.theme-jump .backdrop::after {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 90% 85% at center,
-    transparent 48%, rgba(0,0,0,0.40) 78%, rgba(0,0,0,0.85) 100%);
+  background: radial-gradient(ellipse 95% 90% at center,
+    transparent 60%, rgba(0,0,0,0.25) 84%, rgba(0,0,0,0.60) 100%);
   pointer-events: none;
 }
 
@@ -1038,15 +1038,15 @@ body.theme-jump .blob.b2 { opacity: 0.22 !important; }
 body.theme-jump .blob.b3 { opacity: 0.16 !important; }
 body.theme-jump .blob.b4 { opacity: 0.10 !important; }
 
-/* Cards — preto profundo com fio rosa (hairline) */
+/* Cards — translúcidos: o vídeo aparece através, o blur mantém a leitura */
 body.theme-jump .glass {
-  background: rgba(14, 3, 9, 0.88) !important;
-  border-color: rgba(242, 169, 196, 0.15) !important;
+  background: rgba(14, 3, 9, 0.58) !important;
+  border-color: rgba(242, 169, 196, 0.16) !important;
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.85),
+    0 8px 30px rgba(0, 0, 0, 0.70),
     inset 0 1px 0 rgba(242, 169, 196, 0.07) !important;
-  backdrop-filter: blur(26px) saturate(115%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(115%) !important;
+  backdrop-filter: blur(22px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(120%) !important;
 }
 
 /* Linha fina rosa sob os títulos de painel — a linha da capa DEADLINE */
@@ -1106,12 +1106,12 @@ body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
   object-fit: cover;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.42;
+  opacity: 0.9;
   /* fallback: arte estática aparece mesmo com o vídeo bloqueado/carregando */
   background: url("jump-art.jpg") center / cover no-repeat;
-  /* fade radial — a arte se dissolve no preto nas bordas */
-  -webkit-mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
-  mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
+  /* fade suave só nas bordas — o centro fica totalmente visível */
+  -webkit-mask-image: radial-gradient(ellipse 120% 100% at 50% 42%, #000 55%, transparent 98%);
+  mask-image: radial-gradient(ellipse 120% 100% at 50% 42%, #000 55%, transparent 98%);
 }
 body.theme-jump .jump-art-video { display: block; }
 
