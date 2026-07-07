@@ -1168,3 +1168,32 @@ function BottomNav({ page, setPage, onAdd }) {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+/* Auto-update do PWA: quando o app da tela de início volta ao primeiro plano,
+   compara a versão local (?v= dos assets) com o index.html publicado.
+   Se saiu versão nova → recarrega sozinho. Sem constante manual: a versão
+   é lida do próprio <link> de styles.css, então o bump via sed já basta. */
+(function setupAutoUpdate() {
+  const readV = (s) => (String(s).match(/styles\.css\?v=(\d+)/) || [])[1];
+  const link = document.querySelector('link[href*="styles.css"]');
+  const current = link ? readV(link.getAttribute("href")) : null;
+  if (!current) return;
+  let reloading = false;
+  const check = () => {
+    fetch("index.html", { cache: "no-store" })
+      .then(r => r.text())
+      .then(html => {
+        const latest = readV(html);
+        if (latest && latest !== current && !reloading) {
+          reloading = true;
+          location.reload();
+        }
+      })
+      .catch(() => {});
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") check();
+  });
+  setInterval(check, 5 * 60 * 1000);
+  setTimeout(check, 4000);
+})();

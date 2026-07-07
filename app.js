@@ -2355,4 +2355,27 @@ function BottomNav({
   }));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App, null));
+(function setupAutoUpdate() {
+  const readV = s => (String(s).match(/styles\.css\?v=(\d+)/) || [])[1];
+  const link = document.querySelector('link[href*="styles.css"]');
+  const current = link ? readV(link.getAttribute("href")) : null;
+  if (!current) return;
+  let reloading = false;
+  const check = () => {
+    fetch("index.html", {
+      cache: "no-store"
+    }).then(r => r.text()).then(html => {
+      const latest = readV(html);
+      if (latest && latest !== current && !reloading) {
+        reloading = true;
+        location.reload();
+      }
+    }).catch(() => {});
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") check();
+  });
+  setInterval(check, 5 * 60 * 1000);
+  setTimeout(check, 4000);
+})();
 })();
