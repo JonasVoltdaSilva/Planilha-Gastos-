@@ -12,6 +12,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+  // Vídeo: NÃO intercepta — o Safari/iOS usa Range requests (206) para <video>
+  // e rejeita respostas vindas do fetch() do service worker. Deixa nativo.
+  if (url.pathname.endsWith('.mp4') || url.pathname.endsWith('.webm') || e.request.headers.get('range')) return;
   // Para arquivos do próprio site: ignora cache HTTP, sempre busca da rede
   if (url.origin === self.location.origin) {
     e.respondWith(fetch(e.request, { cache: 'no-store' }));

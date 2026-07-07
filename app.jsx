@@ -539,12 +539,29 @@ function ChromeDecor({ theme }) {
 
 /* Speed-lines diagonais — motion-blur da capa JUMP (BLACKPINK) */
 function JumpDecor({ theme }) {
-  if (theme !== "jump") return null;
+  const vidRef = useRef(null);
 
-  // iOS só faz autoplay com muted setado como propriedade (o atributo JSX não basta)
-  const videoRef = (el) => {
-    if (el) { el.muted = true; el.play().catch(() => {}); }
-  };
+  // iOS: muted precisa ser propriedade (o atributo JSX não basta) e o vídeo
+  // pausa ao ir pro fundo — retoma ao voltar (visibilitychange/pageshow)
+  useEffect(() => {
+    if (theme !== "jump") return;
+    const v = vidRef.current;
+    if (!v) return;
+    v.muted = true;
+    const tryPlay = () => { v.play().catch(() => {}); };
+    tryPlay();
+    const onVis = () => { if (document.visibilityState === "visible") tryPlay(); };
+    v.addEventListener("loadeddata", tryPlay);
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pageshow", onVis);
+    return () => {
+      v.removeEventListener("loadeddata", tryPlay);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pageshow", onVis);
+    };
+  }, [theme]);
+
+  if (theme !== "jump") return null;
 
   // Linhas horizontais finas e lentas — minimalismo da capa DEADLINE
   const streaks = [
@@ -558,10 +575,11 @@ function JumpDecor({ theme }) {
     <>
       {/* Arte animada do álbum (Apple Music) — loop contínuo atrás do conteúdo */}
       <video
-        ref={videoRef}
+        ref={vidRef}
         className="jump-art-video"
         src="jump-art.mp4"
         autoPlay loop muted playsInline
+        preload="auto"
         aria-hidden="true"
       />
       {streaks.map(s => (

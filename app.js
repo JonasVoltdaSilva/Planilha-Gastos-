@@ -1439,13 +1439,29 @@ function ChromeDecor({
 function JumpDecor({
   theme
 }) {
+  const vidRef = useRef(null);
+  useEffect(() => {
+    if (theme !== "jump") return;
+    const v = vidRef.current;
+    if (!v) return;
+    v.muted = true;
+    const tryPlay = () => {
+      v.play().catch(() => {});
+    };
+    tryPlay();
+    const onVis = () => {
+      if (document.visibilityState === "visible") tryPlay();
+    };
+    v.addEventListener("loadeddata", tryPlay);
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pageshow", onVis);
+    return () => {
+      v.removeEventListener("loadeddata", tryPlay);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pageshow", onVis);
+    };
+  }, [theme]);
   if (theme !== "jump") return null;
-  const videoRef = el => {
-    if (el) {
-      el.muted = true;
-      el.play().catch(() => {});
-    }
-  };
   const streaks = [{
     id: 0,
     top: "16%",
@@ -1480,13 +1496,14 @@ function JumpDecor({
     silver: true
   }];
   return React.createElement(React.Fragment, null, React.createElement("video", {
-    ref: videoRef,
+    ref: vidRef,
     className: "jump-art-video",
     src: "jump-art.mp4",
     autoPlay: true,
     loop: true,
     muted: true,
     playsInline: true,
+    preload: "auto",
     "aria-hidden": "true"
   }), streaks.map(s => React.createElement("div", {
     key: s.id,
