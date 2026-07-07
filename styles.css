@@ -999,6 +999,129 @@ body.theme-fancy .onb-card {
   100% { transform: translateY(-110vh) translateX(var(--fc-dx2, -10px)) rotate(var(--fc-r2, 48deg)); opacity: 0; }
 }
 
+/* ============================================================
+   JUMP — BLACKPINK · preto absoluto + rosa motion-blur + chrome
+   Rosa quente #FF8FC4 · magenta profundo · prata metálico
+   ============================================================ */
+body.theme-jump {
+  --accent-blue:      #FF8FC4;
+  --accent-mint:      #F7A8CE;
+  --accent-blue-soft: rgba(255, 143, 196, 0.15);
+  --accent-mint-soft: rgba(247, 168, 206, 0.11);
+  --blob1-color:      rgba(232, 100, 160, 0.45);
+  --blob2-color:      rgba(180, 70, 120, 0.36);
+  --blob3-color:      rgba(120, 48, 84, 0.28);
+  --btn-primary-fg:   #1e0512;
+  --text-hi:          rgba(255, 241, 248, 0.97);
+  --text-mid:         rgba(226, 186, 204, 0.68);
+  --text-lo:          rgba(170, 128, 148, 0.45);
+}
+
+/* Preto absoluto com brilho rosa central — como a capa do álbum */
+body.theme-jump .backdrop {
+  background:
+    radial-gradient(ellipse 130% 62% at 50% 34%, rgba(140, 44, 88, 0.35), transparent 62%),
+    linear-gradient(160deg, #0a0308 0%, #14040e 44%, #050107 100%);
+}
+/* Vinheta pesada — bordas em preto puro */
+body.theme-jump .backdrop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 85% 80% at center,
+    transparent 34%, rgba(0,0,0,0.55) 68%, rgba(0,0,0,0.96) 100%);
+  pointer-events: none;
+}
+
+/* Blobs rosa quente saturados */
+body.theme-jump .blob { filter: blur(85px) saturate(135%) !important; }
+body.theme-jump .blob.b1 { opacity: 0.50 !important; }
+body.theme-jump .blob.b2 { opacity: 0.40 !important; }
+body.theme-jump .blob.b3 { opacity: 0.30 !important; }
+body.theme-jump .blob.b4 {
+  /* prata frio — o chrome da tipografia JUMP */
+  background: radial-gradient(circle, rgba(216, 216, 224, 0.30), transparent 70%) !important;
+  opacity: 0.22 !important;
+}
+
+/* Cards — vinho-preto profundo com borda rosa */
+body.theme-jump .glass {
+  background: rgba(30, 8, 22, 0.85) !important;
+  border-color: rgba(255, 143, 196, 0.16) !important;
+  box-shadow:
+    0 8px 34px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 178, 214, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(28px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(130%) !important;
+}
+
+/* FAB — rosa quente com pulso */
+body.theme-jump .bottom-nav-fab {
+  background: linear-gradient(145deg, #FFB2D6 0%, #F45E9E 52%, #D63578 100%) !important;
+  color: #2a0716 !important;
+  box-shadow: 0 0 22px rgba(255, 120, 180, 0.55), 0 10px 30px rgba(0,0,0,0.7) !important;
+  animation: jumpFabPulse 3s ease-in-out infinite !important;
+}
+@keyframes jumpFabPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 120, 180, 0.48), 0 10px 30px rgba(0,0,0,0.7); }
+  50%       { box-shadow: 0 0 44px rgba(255, 140, 195, 0.85), 0 0 70px rgba(230, 90, 155, 0.40), 0 10px 30px rgba(0,0,0,0.7); }
+}
+body.theme-jump .bottom-nav-fab svg { color: #2a0716 !important; }
+
+/* Nav ativo em rosa */
+body.theme-jump .nav-item.active,
+body.theme-jump .bottom-nav-item.active { color: #FF9FCB !important; }
+
+/* Saldo — gradiente rosa→chrome como a tipografia do álbum */
+body.theme-jump .home-balance-value,
+body.theme-jump .hero-balance {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFB8D9 38%, #E8E4EC 72%, #FF8FC4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none !important;
+  filter: drop-shadow(0 0 20px rgba(255, 140, 195, 0.55));
+}
+
+/* === Jump speed-lines: rastros diagonais de motion-blur (rosa + prata) === */
+.jump-streak {
+  position: fixed;
+  left: -45%;
+  height: 2px;
+  width: 40%;
+  pointer-events: none;
+  z-index: 4;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 143, 196, 0.25) 18%,
+    rgba(255, 180, 215, 0.85) 50%,
+    rgba(255, 143, 196, 0.25) 82%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(255, 143, 196, 0.60), 0 0 22px rgba(240, 100, 165, 0.30);
+  opacity: 0;
+  animation: jumpStreak linear infinite;
+  will-change: left, opacity;
+}
+.jump-streak.silver {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(225, 225, 235, 0.22) 18%,
+    rgba(245, 242, 248, 0.75) 50%,
+    rgba(225, 225, 235, 0.22) 82%,
+    transparent 100%
+  );
+  box-shadow: 0 0 6px rgba(230, 228, 238, 0.50), 0 0 16px rgba(210, 205, 220, 0.22);
+}
+@keyframes jumpStreak {
+  0%   { left: -45%; opacity: 0; }
+  6%   { opacity: 1; }
+  90%  { opacity: 0.8; }
+  100% { left: 110%; opacity: 0; }
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -1688,14 +1811,25 @@ body.no-glow .home-balance-value { text-shadow: none; }
   }
 
   .main-scroll {
-    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(var(--bottom-nav-h) + 16px);
+    padding: env(safe-area-inset-top, 0px) 0 calc(var(--bottom-nav-h) + 12px);
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
     -webkit-overflow-scrolling: touch;
   }
 
-  .page-head { margin-bottom: 18px; }
+  /* Full-bleed: cards encostam nas extremidades da tela (sem moldura lateral) */
+  .page-enter { padding: 6px 0 0; }
+  .main-scroll .panel,
+  .main-scroll .home-hero,
+  .main-scroll .quick,
+  .main-scroll .table-wrap {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .page-head { margin-bottom: 18px; padding: 0 16px; }
   .page-title { font-size: 22px; }
   .page-sub { font-size: 13px; }
 
@@ -1757,7 +1891,7 @@ body.no-glow .home-balance-value { text-shadow: none; }
    MOBILE  ≤ 480px
    ============================================================ */
 @media (max-width: 480px) {
-  .main-scroll { padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px calc(var(--bottom-nav-h) + 12px); }
+  .main-scroll { padding: env(safe-area-inset-top, 0px) 0 calc(var(--bottom-nav-h) + 12px); }
 
   .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat { padding: 14px 12px; }
@@ -3014,6 +3148,7 @@ body.no-decor .chrome-streak,
 body.no-decor .chrome-spark,
 body.no-decor .sweet-sparkle,
 body.no-decor .sweet-kiss-wrap,
+body.no-decor .jump-streak,
 body.no-decor .fancy-charm { display: none !important; }
 body.no-decor .ariana-grain { animation: none !important; }
 

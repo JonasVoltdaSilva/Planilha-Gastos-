@@ -1436,6 +1436,87 @@ function ChromeDecor({
     }
   })));
 }
+function JumpDecor({
+  theme
+}) {
+  if (theme !== "jump") return null;
+  const streaks = [{
+    id: 0,
+    top: "10%",
+    w: "44%",
+    angle: -16,
+    dur: "5.8s",
+    delay: "0s",
+    silver: false
+  }, {
+    id: 1,
+    top: "19%",
+    w: "36%",
+    angle: -14,
+    dur: "7.4s",
+    delay: "1.6s",
+    silver: true
+  }, {
+    id: 2,
+    top: "31%",
+    w: "50%",
+    angle: -18,
+    dur: "6.2s",
+    delay: "3.0s",
+    silver: false
+  }, {
+    id: 3,
+    top: "44%",
+    w: "32%",
+    angle: -12,
+    dur: "8.2s",
+    delay: "0.8s",
+    silver: true
+  }, {
+    id: 4,
+    top: "57%",
+    w: "46%",
+    angle: -17,
+    dur: "6.8s",
+    delay: "2.2s",
+    silver: false
+  }, {
+    id: 5,
+    top: "69%",
+    w: "38%",
+    angle: -13,
+    dur: "7.8s",
+    delay: "4.4s",
+    silver: true
+  }, {
+    id: 6,
+    top: "81%",
+    w: "42%",
+    angle: -15,
+    dur: "6.4s",
+    delay: "1.2s",
+    silver: false
+  }, {
+    id: 7,
+    top: "90%",
+    w: "30%",
+    angle: -11,
+    dur: "8.8s",
+    delay: "3.6s",
+    silver: true
+  }];
+  return React.createElement(React.Fragment, null, streaks.map(s => React.createElement("div", {
+    key: s.id,
+    className: "jump-streak" + (s.silver ? " silver" : ""),
+    style: {
+      top: s.top,
+      width: s.w,
+      transform: `rotate(${s.angle}deg)`,
+      animationDuration: s.dur,
+      animationDelay: s.delay
+    }
+  })));
+}
 function App() {
   const [page, setPage] = useState("home");
   const [gastosInitialTab, setGastosInitialTab] = useState("lancamentos");
@@ -2198,6 +2279,8 @@ function App() {
   }), React.createElement(SweetDecor, {
     theme: profile?.theme
   }), React.createElement(FancyDecor, {
+    theme: profile?.theme
+  }), React.createElement(JumpDecor, {
     theme: profile?.theme
   }), confirmDialog && React.createElement(ConfirmDialog, _extends({}, confirmDialog, {
     onConfirm: () => {

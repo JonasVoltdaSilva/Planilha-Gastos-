@@ -48,6 +48,10 @@ const THEMES = [{
   id: "fancy",
   nome: "Fancy That",
   colors: ["#CC2030", "#9B8FA3"]
+}, {
+  id: "jump",
+  nome: "Jump",
+  colors: ["#FF8FC4", "#0d0309"]
 }];
 const LS_PROFILE = "planilha_gastos_profile_v1";
 function applyTheme(themeId) {
