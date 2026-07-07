@@ -1022,14 +1022,7 @@ body.theme-jump {
 body.theme-jump .backdrop {
   background: linear-gradient(175deg, #0a0106 0%, #0c0208 50%, #070104 100%);
 }
-/* Vinheta bem leve — o vídeo domina o fundo */
-body.theme-jump .backdrop::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 95% 90% at center,
-    transparent 60%, rgba(0,0,0,0.25) 84%, rgba(0,0,0,0.60) 100%);
-  pointer-events: none;
-}
+/* Sem vinheta — o vídeo aparece 100% nítido de borda a borda */
 
 /* Blobs quase imperceptíveis — o preto domina */
 body.theme-jump .blob { filter: blur(110px) saturate(105%) !important; }
@@ -1038,15 +1031,53 @@ body.theme-jump .blob.b2 { opacity: 0.22 !important; }
 body.theme-jump .blob.b3 { opacity: 0.16 !important; }
 body.theme-jump .blob.b4 { opacity: 0.10 !important; }
 
-/* Cards — translúcidos: o vídeo aparece através, o blur mantém a leitura */
+/* Cards — liquid glass: vidro líquido quase transparente, o vídeo
+   atravessa nítido; blur baixo + saturação alta dão o efeito de água */
 body.theme-jump .glass {
-  background: rgba(14, 3, 9, 0.58) !important;
-  border-color: rgba(242, 169, 196, 0.16) !important;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.035) 55%,
+    rgba(255, 255, 255, 0.07) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.70),
-    inset 0 1px 0 rgba(242, 169, 196, 0.07) !important;
-  backdrop-filter: blur(22px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(120%) !important;
+    0 8px 32px rgba(0, 0, 0, 0.40),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(12px) saturate(175%) brightness(1.06) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(175%) brightness(1.06) !important;
+  overflow: hidden;
+}
+/* Reflexo líquido — brilho especular deslizando devagar pelo vidro */
+body.theme-jump .glass::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.06) 44%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.06) 56%,
+    transparent 70%
+  );
+  background-size: 240% 100%;
+  animation: jumpLiquid 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes jumpLiquid {
+  0%   { background-position: 160% center; }
+  100% { background-position: -60% center; }
+}
+/* Nav e FAB também em vidro líquido */
+body.theme-jump .bottom-nav {
+  background: rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(20px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(170%) !important;
+  border-top-color: rgba(255, 255, 255, 0.22) !important;
+}
+body.theme-jump .bottom-nav::after {
+  background: rgba(10, 1, 6, 0.55) !important;
 }
 
 /* Linha fina rosa sob os títulos de painel — a linha da capa DEADLINE */
@@ -1085,12 +1116,7 @@ body.theme-jump .bottom-nav-fab {
 }
 body.theme-jump .bottom-nav-fab svg { color: #1e0512 !important; }
 
-/* Nav — barra preta pura com rosa suave no ativo */
-body.theme-jump .bottom-nav {
-  background: rgba(8, 1, 5, 0.86) !important;
-  border-top-color: rgba(242, 169, 196, 0.16) !important;
-}
-body.theme-jump .bottom-nav::after { background: rgba(8, 1, 5, 0.86) !important; }
+/* Rosa suave no item ativo da nav */
 body.theme-jump .nav-item.active,
 body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
 
@@ -1106,12 +1132,9 @@ body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
   object-fit: cover;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.9;
+  opacity: 1;
   /* fallback: arte estática aparece mesmo com o vídeo bloqueado/carregando */
   background: url("jump-art.jpg") center / cover no-repeat;
-  /* fade suave só nas bordas — o centro fica totalmente visível */
-  -webkit-mask-image: radial-gradient(ellipse 120% 100% at 50% 42%, #000 55%, transparent 98%);
-  mask-image: radial-gradient(ellipse 120% 100% at 50% 42%, #000 55%, transparent 98%);
 }
 body.theme-jump .jump-art-video { display: block; }
 
