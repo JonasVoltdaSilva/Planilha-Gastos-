@@ -1000,90 +1000,101 @@ body.theme-fancy .onb-card {
 }
 
 /* ============================================================
-   JUMP — BLACKPINK · preto absoluto + rosa motion-blur + chrome
-   Rosa quente #FF8FC4 · magenta profundo · prata metálico
+   JUMP — BLACKPINK · estética DEADLINE
+   Preto absoluto #0a0106 · rosa suave #F2A9C4 · serif editorial
+   Linhas finas horizontais · minimalismo de capa de vinil
    ============================================================ */
 body.theme-jump {
-  --accent-blue:      #FF8FC4;
-  --accent-mint:      #F7A8CE;
-  --accent-blue-soft: rgba(255, 143, 196, 0.15);
-  --accent-mint-soft: rgba(247, 168, 206, 0.11);
-  --blob1-color:      rgba(232, 100, 160, 0.45);
-  --blob2-color:      rgba(180, 70, 120, 0.36);
-  --blob3-color:      rgba(120, 48, 84, 0.28);
+  --accent-blue:      #F2A9C4;
+  --accent-mint:      #EFB6CC;
+  --accent-blue-soft: rgba(242, 169, 196, 0.13);
+  --accent-mint-soft: rgba(239, 182, 204, 0.10);
+  --blob1-color:      rgba(180, 100, 135, 0.22);
+  --blob2-color:      rgba(130, 65, 95, 0.18);
+  --blob3-color:      rgba(90, 45, 65, 0.14);
   --btn-primary-fg:   #1e0512;
-  --text-hi:          rgba(255, 241, 248, 0.97);
-  --text-mid:         rgba(226, 186, 204, 0.68);
-  --text-lo:          rgba(170, 128, 148, 0.45);
+  --text-hi:          rgba(252, 240, 246, 0.97);
+  --text-mid:         rgba(214, 178, 192, 0.65);
+  --text-lo:          rgba(160, 122, 138, 0.42);
 }
 
-/* Preto absoluto com brilho rosa central — como a capa do álbum */
+/* Preto puro de capa de vinil — quase sem gradiente */
 body.theme-jump .backdrop {
-  background:
-    radial-gradient(ellipse 130% 62% at 50% 34%, rgba(140, 44, 88, 0.35), transparent 62%),
-    linear-gradient(160deg, #0a0308 0%, #14040e 44%, #050107 100%);
+  background: linear-gradient(175deg, #0a0106 0%, #0c0208 50%, #070104 100%);
 }
-/* Vinheta pesada — bordas em preto puro */
+/* Vinheta discreta */
 body.theme-jump .backdrop::after {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 85% 80% at center,
-    transparent 34%, rgba(0,0,0,0.55) 68%, rgba(0,0,0,0.96) 100%);
+  background: radial-gradient(ellipse 90% 85% at center,
+    transparent 48%, rgba(0,0,0,0.40) 78%, rgba(0,0,0,0.85) 100%);
   pointer-events: none;
 }
 
-/* Blobs rosa quente saturados */
-body.theme-jump .blob { filter: blur(85px) saturate(135%) !important; }
-body.theme-jump .blob.b1 { opacity: 0.50 !important; }
-body.theme-jump .blob.b2 { opacity: 0.40 !important; }
-body.theme-jump .blob.b3 { opacity: 0.30 !important; }
-body.theme-jump .blob.b4 {
-  /* prata frio — o chrome da tipografia JUMP */
-  background: radial-gradient(circle, rgba(216, 216, 224, 0.30), transparent 70%) !important;
-  opacity: 0.22 !important;
-}
+/* Blobs quase imperceptíveis — o preto domina */
+body.theme-jump .blob { filter: blur(110px) saturate(105%) !important; }
+body.theme-jump .blob.b1 { opacity: 0.28 !important; }
+body.theme-jump .blob.b2 { opacity: 0.22 !important; }
+body.theme-jump .blob.b3 { opacity: 0.16 !important; }
+body.theme-jump .blob.b4 { opacity: 0.10 !important; }
 
-/* Cards — vinho-preto profundo com borda rosa */
+/* Cards — preto profundo com fio rosa (hairline) */
 body.theme-jump .glass {
-  background: rgba(30, 8, 22, 0.85) !important;
-  border-color: rgba(255, 143, 196, 0.16) !important;
+  background: rgba(14, 3, 9, 0.88) !important;
+  border-color: rgba(242, 169, 196, 0.15) !important;
   box-shadow:
-    0 8px 34px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 178, 214, 0.10),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25) !important;
-  backdrop-filter: blur(28px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(130%) !important;
+    0 8px 30px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(242, 169, 196, 0.07) !important;
+  backdrop-filter: blur(26px) saturate(115%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(115%) !important;
 }
 
-/* FAB — rosa quente com pulso */
-body.theme-jump .bottom-nav-fab {
-  background: linear-gradient(145deg, #FFB2D6 0%, #F45E9E 52%, #D63578 100%) !important;
-  color: #2a0716 !important;
-  box-shadow: 0 0 22px rgba(255, 120, 180, 0.55), 0 10px 30px rgba(0,0,0,0.7) !important;
-  animation: jumpFabPulse 3s ease-in-out infinite !important;
+/* Linha fina rosa sob os títulos de painel — a linha da capa DEADLINE */
+body.theme-jump .panel-head {
+  border-bottom: 1px solid rgba(242, 169, 196, 0.22);
+  padding-bottom: 12px;
 }
-@keyframes jumpFabPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 120, 180, 0.48), 0 10px 30px rgba(0,0,0,0.7); }
-  50%       { box-shadow: 0 0 44px rgba(255, 140, 195, 0.85), 0 0 70px rgba(230, 90, 155, 0.40), 0 10px 30px rgba(0,0,0,0.7); }
-}
-body.theme-jump .bottom-nav-fab svg { color: #2a0716 !important; }
 
-/* Nav ativo em rosa */
-body.theme-jump .nav-item.active,
-body.theme-jump .bottom-nav-item.active { color: #FF9FCB !important; }
-
-/* Saldo — gradiente rosa→chrome como a tipografia do álbum */
+/* Tipografia serif editorial — como o lettering DEADLINE */
 body.theme-jump .home-balance-value,
 body.theme-jump .hero-balance {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFB8D9 38%, #E8E4EC 72%, #FF8FC4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: "Playfair Display", serif !important;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #F2A9C4 !important;
+  background: none !important;
+  -webkit-text-fill-color: #F2A9C4 !important;
   text-shadow: none !important;
-  filter: drop-shadow(0 0 20px rgba(255, 140, 195, 0.55));
+  filter: drop-shadow(0 0 24px rgba(242, 169, 196, 0.35));
 }
+body.theme-jump .page-title,
+body.theme-jump .home-greeting,
+body.theme-jump .panel-title {
+  font-family: "Playfair Display", serif !important;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+body.theme-jump .panel-title { font-size: 13px; color: #F2A9C4; }
 
-/* === Arte animada do álbum JUMP (Apple Music) — fundo vivo === */
+/* FAB — rosa suave fosco, sem pulso (minimalismo) */
+body.theme-jump .bottom-nav-fab {
+  background: linear-gradient(150deg, #F6BAD1 0%, #EFA3C0 100%) !important;
+  color: #1e0512 !important;
+  box-shadow: 0 0 18px rgba(242, 169, 196, 0.35), 0 10px 28px rgba(0,0,0,0.75) !important;
+}
+body.theme-jump .bottom-nav-fab svg { color: #1e0512 !important; }
+
+/* Nav — barra preta pura com rosa suave no ativo */
+body.theme-jump .bottom-nav {
+  background: rgba(8, 1, 5, 0.86) !important;
+  border-top-color: rgba(242, 169, 196, 0.16) !important;
+}
+body.theme-jump .bottom-nav::after { background: rgba(8, 1, 5, 0.86) !important; }
+body.theme-jump .nav-item.active,
+body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
+
+/* === Arte animada oficial (GIF do Apple Music) — fundo vivo === */
 .jump-art-video {
   position: fixed;
   inset: 0;
@@ -1092,43 +1103,42 @@ body.theme-jump .hero-balance {
   object-fit: cover;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.55;
-  /* fade radial — a arte se dissolve no preto do backdrop nas bordas */
-  -webkit-mask-image: radial-gradient(ellipse 95% 82% at 50% 40%, #000 26%, transparent 80%);
-  mask-image: radial-gradient(ellipse 95% 82% at 50% 40%, #000 26%, transparent 80%);
+  opacity: 0.42;
+  /* fade radial — a arte se dissolve no preto nas bordas */
+  -webkit-mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
+  mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
 }
 
-/* === Jump speed-lines: rastros diagonais de motion-blur (rosa + prata) === */
+/* === Linha fina horizontal — assinatura da capa DEADLINE ===
+   Uma única linha rosa atravessa a tela lentamente, discreta */
 .jump-streak {
   position: fixed;
   left: -45%;
-  height: 2px;
-  width: 40%;
+  height: 1px;
+  width: 42%;
   pointer-events: none;
   z-index: 4;
-  border-radius: 999px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(255, 143, 196, 0.25) 18%,
-    rgba(255, 180, 215, 0.85) 50%,
-    rgba(255, 143, 196, 0.25) 82%,
+    rgba(242, 169, 196, 0.35) 20%,
+    rgba(242, 169, 196, 0.80) 50%,
+    rgba(242, 169, 196, 0.35) 80%,
     transparent 100%
   );
-  box-shadow: 0 0 8px rgba(255, 143, 196, 0.60), 0 0 22px rgba(240, 100, 165, 0.30);
+  box-shadow: 0 0 6px rgba(242, 169, 196, 0.45);
   opacity: 0;
   animation: jumpStreak linear infinite;
   will-change: left, opacity;
 }
 .jump-streak.silver {
-  height: 1px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(225, 225, 235, 0.22) 18%,
-    rgba(245, 242, 248, 0.75) 50%,
-    rgba(225, 225, 235, 0.22) 82%,
+    rgba(238, 226, 232, 0.18) 20%,
+    rgba(246, 238, 242, 0.55) 50%,
+    rgba(238, 226, 232, 0.18) 80%,
     transparent 100%
   );
-  box-shadow: 0 0 6px rgba(230, 228, 238, 0.50), 0 0 16px rgba(210, 205, 220, 0.22);
+  box-shadow: 0 0 4px rgba(238, 226, 232, 0.30);
 }
 @keyframes jumpStreak {
   0%   { left: -45%; opacity: 0; }

@@ -546,15 +546,12 @@ function JumpDecor({ theme }) {
     if (el) { el.muted = true; el.play().catch(() => {}); }
   };
 
+  // Linhas horizontais finas e lentas — minimalismo da capa DEADLINE
   const streaks = [
-    { id: 0, top: "10%", w: "44%", angle: -16, dur: "5.8s", delay: "0s",   silver: false },
-    { id: 1, top: "19%", w: "36%", angle: -14, dur: "7.4s", delay: "1.6s", silver: true  },
-    { id: 2, top: "31%", w: "50%", angle: -18, dur: "6.2s", delay: "3.0s", silver: false },
-    { id: 3, top: "44%", w: "32%", angle: -12, dur: "8.2s", delay: "0.8s", silver: true  },
-    { id: 4, top: "57%", w: "46%", angle: -17, dur: "6.8s", delay: "2.2s", silver: false },
-    { id: 5, top: "69%", w: "38%", angle: -13, dur: "7.8s", delay: "4.4s", silver: true  },
-    { id: 6, top: "81%", w: "42%", angle: -15, dur: "6.4s", delay: "1.2s", silver: false },
-    { id: 7, top: "90%", w: "30%", angle: -11, dur: "8.8s", delay: "3.6s", silver: true  },
+    { id: 0, top: "16%", w: "44%", angle: 0, dur: "12s", delay: "0s",  silver: false },
+    { id: 1, top: "38%", w: "36%", angle: 0, dur: "16s", delay: "5s",  silver: true  },
+    { id: 2, top: "58%", w: "48%", angle: 0, dur: "14s", delay: "9s",  silver: false },
+    { id: 3, top: "78%", w: "34%", angle: 0, dur: "18s", delay: "3s",  silver: true  },
   ];
 
   return (

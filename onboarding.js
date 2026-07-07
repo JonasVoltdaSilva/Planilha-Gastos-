@@ -51,7 +51,7 @@ const THEMES = [{
 }, {
   id: "jump",
   nome: "Jump",
-  colors: ["#FF8FC4", "#0d0309"]
+  colors: ["#F2A9C4", "#0a0106"]
 }];
 const LS_PROFILE = "planilha_gastos_profile_v1";
 function applyTheme(themeId) {
