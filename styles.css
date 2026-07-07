@@ -1083,6 +1083,21 @@ body.theme-jump .hero-balance {
   filter: drop-shadow(0 0 20px rgba(255, 140, 195, 0.55));
 }
 
+/* === Arte animada do álbum JUMP (Apple Music) — fundo vivo === */
+.jump-art-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  /* fade radial — a arte se dissolve no preto do backdrop nas bordas */
+  -webkit-mask-image: radial-gradient(ellipse 95% 82% at 50% 40%, #000 26%, transparent 80%);
+  mask-image: radial-gradient(ellipse 95% 82% at 50% 40%, #000 26%, transparent 80%);
+}
+
 /* === Jump speed-lines: rastros diagonais de motion-blur (rosa + prata) === */
 .jump-streak {
   position: fixed;
@@ -3149,6 +3164,7 @@ body.no-decor .chrome-spark,
 body.no-decor .sweet-sparkle,
 body.no-decor .sweet-kiss-wrap,
 body.no-decor .jump-streak,
+body.no-decor .jump-art-video,
 body.no-decor .fancy-charm { display: none !important; }
 body.no-decor .ariana-grain { animation: none !important; }
 

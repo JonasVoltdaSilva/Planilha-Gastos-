@@ -1440,6 +1440,12 @@ function JumpDecor({
   theme
 }) {
   if (theme !== "jump") return null;
+  const videoRef = el => {
+    if (el) {
+      el.muted = true;
+      el.play().catch(() => {});
+    }
+  };
   const streaks = [{
     id: 0,
     top: "10%",
@@ -1505,7 +1511,16 @@ function JumpDecor({
     delay: "3.6s",
     silver: true
   }];
-  return React.createElement(React.Fragment, null, streaks.map(s => React.createElement("div", {
+  return React.createElement(React.Fragment, null, React.createElement("video", {
+    ref: videoRef,
+    className: "jump-art-video",
+    src: "jump-art.mp4",
+    autoPlay: true,
+    loop: true,
+    muted: true,
+    playsInline: true,
+    "aria-hidden": "true"
+  }), streaks.map(s => React.createElement("div", {
     key: s.id,
     className: "jump-streak" + (s.silver ? " silver" : ""),
     style: {

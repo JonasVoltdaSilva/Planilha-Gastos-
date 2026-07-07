@@ -541,6 +541,11 @@ function ChromeDecor({ theme }) {
 function JumpDecor({ theme }) {
   if (theme !== "jump") return null;
 
+  // iOS só faz autoplay com muted setado como propriedade (o atributo JSX não basta)
+  const videoRef = (el) => {
+    if (el) { el.muted = true; el.play().catch(() => {}); }
+  };
+
   const streaks = [
     { id: 0, top: "10%", w: "44%", angle: -16, dur: "5.8s", delay: "0s",   silver: false },
     { id: 1, top: "19%", w: "36%", angle: -14, dur: "7.4s", delay: "1.6s", silver: true  },
@@ -554,6 +559,14 @@ function JumpDecor({ theme }) {
 
   return (
     <>
+      {/* Arte animada do álbum (Apple Music) — loop contínuo atrás do conteúdo */}
+      <video
+        ref={videoRef}
+        className="jump-art-video"
+        src="jump-art.mp4"
+        autoPlay loop muted playsInline
+        aria-hidden="true"
+      />
       {streaks.map(s => (
         <div key={s.id} className={"jump-streak" + (s.silver ? " silver" : "")} style={{
           top: s.top,
