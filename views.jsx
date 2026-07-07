@@ -1548,7 +1548,7 @@ const TS_CATS = [
   { id: "padrao", label: "Padrão", ids: ["default","dark","rose","orange"] },
   { id: "neon",   label: "Neon",   ids: ["blue","purple"] },
   { id: "albuns", label: "Álbuns", ids: ["petal","chrome","sweet","fancy"] },
-  { id: "kpop",   label: "K-pop",  ids: ["acid"] },
+  { id: "kpop",   label: "K-pop",  ids: ["acid","jump"] },
 ];
 
 const LIGHT_THEMES = new Set(["petal","sweet","fancy"]);

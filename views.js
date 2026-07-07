@@ -2869,7 +2869,7 @@ const TS_CATS = [{
 }, {
   id: "kpop",
   label: "K-pop",
-  ids: ["acid"]
+  ids: ["acid", "jump"]
 }];
 const LIGHT_THEMES = new Set(["petal", "sweet", "fancy"]);
 function ThemePreview({

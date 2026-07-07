@@ -1826,25 +1826,14 @@ body.no-glow .home-balance-value { text-shadow: none; }
   }
 
   .main-scroll {
-    padding: env(safe-area-inset-top, 0px) 0 calc(var(--bottom-nav-h) + 12px);
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(var(--bottom-nav-h) + 16px);
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Full-bleed: cards encostam nas extremidades da tela (sem moldura lateral) */
-  .page-enter { padding: 6px 0 0; }
-  .main-scroll .panel,
-  .main-scroll .home-hero,
-  .main-scroll .quick,
-  .main-scroll .table-wrap {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-  }
-
-  .page-head { margin-bottom: 18px; padding: 0 16px; }
+  .page-head { margin-bottom: 18px; }
   .page-title { font-size: 22px; }
   .page-sub { font-size: 13px; }
 
@@ -1906,7 +1895,7 @@ body.no-glow .home-balance-value { text-shadow: none; }
    MOBILE  ≤ 480px
    ============================================================ */
 @media (max-width: 480px) {
-  .main-scroll { padding: env(safe-area-inset-top, 0px) 0 calc(var(--bottom-nav-h) + 12px); }
+  .main-scroll { padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px calc(var(--bottom-nav-h) + 12px); }
 
   .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat { padding: 14px 12px; }
