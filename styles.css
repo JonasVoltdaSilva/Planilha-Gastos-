@@ -1094,20 +1094,24 @@ body.theme-jump .bottom-nav::after { background: rgba(8, 1, 5, 0.86) !important;
 body.theme-jump .nav-item.active,
 body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
 
-/* === Arte animada oficial (GIF do Apple Music) — fundo vivo === */
+/* === Arte animada oficial (GIF do Apple Music) — fundo vivo ===
+   Elemento estático no index.html, irmão do .backdrop (z 0) —
+   pinta acima do backdrop e abaixo de todo o conteúdo do app (z 1). */
 .jump-art-video {
+  display: none;
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   opacity: 0.42;
   /* fade radial — a arte se dissolve no preto nas bordas */
   -webkit-mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
   mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, #000 24%, transparent 78%);
 }
+body.theme-jump .jump-art-video { display: block; }
 
 /* === Linha fina horizontal — assinatura da capa DEADLINE ===
    Uma única linha rosa atravessa a tela lentamente, discreta */

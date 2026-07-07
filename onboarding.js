@@ -59,6 +59,15 @@ function applyTheme(themeId) {
   if (themeId && themeId !== "default") {
     document.body.classList.add(`theme-${themeId}`);
   }
+  const art = document.getElementById("jump-art");
+  if (art) {
+    if (themeId === "jump") {
+      art.muted = true;
+      art.play().catch(() => {});
+    } else {
+      art.pause();
+    }
+  }
 }
 function OnboardingPage({
   onEnter

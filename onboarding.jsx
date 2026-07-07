@@ -25,6 +25,17 @@ function applyTheme(themeId) {
   if (themeId && themeId !== "default") {
     document.body.classList.add(`theme-${themeId}`);
   }
+  // Vídeo de fundo do tema Jump (elemento estático no index.html):
+  // muted como propriedade + play() explícito — requisitos do autoplay no iOS
+  const art = document.getElementById("jump-art");
+  if (art) {
+    if (themeId === "jump") {
+      art.muted = true;
+      art.play().catch(() => {});
+    } else {
+      art.pause();
+    }
+  }
 }
 
 function OnboardingPage({ onEnter }) {
