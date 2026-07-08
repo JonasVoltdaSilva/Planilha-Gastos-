@@ -1180,8 +1180,11 @@ body.theme-jump .jump-art-video { display: block; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* iOS PWA fullscreen: height 100% ou 100dvh no html/body quebram o
+   viewport-fit=cover em modo standalone (letterbox preto em cima/embaixo).
+   100vh é o único valor confiável no cold start do app instalado. */
 html {
-  height: 100%;
+  height: 100vh;
   background: #050b14;
 }
 
@@ -1192,13 +1195,11 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden;
-  min-height: 100dvh;
-  height: 100%;
+  height: 100vh;
 }
 
 #root {
   height: 100vh;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
 }
