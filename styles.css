@@ -1036,43 +1036,43 @@ body.theme-jump.perf-lite .glass {
     rgba(18, 3, 11, 0.46) 0%,
     rgba(10, 1, 6, 0.32) 55%,
     rgba(18, 3, 11, 0.42) 100%) !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(242, 199, 216, 0.22) !important;
+  /* sombras na paleta: vinho-preto externa, prata-rosa nos filetes */
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 1px rgba(255, 255, 255, 0.22),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.06) !important;
+    0 8px 32px rgba(30, 4, 18, 0.55),
+    inset 0 1px 1px rgba(246, 214, 228, 0.20),
+    inset 0 -1px 1px rgba(246, 214, 228, 0.05) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   overflow: hidden;
+  /* camada GPU estável — sem isso o Safari/iOS pisca retângulos
+     pretos ao recompor cards sobre o <video> em tela cheia */
+  transform: translateZ(0);
 }
-/* Reflexo líquido — brilho especular deslizando devagar pelo vidro */
+/* Reflexo especular ESTÁTICO — a versão animada (background-position
+   em loop sobre vídeo) disparava o bug de flicker preto do WebKit */
 body.theme-jump .glass::before {
   content: '';
   position: absolute; inset: 0;
   border-radius: inherit;
   background: linear-gradient(
     115deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.06) 44%,
-    rgba(255, 255, 255, 0.14) 50%,
-    rgba(255, 255, 255, 0.06) 56%,
-    transparent 70%
+    transparent 34%,
+    rgba(246, 214, 228, 0.05) 46%,
+    rgba(246, 214, 228, 0.11) 52%,
+    rgba(246, 214, 228, 0.05) 58%,
+    transparent 72%
   );
-  background-size: 240% 100%;
-  animation: jumpLiquid 8s ease-in-out infinite;
+  animation: none;
   pointer-events: none;
   z-index: 0;
-}
-@keyframes jumpLiquid {
-  0%   { background-position: 160% center; }
-  100% { background-position: -60% center; }
 }
 /* Nav em vidro fumê sem blur — o vídeo passa nítido por trás */
 body.theme-jump .bottom-nav {
   background: rgba(10, 1, 6, 0.60) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-top-color: rgba(255, 255, 255, 0.20) !important;
+  border-top-color: rgba(242, 199, 216, 0.20) !important;
 }
 body.theme-jump .bottom-nav::after {
   background: rgba(10, 1, 6, 0.55) !important;
@@ -1109,13 +1109,25 @@ body.theme-jump .panel-title {
 }
 body.theme-jump .panel-title { font-size: 14px; color: #F2A9C4; font-weight: 700; }
 
-/* FAB — rosa suave fosco, sem pulso (minimalismo) */
+/* FAB — rosa suave fosco; sombra na paleta vinho-preto */
 body.theme-jump .bottom-nav-fab {
+  position: relative;
   background: linear-gradient(150deg, #F6BAD1 0%, #EFA3C0 100%) !important;
   color: #1e0512 !important;
-  box-shadow: 0 0 18px rgba(242, 169, 196, 0.35), 0 10px 28px rgba(0,0,0,0.75) !important;
+  box-shadow: 0 0 18px rgba(242, 169, 196, 0.35), 0 10px 28px rgba(30, 4, 18, 0.80) !important;
 }
 body.theme-jump .bottom-nav-fab svg { color: #1e0512 !important; }
+/* Pulso do FAB via opacity de um halo pseudo-elemento — anima só no
+   compositor (animar filter/box-shadow causa flicker no iOS) */
+body.theme-jump .bottom-nav-fab::after {
+  content: '';
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  box-shadow: 0 0 22px 5px rgba(242, 169, 196, 0.55);
+  opacity: 0.15;
+  animation: jumpFabPulse 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
 
 /* Rosa suave no item ativo da nav */
 body.theme-jump .nav-item.active,
@@ -1190,20 +1202,18 @@ body.theme-jump .blobs::after {
   0%, 100% { opacity: 0.18; }
   50%      { opacity: 0.95; }
 }
-/* FAB com pulso de brilho rosa — vida sem exagero */
-body.theme-jump .bottom-nav-fab { animation: jumpFabPulse 3.2s ease-in-out infinite; }
 @keyframes jumpFabPulse {
-  0%, 100% { filter: drop-shadow(0 0 5px rgba(242,169,196,0.25)); }
-  50%      { filter: drop-shadow(0 0 16px rgba(242,169,196,0.70)); }
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.75; }
 }
 /* Modos econômicos: sem cintilar nem pulsar */
 body.no-decor .blobs::before, body.no-decor .blobs::after { display: none !important; }
 body.no-anim .blobs::before, body.no-anim .blobs::after,
 body.perf-lite .blobs::before, body.perf-lite .blobs::after { animation: none !important; }
-body.no-anim .bottom-nav-fab, body.perf-lite .bottom-nav-fab { animation: none !important; }
+body.no-anim .bottom-nav-fab::after, body.perf-lite .bottom-nav-fab::after { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
   body.theme-jump .blobs::before, body.theme-jump .blobs::after,
-  body.theme-jump .bottom-nav-fab { animation: none; }
+  body.theme-jump .bottom-nav-fab::after { animation: none; }
 }
 
 /* === Linha fina horizontal — assinatura da capa DEADLINE ===
