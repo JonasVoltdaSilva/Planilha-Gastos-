@@ -1127,33 +1127,19 @@ body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
   inset: 0;
   width: 100%;
   height: 100%;
-  /* fill: estica a arte na vertical para preencher a tela inteira —
-     nada é recortado (cover cortava ~75%; contain deixava faixas) */
-  object-fit: fill;
+  /* Canvas oficial do Spotify (1080×1920, 9:16): já é vertical, então
+     cover preenche a tela sem esticar e praticamente sem cortar */
+  object-fit: cover;
   z-index: 0;
   pointer-events: none;
   opacity: 1;
   /* fallback: arte estática aparece mesmo com o vídeo bloqueado/carregando */
-  background: #0a0106 url("jump-art.jpg") center / 100% 100% no-repeat;
+  background: #0a0106 url("jump-art.jpg") center / cover no-repeat;
 }
 body.theme-jump .jump-art-video { display: block; }
 
 /* Streaks desligados — nada risca a tela por cima do vídeo */
 body.theme-jump .jump-streak { display: none !important; }
-
-/* Fade escuro no topo: neutraliza o efeito de lente/blur que o iOS
-   desenha na área do relógio e da Dynamic Island (um degradê suave
-   desfocado continua idêntico) e melhora a leitura da hora */
-body.theme-jump::before {
-  content: '';
-  position: fixed; top: 0; left: 0; right: 0; z-index: 2;
-  height: calc(env(safe-area-inset-top, 0px) + 24px);
-  pointer-events: none;
-  background: linear-gradient(to bottom,
-    rgba(7, 1, 4, 0.90) 0%,
-    rgba(7, 1, 4, 0.48) 58%,
-    transparent 100%);
-}
 
 /* === Brilhos cintilantes — pontos rosa e prata piscando sobre a arte,
    em duas camadas com ritmos diferentes (efeito orgânico). Pousam nos
