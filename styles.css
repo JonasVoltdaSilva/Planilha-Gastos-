@@ -1084,12 +1084,14 @@ body.theme-jump .panel-head {
   padding-bottom: 12px;
 }
 
-/* Tipografia serif editorial — como o lettering DEADLINE */
+/* Tipografia racing — condensada, pesada e inclinada como o
+   lettering JUMP da capa (Barlow Condensed Black Italic, OFL) */
 body.theme-jump .home-balance-value,
 body.theme-jump .hero-balance {
-  font-family: "Playfair Display", serif !important;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-family: "Barlow Condensed", sans-serif !important;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.02em;
   color: #F2A9C4 !important;
   background: none !important;
   -webkit-text-fill-color: #F2A9C4 !important;
@@ -1099,12 +1101,13 @@ body.theme-jump .hero-balance {
 body.theme-jump .page-title,
 body.theme-jump .home-greeting,
 body.theme-jump .panel-title {
-  font-family: "Playfair Display", serif !important;
-  letter-spacing: 0.10em;
+  font-family: "Barlow Condensed", sans-serif !important;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-weight: 700;
 }
-body.theme-jump .panel-title { font-size: 13px; color: #F2A9C4; }
+body.theme-jump .panel-title { font-size: 14px; color: #F2A9C4; font-weight: 700; }
 
 /* FAB — rosa suave fosco, sem pulso (minimalismo) */
 body.theme-jump .bottom-nav-fab {
