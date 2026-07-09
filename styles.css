@@ -1209,6 +1209,18 @@ body {
   position: fixed; inset: 0; z-index: 0;
   background: linear-gradient(135deg, #030710 0%, #05101a 40%, #060e0b 78%, #040c08 100%);
 }
+/* Container dos blobs: some com o brilho desfocado na faixa da barra de
+   status (fullscreen iOS) — o glow entra em fade só abaixo dessa área.
+   Funciona em qualquer tema, pois o backdrop (cor chapada) fica intacto. */
+.blobs {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0,
+    black calc(env(safe-area-inset-top, 0px) + 34px));
+  mask-image: linear-gradient(to bottom,
+    transparent 0,
+    black calc(env(safe-area-inset-top, 0px) + 34px));
+}
 .blob {
   position: fixed; border-radius: 50%; filter: blur(90px);
   opacity: 0.28; z-index: 0; pointer-events: none;

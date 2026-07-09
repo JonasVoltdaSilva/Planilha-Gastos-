@@ -22,7 +22,7 @@
   <!-- Clash Display — Fontshare (Indian Type Foundry) — display tipográfico 2025 -->
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=94" />
+  <link rel="stylesheet" href="styles.css?v=95" />
 </head>
 <body>
   <div class="backdrop"></div>
@@ -42,10 +42,13 @@
       window.addEventListener('click', kick);
     })();
   </script>
-  <div class="blob b1"></div>
-  <div class="blob b2"></div>
-  <div class="blob b3"></div>
-  <div class="blob b4"></div>
+  <!-- Wrapper mascara os brilhos na faixa da barra de status (topo limpo em fullscreen) -->
+  <div class="blobs" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="blob b4"></div>
+  </div>
   <div id="root"></div>
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
@@ -61,13 +64,13 @@
   <!-- Phosphor Icons — duotone weight — MutationObserver processa ícones dinâmicos do React -->
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 
-  <script src="icons.js?v=94"></script>
-  <script src="data.js?v=94"></script>
-  <script src="onboarding.js?v=94"></script>
-  <script src="chart.js?v=94"></script>
-  <script src="modal.js?v=94"></script>
-  <script src="views.js?v=94"></script>
-  <script src="app.js?v=94"></script>
+  <script src="icons.js?v=95"></script>
+  <script src="data.js?v=95"></script>
+  <script src="onboarding.js?v=95"></script>
+  <script src="chart.js?v=95"></script>
+  <script src="modal.js?v=95"></script>
+  <script src="views.js?v=95"></script>
+  <script src="app.js?v=95"></script>
 
   <script>
     if ('serviceWorker' in navigator) {
