@@ -1127,16 +1127,95 @@ body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
   inset: 0;
   width: 100%;
   height: 100%;
-  /* Canvas oficial do Spotify (1080×1920, 9:16): já é vertical, então
-     cover preenche a tela sem esticar e praticamente sem cortar */
-  object-fit: cover;
+  /* fill: estica a arte na vertical para preencher a tela inteira —
+     nada é recortado (cover cortava ~75%; contain deixava faixas) */
+  object-fit: fill;
   z-index: 0;
   pointer-events: none;
   opacity: 1;
   /* fallback: arte estática aparece mesmo com o vídeo bloqueado/carregando */
-  background: #0a0106 url("jump-art.jpg") center / cover no-repeat;
+  background: #0a0106 url("jump-art.jpg") center / 100% 100% no-repeat;
 }
 body.theme-jump .jump-art-video { display: block; }
+
+/* Streaks desligados — nada risca a tela por cima do vídeo */
+body.theme-jump .jump-streak { display: none !important; }
+
+/* Fade escuro no topo: neutraliza o efeito de lente/blur que o iOS
+   desenha na área do relógio e da Dynamic Island (um degradê suave
+   desfocado continua idêntico) e melhora a leitura da hora */
+body.theme-jump::before {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; z-index: 2;
+  height: calc(env(safe-area-inset-top, 0px) + 24px);
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(7, 1, 4, 0.90) 0%,
+    rgba(7, 1, 4, 0.48) 58%,
+    transparent 100%);
+}
+
+/* === Brilhos cintilantes — pontos rosa e prata piscando sobre a arte,
+   em duas camadas com ritmos diferentes (efeito orgânico). Pousam nos
+   ::before/::after do container .blobs: acima do vídeo, abaixo dos
+   cards, e herdam a máscara que os apaga atrás da barra de status. */
+body.theme-jump .blobs::before,
+body.theme-jump .blobs::after {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 3px; border-radius: 50%;
+  background: transparent;
+  animation: jumpTwinkle 4.2s ease-in-out infinite;
+}
+body.theme-jump .blobs::before {
+  box-shadow:
+    8vw  14vh 0 0   rgba(242,169,196,0.85),
+    22vw 34vh 3px 1px rgba(242,169,196,0.40),
+    36vw  9vh 0 0   rgba(242,169,196,0.65),
+    52vw 27vh 2px 0 rgba(246,186,209,0.55),
+    67vw 16vh 0 1px rgba(242,169,196,0.75),
+    84vw 30vh 3px 0 rgba(242,169,196,0.45),
+    14vw 55vh 0 0   rgba(246,186,209,0.60),
+    45vw 62vh 2px 1px rgba(242,169,196,0.42),
+    76vw 58vh 0 0   rgba(242,169,196,0.70),
+    30vw 78vh 3px 0 rgba(242,169,196,0.38),
+    60vw 84vh 0 1px rgba(246,186,209,0.55),
+    90vw 72vh 2px 0 rgba(242,169,196,0.48);
+}
+body.theme-jump .blobs::after {
+  animation-duration: 5.6s;
+  animation-delay: -2.4s;
+  box-shadow:
+    16vw 21vh 0 0   rgba(238,226,232,0.70),
+    42vw 17vh 2px 0 rgba(246,238,242,0.45),
+    58vw  8vh 0 1px rgba(238,226,232,0.60),
+    78vw 24vh 3px 0 rgba(238,226,232,0.35),
+    10vw 42vh 0 0   rgba(246,238,242,0.55),
+    50vw 47vh 2px 1px rgba(238,226,232,0.40),
+    88vw 44vh 0 0   rgba(238,226,232,0.65),
+    24vw 68vh 3px 0 rgba(238,226,232,0.32),
+    68vw 74vh 0 1px rgba(246,238,242,0.50),
+    40vw 90vh 2px 0 rgba(238,226,232,0.42);
+}
+@keyframes jumpTwinkle {
+  0%, 100% { opacity: 0.18; }
+  50%      { opacity: 0.95; }
+}
+/* FAB com pulso de brilho rosa — vida sem exagero */
+body.theme-jump .bottom-nav-fab { animation: jumpFabPulse 3.2s ease-in-out infinite; }
+@keyframes jumpFabPulse {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(242,169,196,0.25)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(242,169,196,0.70)); }
+}
+/* Modos econômicos: sem cintilar nem pulsar */
+body.no-decor .blobs::before, body.no-decor .blobs::after { display: none !important; }
+body.no-anim .blobs::before, body.no-anim .blobs::after,
+body.perf-lite .blobs::before, body.perf-lite .blobs::after { animation: none !important; }
+body.no-anim .bottom-nav-fab, body.perf-lite .bottom-nav-fab { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  body.theme-jump .blobs::before, body.theme-jump .blobs::after,
+  body.theme-jump .bottom-nav-fab { animation: none; }
+}
 
 /* === Linha fina horizontal — assinatura da capa DEADLINE ===
    Uma única linha rosa atravessa a tela lentamente, discreta */
