@@ -1138,26 +1138,6 @@ body.theme-jump .bottom-nav-item.active { color: #F2A9C4 !important; }
 }
 body.theme-jump .jump-art-video { display: block; }
 
-/* Full-bleed lateral SÓ no tema Jump — remove a moldura na beirada da
-   tela: conteúdo encosta nas extremidades, cards sem cantos/bordas
-   laterais. Os demais temas mantêm as margens normais. */
-@media (max-width: 920px) {
-  body.theme-jump .main-scroll {
-    padding: env(safe-area-inset-top, 0px) 0 calc(var(--bottom-nav-h) + 12px);
-  }
-  body.theme-jump .page-enter { padding: 6px 0 0; }
-  body.theme-jump .main-scroll .panel,
-  body.theme-jump .main-scroll .home-hero,
-  body.theme-jump .main-scroll .quick,
-  body.theme-jump .main-scroll .table-wrap {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-  }
-  /* títulos e cabeçalhos soltos ganham o respiro que perderam do container */
-  body.theme-jump .page-head { padding: 0 16px; }
-}
-
 /* === Linha fina horizontal — assinatura da capa DEADLINE ===
    Uma única linha rosa atravessa a tela lentamente, discreta */
 .jump-streak {
