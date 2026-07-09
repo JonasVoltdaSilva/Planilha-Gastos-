@@ -1024,27 +1024,25 @@ body.theme-jump .backdrop {
 }
 /* Sem vinheta — o vídeo aparece 100% nítido de borda a borda */
 
-/* Blobs quase imperceptíveis — o preto domina */
-body.theme-jump .blob { filter: blur(110px) saturate(105%) !important; }
-body.theme-jump .blob.b1 { opacity: 0.28 !important; }
-body.theme-jump .blob.b2 { opacity: 0.22 !important; }
-body.theme-jump .blob.b3 { opacity: 0.16 !important; }
-body.theme-jump .blob.b4 { opacity: 0.10 !important; }
+/* Blobs desligados — nenhuma névoa desfocada sobre o vídeo */
+body.theme-jump .blob { display: none !important; }
 
-/* Cards — liquid glass: vidro líquido quase transparente, o vídeo
-   atravessa nítido; blur baixo + saturação alta dão o efeito de água */
-body.theme-jump .glass {
+/* Cards — vidro fumê SEM blur: o vídeo atravessa 100% nítido;
+   o tinte escuro translúcido garante a leitura do texto por cima.
+   (.perf-lite re-aplicaria blur(12px) — o seletor duplo vence ele) */
+body.theme-jump .glass,
+body.theme-jump.perf-lite .glass {
   background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.045) 0%,
-    rgba(255, 255, 255, 0.015) 55%,
-    rgba(255, 255, 255, 0.03) 100%) !important;
-  border-color: rgba(255, 255, 255, 0.24) !important;
+    rgba(18, 3, 11, 0.46) 0%,
+    rgba(10, 1, 6, 0.32) 55%,
+    rgba(18, 3, 11, 0.42) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.35),
-    inset 0 1px 1px rgba(255, 255, 255, 0.28),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(5px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(5px) saturate(150%) !important;
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   overflow: hidden;
 }
 /* Reflexo líquido — brilho especular deslizando devagar pelo vidro */
@@ -1069,12 +1067,12 @@ body.theme-jump .glass::before {
   0%   { background-position: 160% center; }
   100% { background-position: -60% center; }
 }
-/* Nav e FAB também em vidro líquido */
+/* Nav em vidro fumê sem blur — o vídeo passa nítido por trás */
 body.theme-jump .bottom-nav {
-  background: rgba(255, 255, 255, 0.07) !important;
-  backdrop-filter: blur(20px) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(170%) !important;
-  border-top-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(10, 1, 6, 0.60) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-top-color: rgba(255, 255, 255, 0.20) !important;
 }
 body.theme-jump .bottom-nav::after {
   background: rgba(10, 1, 6, 0.55) !important;
